@@ -44,7 +44,7 @@ export function Header() {
             alt="Azienda Agricola Gianni Parisse"
             width={200}
             height={75}
-            className="h-16 w-auto sm:h-20"
+            className="h-20 w-auto sm:h-24"
             priority
           />
         </Link>
