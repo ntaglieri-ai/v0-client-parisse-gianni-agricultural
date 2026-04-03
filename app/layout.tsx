@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import { TopBar } from "@/components/top-bar";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { WhatsAppButton } from "@/components/whatsapp-button";
@@ -57,7 +56,6 @@ export default function RootLayout({
   return (
     <html lang="it" className={`${inter.variable} ${playfair.variable}`}>
       <body className="font-sans antialiased">
-        <TopBar />
         <Header />
         <main>{children}</main>
         <Footer />
