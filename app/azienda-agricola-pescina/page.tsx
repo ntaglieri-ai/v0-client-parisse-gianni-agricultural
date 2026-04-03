@@ -212,6 +212,37 @@ export default function AziendaPage() {
           </div>
         </div>
       </section>
+
+      {/* Dove Siamo */}
+      <section id="dove-siamo" className="bg-secondary py-20 lg:py-28">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+          <div className="text-center">
+            <h2 className="font-serif text-3xl font-bold text-foreground md:text-4xl">
+              Dove Siamo
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Vieni a trovarci in azienda
+            </p>
+          </div>
+
+          <div className="mt-12 overflow-hidden rounded-2xl">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2946.1234567890123!2d13.6558!3d42.0264!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132fe7c8c8c8c8c8%3A0x123456789abcdef!2sVia%20II%20Traversa%20delle%20Croci%2C%2016%2C%2067057%20Pescina%20AQ!5e0!3m2!1sit!2sit!4v1234567890123!5m2!1sit!2sit"
+              width="100%"
+              height="450"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Mappa Azienda Agricola Parisse Gianni"
+            />
+          </div>
+
+          <p className="mt-8 text-center text-lg text-foreground">
+            Via II Traversa delle Croci, 16 — 67057 Pescina (AQ)
+          </p>
+        </div>
+      </section>
     </>
   );
 }
