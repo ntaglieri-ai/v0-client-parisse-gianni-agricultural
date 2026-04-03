@@ -14,6 +14,12 @@ const navigation = [
   { name: "Contatti", href: "/contatti" },
 ];
 
+const desktopNavigation = [
+  { name: "Home", href: "/" },
+  { name: "Azienda", href: "/azienda-agricola-pescina" },
+  { name: "Prodotti", href: "/prodotti-agricoli-marsica" },
+];
+
 export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -105,12 +111,9 @@ export function Header() {
             </a>
           </div>
 
-          {/* Spacer for desktop layout */}
-          <div className="hidden flex-1 md:block" />
-
-          {/* Desktop Navigation */}
-          <div className="hidden items-center gap-8 md:flex">
-            {navigation.map((item) => (
+          {/* Desktop Navigation - Centered */}
+          <div className="hidden flex-1 items-center justify-center gap-8 md:flex">
+            {desktopNavigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
@@ -127,7 +130,7 @@ export function Header() {
           </div>
 
           {/* Desktop CTA with dropdown */}
-          <div className="relative hidden md:block" ref={contactMenuRef}>
+          <div className="relative hidden flex-1 items-center justify-end md:flex" ref={contactMenuRef}>
             <button
               type="button"
               onClick={() => setContactMenuOpen(!contactMenuOpen)}
