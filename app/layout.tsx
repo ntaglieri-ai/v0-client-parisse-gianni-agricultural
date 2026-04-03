@@ -18,10 +18,35 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Azienda Agricola Pescina (AQ) | Prodotti del Fucino",
+  title: "Azienda Agricola Parisse Gianni | Prodotti del Fucino",
   description:
-    "Vendita diretta di ortaggi, legumi e cereali dalla Marsica. Azienda agricola a Pescina.",
+    "Vendita diretta di ortaggi, legumi e cereali dalla Marsica. Azienda agricola a Pescina (AQ).",
   generator: "v0.app",
+  metadataBase: new URL("https://parisse.it"),
+  openGraph: {
+    title: "Azienda Agricola Parisse Gianni | Prodotti del Fucino",
+    description:
+      "Vendita diretta di ortaggi, legumi e cereali dalla Marsica. Azienda agricola a Pescina (AQ).",
+    url: "https://parisse.it",
+    siteName: "Azienda Agricola Parisse Gianni",
+    images: [
+      {
+        url: "/images/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Azienda Agricola Parisse Gianni - Prodotti Agricoli dal Fucino",
+      },
+    ],
+    locale: "it_IT",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Azienda Agricola Parisse Gianni | Prodotti del Fucino",
+    description:
+      "Vendita diretta di ortaggi, legumi e cereali dalla Marsica. Azienda agricola a Pescina (AQ).",
+    images: ["/images/og-image.png"],
+  },
   icons: {
     icon: [
       {

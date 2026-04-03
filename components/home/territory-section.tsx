@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-// Territory section - La Marsica e il Fucino
 export function TerritorySection() {
   return (
     <section className="bg-secondary py-20 lg:py-28">
