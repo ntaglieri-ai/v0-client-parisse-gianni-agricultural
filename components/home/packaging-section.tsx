@@ -1,6 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
-import { Phone, MessageCircle, Package, Truck } from "lucide-react";
+import { Package, Truck } from "lucide-react";
 
 export function PackagingSection() {
   return (
@@ -12,7 +11,7 @@ export function PackagingSection() {
             Qualita Garantita
           </span>
           <h2 className="mt-4 font-serif text-3xl font-bold text-foreground md:text-4xl">
-            <span className="text-balance">Packaging curato & consegne rapide</span>
+            <span className="text-balance">Packaging curato e consegne rapide</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
             Dalla raccolta alla consegna, ogni dettaglio e pensato per garantire freschezza e qualita.
@@ -76,25 +75,7 @@ export function PackagingSection() {
           </div>
         </div>
 
-        {/* CTA Buttons */}
-        <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Link
-            href="tel:+393382726361"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <Phone className="h-4 w-4" />
-            Contattaci per disponibilita
-          </Link>
-          <Link
-            href="https://wa.me/393382726361?text=Ciao,%20vorrei%20informazioni%20su%20packaging%20e%20consegne"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border-2 border-primary bg-transparent px-8 py-4 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
-          >
-            <MessageCircle className="h-4 w-4" />
-            Scrivi su WhatsApp
-          </Link>
-        </div>
+        
       </div>
     </section>
   );
