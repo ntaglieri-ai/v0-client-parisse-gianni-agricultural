@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { Menu, X, Phone, Mail, MessageCircle } from "lucide-react";
@@ -37,20 +38,15 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-            <span className="font-serif text-lg font-bold text-primary-foreground">
-              P
-            </span>
-          </div>
-          <div className="hidden flex-col sm:flex">
-            <span className="font-serif text-lg font-semibold leading-tight text-foreground">
-              Parisse Gianni
-            </span>
-            <span className="text-xs tracking-wide text-muted-foreground">
-              Azienda Agricola
-            </span>
-          </div>
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/images/logo.png"
+            alt="Azienda Agricola Gianni Parisse"
+            width={160}
+            height={60}
+            className="h-12 w-auto sm:h-14"
+            priority
+          />
         </Link>
 
         {/* Desktop Navigation */}

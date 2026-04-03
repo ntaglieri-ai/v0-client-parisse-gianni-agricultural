@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, MapPin, Phone } from "lucide-react";
 
 const navigation = [
@@ -15,19 +16,15 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-foreground">
-                <span className="font-serif text-xl font-bold text-primary">
-                  P
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-serif text-xl font-semibold">
-                  Azienda Agricola
-                </span>
-                <span className="font-serif text-lg">Parisse Gianni</span>
-              </div>
-            </div>
+            <Link href="/">
+              <Image
+                src="/images/logo.png"
+                alt="Azienda Agricola Gianni Parisse"
+                width={180}
+                height={68}
+                className="h-16 w-auto brightness-0 invert"
+              />
+            </Link>
             <p className="mt-6 max-w-md text-sm leading-relaxed text-primary-foreground/80">
               Coltiviamo ortaggi, legumi e cereali nel cuore del Fucino, in
               Abruzzo. Prodotti genuini dalla terra alla tua tavola, con la
