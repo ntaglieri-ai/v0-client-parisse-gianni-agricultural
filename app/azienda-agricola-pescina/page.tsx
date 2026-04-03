@@ -1,39 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Leaf, Heart, Users, Mountain } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Azienda Agricola a Pescina (AQ) | Tradizione e Qualita del Fucino",
   description:
     "Scopri la storia dell'Azienda Agricola Parisse Gianni a Pescina, nel cuore della Marsica. Tradizione agricola, qualita genuina e prodotti del Fucino.",
 };
-
-const values = [
-  {
-    icon: Leaf,
-    title: "Qualita",
-    description:
-      "Ogni prodotto che coltiviamo rispecchia il nostro impegno per l'eccellenza. Selezioniamo con cura le varieta piu adatte al nostro territorio.",
-  },
-  {
-    icon: Heart,
-    title: "Stagionalita",
-    description:
-      "Rispettiamo i ritmi della natura, coltivando e raccogliendo ogni prodotto nel momento ottimale per garantire il massimo del sapore.",
-  },
-  {
-    icon: Users,
-    title: "Filiera Corta",
-    description:
-      "Dal nostro campo alla tua tavola senza intermediari. Questo significa freschezza, tracciabilita e un rapporto diretto con chi coltiva il tuo cibo.",
-  },
-  {
-    icon: Mountain,
-    title: "Territorio",
-    description:
-      "Il Fucino e la Marsica sono la nostra casa. Coltiviamo qui perche crediamo nelle qualita uniche di questa terra.",
-  },
-];
 
 export default function AziendaPage() {
   return (
@@ -154,44 +126,14 @@ export default function AziendaPage() {
         </div>
       </section>
 
-      {/* Values */}
-      <section className="bg-primary py-20 lg:py-28">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <span className="text-sm font-medium uppercase tracking-wider text-accent">
-              I Nostri Valori
-            </span>
-            <h2 className="mt-4 font-serif text-3xl font-bold text-primary-foreground md:text-4xl">
-              <span className="text-balance">Cosa Ci Guida Ogni Giorno</span>
-            </h2>
-          </div>
-
-          <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {values.map((value, index) => (
-              <div key={index} className="text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-foreground">
-                  <value.icon className="h-7 w-7 text-primary" />
-                </div>
-                <h3 className="mt-6 font-serif text-xl font-semibold text-primary-foreground">
-                  {value.title}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-primary-foreground/80">
-                  {value.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Dove Siamo */}
-      <section id="dove-siamo" className="bg-secondary py-20 lg:py-28">
+      <section id="dove-siamo" className="bg-primary py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <div className="text-center">
-            <h2 className="font-serif text-3xl font-bold text-foreground md:text-4xl">
+            <h2 className="font-serif text-3xl font-bold text-white md:text-4xl">
               Dove Siamo
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
+            <p className="mt-4 text-lg text-white">
               Vieni a trovarci in azienda
             </p>
           </div>
@@ -209,7 +151,7 @@ export default function AziendaPage() {
             />
           </div>
 
-          <p className="mt-8 text-center text-lg text-foreground">
+          <p className="mt-8 text-center text-lg text-white">
             Via II Traversa delle Croci, 16 — 67057 Pescina (AQ)
           </p>
         </div>
