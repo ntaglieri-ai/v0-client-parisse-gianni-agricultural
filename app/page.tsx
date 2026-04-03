@@ -1,5 +1,3 @@
-import Image from "next/image";
-import Link from "next/link";
 import { HeroSection } from "@/components/home/hero-section";
 import { TrustSection } from "@/components/home/trust-section";
 import { ProductCategories } from "@/components/home/product-categories";
@@ -12,11 +10,11 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
+      <TerritorySection />
       <TrustSection />
       <ProductCategories />
       <HowItWorks />
       <PackagingSection />
-      <TerritorySection />
       <FinalCta />
     </>
   );

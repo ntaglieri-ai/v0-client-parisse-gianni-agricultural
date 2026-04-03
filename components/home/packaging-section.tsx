@@ -1,10 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Phone, MessageCircle } from "lucide-react";
+import { Phone, MessageCircle, Package, Truck } from "lucide-react";
 
 export function PackagingSection() {
   return (
-    <section className="bg-secondary py-20 lg:py-28">
+    <section className="bg-background py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
         {/* Section Header */}
         <div className="text-center">
@@ -19,24 +19,28 @@ export function PackagingSection() {
           </p>
         </div>
 
-        {/* Content Blocks */}
-        <div className="mt-16 space-y-16 lg:space-y-24">
-          {/* Block 1 - Packaging (Image Left, Text Right) */}
-          <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+        {/* Two Column Layout */}
+        <div className="mt-16 grid gap-8 lg:grid-cols-2 lg:gap-12">
+          {/* Left Column - Packaging */}
+          <div className="overflow-hidden rounded-2xl bg-secondary">
+            <div className="relative aspect-[4/3]">
               <Image
                 src="/images/packaging.jpg"
                 alt="Verdure fresche confezionate con cura in cassette di legno"
                 fill
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
             </div>
-            <div className="lg:pl-8">
-              <h3 className="font-serif text-2xl font-bold text-foreground md:text-3xl">
-                Packaging attento alla qualita
-              </h3>
-              <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+            <div className="p-6 lg:p-8">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Package className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-serif text-xl font-bold text-foreground lg:text-2xl">
+                  Packaging attento alla qualita
+                </h3>
+              </div>
+              <p className="mt-4 leading-relaxed text-muted-foreground">
                 I nostri prodotti vengono selezionati e confezionati con cura, per preservarne 
                 freschezza, integrita e caratteristiche naturali. Utilizziamo soluzioni semplici 
                 ed efficaci, pensate per mantenere intatta la qualita dal campo alla tavola.
@@ -44,22 +48,26 @@ export function PackagingSection() {
             </div>
           </div>
 
-          {/* Block 2 - Delivery (Image Right, Text Left) */}
-          <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
-            <div className="order-1 lg:order-2 relative aspect-[4/3] overflow-hidden rounded-2xl">
+          {/* Right Column - Delivery */}
+          <div className="overflow-hidden rounded-2xl bg-secondary">
+            <div className="relative aspect-[4/3]">
               <Image
                 src="/images/delivery.jpg"
                 alt="Consegna di prodotti agricoli freschi"
                 fill
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
             </div>
-            <div className="order-2 lg:order-1 lg:pr-8">
-              <h3 className="font-serif text-2xl font-bold text-foreground md:text-3xl">
-                Consegne rapide e flessibili
-              </h3>
-              <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+            <div className="p-6 lg:p-8">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Truck className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-serif text-xl font-bold text-foreground lg:text-2xl">
+                  Consegne rapide e flessibili
+                </h3>
+              </div>
+              <p className="mt-4 leading-relaxed text-muted-foreground">
                 Organizziamo consegne rapide sul territorio e ritiri diretti in azienda. 
                 Contattaci per conoscere disponibilita, tempi e modalita: troviamo sempre 
                 la soluzione piu comoda per te.
@@ -69,16 +77,16 @@ export function PackagingSection() {
         </div>
 
         {/* CTA Buttons */}
-        <div className="mt-16 flex flex-col items-center justify-center gap-4 sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            href="tel:+393200748337"
+            href="tel:+393382726361"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <Phone className="h-4 w-4" />
             Contattaci per disponibilita
           </Link>
           <Link
-            href="https://wa.me/393200748337?text=Ciao,%20vorrei%20informazioni%20su%20packaging%20e%20consegne"
+            href="https://wa.me/393382726361?text=Ciao,%20vorrei%20informazioni%20su%20packaging%20e%20consegne"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-full border-2 border-primary bg-transparent px-8 py-4 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"

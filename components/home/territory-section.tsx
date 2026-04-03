@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 
 export function TerritorySection() {
   return (
-    <section className="bg-card py-20 lg:py-28">
+    <section className="bg-secondary py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           {/* Image */}
