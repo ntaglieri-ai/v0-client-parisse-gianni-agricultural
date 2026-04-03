@@ -1,5 +1,5 @@
 import { HeroSection } from "@/components/home/hero-section";
-import { Territory } from "@/components/home/territory";
+import { TerritorySection } from "@/components/home/territory-section";
 import { TrustSection } from "@/components/home/trust-section";
 import { ProductCategories } from "@/components/home/product-categories";
 import { HowItWorks } from "@/components/home/how-it-works";
@@ -10,7 +10,7 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <Territory />
+      <TerritorySection />
       <TrustSection />
       <ProductCategories />
       <HowItWorks />
