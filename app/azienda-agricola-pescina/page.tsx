@@ -127,13 +127,13 @@ export default function AziendaPage() {
       </section>
 
       {/* Dove Siamo */}
-      <section id="dove-siamo" className="bg-primary py-20 lg:py-28">
+      <section id="dove-siamo" className="bg-secondary py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <div className="text-center">
-            <h2 className="font-serif text-3xl font-bold text-white md:text-4xl">
+            <h2 className="font-serif text-3xl font-bold text-primary md:text-4xl">
               Dove Siamo
             </h2>
-            <p className="mt-4 text-lg text-white">
+            <p className="mt-4 text-lg text-primary">
               Vieni a trovarci in azienda
             </p>
           </div>
@@ -151,7 +151,7 @@ export default function AziendaPage() {
             />
           </div>
 
-          <p className="mt-8 text-center text-lg text-white">
+          <p className="mt-8 text-center text-lg text-primary">
             Via II Traversa delle Croci, 16 — 67057 Pescina (AQ)
           </p>
         </div>
