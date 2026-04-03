@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Menu, X, Phone, Mail, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -16,6 +16,22 @@ const navigation = [
 export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [contactMenuOpen, setContactMenuOpen] = useState(false);
+  const contactMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close contact menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        contactMenuRef.current &&
+        !contactMenuRef.current.contains(event.target as Node)
+      ) {
+        setContactMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -55,14 +71,47 @@ export function Header() {
           ))}
         </div>
 
-        {/* Desktop CTA */}
-        <div className="hidden md:block">
-          <a
-            href="tel:+393382726361"
+        {/* Desktop CTA with dropdown */}
+        <div className="relative hidden md:block" ref={contactMenuRef}>
+          <button
+            type="button"
+            onClick={() => setContactMenuOpen(!contactMenuOpen)}
             className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Chiama Ora
-          </a>
+            Contattaci
+          </button>
+
+          {/* Dropdown menu */}
+          {contactMenuOpen && (
+            <div className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-lg border border-border bg-background shadow-lg">
+              <a
+                href="tel:+393382726361"
+                className="flex items-center gap-3 px-4 py-3 text-sm text-foreground transition-colors hover:bg-muted"
+                onClick={() => setContactMenuOpen(false)}
+              >
+                <Phone className="h-4 w-4 text-primary" />
+                <span>+39 338 272 6361</span>
+              </a>
+              <a
+                href="mailto:info@parisse.it"
+                className="flex items-center gap-3 px-4 py-3 text-sm text-foreground transition-colors hover:bg-muted"
+                onClick={() => setContactMenuOpen(false)}
+              >
+                <Mail className="h-4 w-4 text-primary" />
+                <span>info@parisse.it</span>
+              </a>
+              <a
+                href="https://wa.me/393382726361"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-4 py-3 text-sm text-foreground transition-colors hover:bg-muted"
+                onClick={() => setContactMenuOpen(false)}
+              >
+                <MessageCircle className="h-4 w-4 text-primary" />
+                <span>WhatsApp</span>
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Mobile menu button */}
@@ -99,12 +148,37 @@ export function Header() {
                 {item.name}
               </Link>
             ))}
-            <div className="pt-4">
+            
+            {/* Mobile contact options */}
+            <div className="border-t border-border pt-4 mt-4 space-y-2">
+              <p className="px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Contattaci
+              </p>
               <a
                 href="tel:+393382726361"
-                className="block w-full rounded-lg bg-primary py-3 text-center text-base font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
-                Chiama Ora
+                <Phone className="h-5 w-5 text-primary" />
+                <span>+39 338 272 6361</span>
+              </a>
+              <a
+                href="mailto:info@parisse.it"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <Mail className="h-5 w-5 text-primary" />
+                <span>info@parisse.it</span>
+              </a>
+              <a
+                href="https://wa.me/393382726361"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <MessageCircle className="h-5 w-5 text-primary" />
+                <span>WhatsApp</span>
               </a>
             </div>
           </div>
