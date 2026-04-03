@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
-import { ArrowRight, Leaf, Heart, Users, Mountain } from "lucide-react";
+import { Leaf, Heart, Users, Mountain } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Azienda Agricola a Pescina (AQ) | Tradizione e Qualita del Fucino",
@@ -181,34 +180,6 @@ export default function AziendaPage() {
                 </p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20 lg:py-28">
-        <div className="mx-auto max-w-7xl px-4 text-center lg:px-8">
-          <h2 className="font-serif text-3xl font-bold text-foreground md:text-4xl">
-            <span className="text-balance">Vuoi Conoscere i Nostri Prodotti?</span>
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            Scopri la nostra selezione di ortaggi, legumi e cereali coltivati
-            nel Fucino con passione e dedizione.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              href="/prodotti-agricoli-marsica"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-8 py-4 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              Scopri i Prodotti
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-            <Link
-              href="/contatti"
-              className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-primary bg-transparent px-8 py-4 text-base font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
-            >
-              Contattaci
-            </Link>
           </div>
         </div>
       </section>
