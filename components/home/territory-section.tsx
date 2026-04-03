@@ -39,13 +39,22 @@ export function TerritorySection() {
                 La nostra azienda si trova a Pescina, nel cuore della Marsica, dove coltiviamo seguendo le tradizioni tramandate di generazione in generazione, con il rispetto per la terra che ci caratterizza da sempre.
               </p>
             </div>
-            <Link
-              href="/azienda-agricola-pescina"
-              className="mt-8 inline-flex items-center gap-2 font-medium text-primary transition-colors hover:text-primary/80"
-            >
-              Scopri la Nostra Storia
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            <div className="mt-8 flex flex-wrap items-center gap-6">
+              <Link
+                href="/azienda-agricola-pescina"
+                className="inline-flex items-center gap-2 font-medium text-primary transition-colors hover:text-primary/80"
+              >
+                Scopri l&apos;Azienda
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/azienda-agricola-pescina#dove-siamo"
+                className="inline-flex items-center gap-2 font-medium text-primary transition-colors hover:text-primary/80"
+              >
+                Dove Siamo
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>
