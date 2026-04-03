@@ -20,9 +20,9 @@ export function Footer() {
               <Image
                 src="/images/logo.png"
                 alt="Azienda Agricola Gianni Parisse"
-                width={180}
-                height={68}
-                className="h-16 w-auto brightness-0 invert"
+                width={220}
+                height={83}
+                className="h-20 w-auto brightness-0 invert"
               />
             </Link>
             <p className="mt-6 max-w-md text-sm leading-relaxed text-primary-foreground/80">

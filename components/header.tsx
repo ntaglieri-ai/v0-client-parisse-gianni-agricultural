@@ -42,9 +42,9 @@ export function Header() {
           <Image
             src="/images/logo.png"
             alt="Azienda Agricola Gianni Parisse"
-            width={160}
-            height={60}
-            className="h-12 w-auto sm:h-14"
+            width={200}
+            height={75}
+            className="h-16 w-auto sm:h-20"
             priority
           />
         </Link>
