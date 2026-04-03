@@ -1,13 +1,8 @@
+"use client";
+
 import Image from "next/image";
-import { Phone, MessageCircle } from "lucide-react";
 
 export function HeroSection() {
-  const whatsappUrl =
-    "https://wa.me/393382726361?text=" +
-    encodeURIComponent(
-      "Salve, vorrei informazioni sui vostri prodotti agricoli."
-    );
-
   return (
     <section className="relative min-h-[90vh] overflow-hidden">
       {/* Background Image */}
@@ -42,23 +37,17 @@ export function HeroSection() {
           Marsica. Qualita genuina, filiera corta, dal campo alla tua tavola.
         </p>
 
-        {/* CTAs */}
-        <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+        {/* CTA */}
+        <div className="mt-10">
           <a
-            href="tel:+393382726361"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-8 py-4 text-base font-semibold text-primary transition-all hover:bg-white/90 hover:shadow-lg"
+            href="#contattaci"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById("contattaci")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="inline-flex items-center justify-center rounded-lg border-2 border-white bg-transparent px-8 py-4 text-base font-semibold text-white transition-all duration-200 hover:border-black hover:bg-white hover:text-black active:border-black active:bg-white active:text-black"
           >
-            <Phone className="h-5 w-5" />
-            Chiama Ora
-          </a>
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-white bg-transparent px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white hover:text-primary"
-          >
-            <MessageCircle className="h-5 w-5" />
-            Scrivi su WhatsApp
+            Vedi i Prodotti Disponibili
           </a>
         </div>
       </div>
