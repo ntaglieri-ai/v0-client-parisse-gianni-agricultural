@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-export function TerritorySection() {
+export function Territory() {
   return (
     <section className="bg-secondary py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
@@ -39,7 +39,7 @@ export function TerritorySection() {
                 La nostra azienda si trova a Pescina, nel cuore della Marsica, dove coltiviamo seguendo le tradizioni tramandate di generazione in generazione, con il rispetto per la terra che ci caratterizza da sempre.
               </p>
             </div>
-            <div className="mt-8 flex flex-wrap items-center gap-6">
+            <div className="mt-8 flex flex-col items-start gap-4">
               <Link
                 href="/azienda-agricola-pescina"
                 className="inline-flex items-center gap-2 font-medium text-primary transition-colors hover:text-primary/80"
@@ -49,10 +49,9 @@ export function TerritorySection() {
               </Link>
               <Link
                 href="/azienda-agricola-pescina#dove-siamo"
-                className="inline-flex items-center gap-2 font-medium text-primary transition-colors hover:text-primary/80"
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-primary/90"
               >
                 Dove Siamo
-                <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
