@@ -57,9 +57,9 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
+        <nav className="mx-auto flex max-w-7xl items-center px-4 py-4 lg:px-8">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex shrink-0 items-center">
             <Image
               src="/images/logo.png"
               alt="Azienda Agricola Gianni Parisse"
@@ -71,7 +71,7 @@ export function Header() {
           </Link>
 
           {/* Mobile Contact Icons - Center */}
-          <div className="flex items-center gap-6 md:hidden">
+          <div className="flex flex-1 items-center justify-center gap-4 md:hidden">
             <button
               type="button"
               onClick={(e) => {
@@ -104,6 +104,9 @@ export function Header() {
               <MessageCircle className="h-5 w-5" />
             </a>
           </div>
+
+          {/* Spacer for desktop layout */}
+          <div className="hidden flex-1 md:block" />
 
           {/* Desktop Navigation */}
           <div className="hidden items-center gap-8 md:flex">
