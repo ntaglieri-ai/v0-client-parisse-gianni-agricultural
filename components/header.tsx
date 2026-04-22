@@ -11,6 +11,7 @@ const navigation = [
   { name: "Home", href: "/" },
   { name: "Azienda", href: "/azienda-agricola-pescina" },
   { name: "Prodotti", href: "/prodotti-agricoli-marsica" },
+  { name: "Store", href: "/store" },
   { name: "Contatti", href: "/contatti" },
 ];
 
@@ -18,6 +19,7 @@ const desktopNavigation = [
   { name: "Home", href: "/" },
   { name: "Azienda", href: "/azienda-agricola-pescina" },
   { name: "Prodotti", href: "/prodotti-agricoli-marsica" },
+  { name: "Store", href: "/store" },
 ];
 
 export function Header() {
