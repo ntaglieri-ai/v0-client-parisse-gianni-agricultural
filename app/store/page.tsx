@@ -12,8 +12,9 @@ const CATEGORIE = [
   { id: 'ortaggi', label: '🥦 Ortaggi' },
   { id: 'legumi', label: '🫘 Legumi' },
   { id: 'cereali', label: '🌾 Cereali' },
-  { id: 'olio', label: '🫒 Olio' },
-  { id: 'frutta', label: '🍎 Frutta' },
+  { id: 'farine', label: '🌾 Farine' },
+  { id: 'trasformati', label: '🫙 Trasformati' },
+  { id: 'pasta', label: '🍝 Pasta' },
 ]
 
 export default function StorePage() {

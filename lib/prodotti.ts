@@ -8,168 +8,68 @@ export type Step = {
 export type Prodotto = {
   id: string
   nome: string
-  cat: 'ortaggi' | 'legumi' | 'cereali' | 'olio' | 'frutta'
+  cat: 'ortaggi' | 'legumi' | 'cereali' | 'farine' | 'trasformati' | 'pasta'
   emoji: string
   bio: boolean
   bg: string
-  prezzo: string
-  unita: string
+  prezzo: string   // TODO: inserire prezzo reale
+  unita: string    // TODO: inserire unità reale (kg, 500g, ecc.)
   desc: string
-  lotto: string
-  raccolta: string
-  campo: string
-  varieta: string
-  metodo: string
-  cert: string
+  lotto: string    // TODO: inserire lotto reale
+  raccolta: string // TODO: inserire data raccolta reale
+  campo: string    // TODO: inserire campo/località reale
+  varieta: string  // TODO: inserire varietà reale
+  metodo: string   // TODO: inserire metodo coltivazione reale
+  cert: string     // TODO: inserire certificazione reale
   steps: Step[]
 }
 
 export const prodotti: Prodotto[] = [
-  {
-    id: 'P001',
-    nome: 'Patate del Fucino',
-    cat: 'ortaggi',
-    emoji: '🥔',
-    bio: true,
-    bg: '#fef9e7',
-    prezzo: '1,20',
-    unita: 'kg',
-    desc: "Patate a pasta gialla coltivate sull'altopiano del Fucino, ricche di amido e dal sapore unico.",
-    lotto: 'FUC-2025-001',
-    raccolta: '15 Mar 2025',
-    campo: 'Campo Nord – Loc. Collarmele',
-    varieta: 'Monalisa',
-    metodo: 'Agricoltura integrata',
-    cert: 'GlobalGAP',
-    steps: [
-      { icon: '🌱', label: 'Semina', data: '28 Gen 2025', done: true },
-      { icon: '🌿', label: 'Coltivazione & irrigazione', data: 'Feb – Mar 2025', done: true },
-      { icon: '🚜', label: 'Raccolta meccanizzata', data: '15 Mar 2025', done: true },
-      { icon: '🏭', label: 'Selezione e confezionamento', data: '16 Mar 2025', done: true },
-      { icon: '🛒', label: 'Distribuzione', data: '17 Mar 2025', done: true },
-    ],
-  },
-  {
-    id: 'P002',
-    nome: 'Lenticchie della Marsica',
-    cat: 'legumi',
-    emoji: '🫘',
-    bio: true,
-    bg: '#fdf2e9',
-    prezzo: '3,50',
-    unita: '500g',
-    desc: "Lenticchie piccole e profumate, coltivate nei terreni vulcanici dell'altopiano abruzzese.",
-    lotto: 'MAR-2025-002',
-    raccolta: '20 Giu 2025',
-    campo: 'Campo Sud – Loc. Trasacco',
-    varieta: 'Lenticchia nana',
-    metodo: 'Biologico certificato',
-    cert: 'ICEA Bio',
-    steps: [
-      { icon: '🌱', label: 'Semina', data: 'Apr 2025', done: true },
-      { icon: '🌿', label: 'Crescita naturale', data: 'Apr – Giu 2025', done: true },
-      { icon: '🚜', label: 'Raccolta', data: '20 Giu 2025', done: true },
-      { icon: '🏭', label: 'Pulitura e insacchettamento', data: '22 Giu 2025', done: true },
-      { icon: '🛒', label: 'Distribuzione', data: '24 Giu 2025', done: false },
-    ],
-  },
-  {
-    id: 'P003',
-    nome: 'Olio Extravergine Fucino',
-    cat: 'olio',
-    emoji: '🫒',
-    bio: false,
-    bg: '#e9f5e9',
-    prezzo: '12,00',
-    unita: '500ml',
-    desc: 'Olio EVO prodotto da olive Gentile di Chieti raccolte a mano, prima spremitura a freddo.',
-    lotto: 'OLI-2024-003',
-    raccolta: '20 Ott 2024',
-    campo: 'Uliveto Est – Loc. Avezzano',
-    varieta: 'Gentile di Chieti',
-    metodo: 'Prima spremitura a freddo',
-    cert: 'DOP in attesa',
-    steps: [
-      { icon: '🫒', label: 'Raccolta olive a mano', data: '20 Ott 2024', done: true },
-      { icon: '⚙️', label: 'Frangitura entro 24h', data: '21 Ott 2024', done: true },
-      { icon: '🏭', label: 'Spremitura a freddo', data: '21 Ott 2024', done: true },
-      { icon: '🫙', label: 'Imbottigliamento', data: '25 Ott 2024', done: true },
-      { icon: '🛒', label: 'Distribuzione', data: 'Nov 2024', done: true },
-    ],
-  },
-  {
-    id: 'P004',
-    nome: 'Farro della Marsica',
-    cat: 'cereali',
-    emoji: '🌾',
-    bio: true,
-    bg: '#fdf6e3',
-    prezzo: '2,80',
-    unita: '500g',
-    desc: 'Farro monococco antico, coltivato in altura. Ricco di proteine, fibre e minerali.',
-    lotto: 'FAR-2025-004',
-    raccolta: '10 Lug 2025',
-    campo: 'Campo Ovest – Loc. Pescina',
-    varieta: 'Farro monococco',
-    metodo: 'Biologico certificato',
-    cert: 'CCPB Bio',
-    steps: [
-      { icon: '🌱', label: 'Semina autunnale', data: 'Nov 2024', done: true },
-      { icon: '🌿', label: 'Crescita invernale', data: 'Dic 2024 – Mag 2025', done: true },
-      { icon: '🚜', label: 'Raccolta', data: '10 Lug 2025', done: true },
-      { icon: '🏭', label: 'Trebbiatura e confezionamento', data: '12 Lug 2025', done: false },
-      { icon: '🛒', label: 'Distribuzione', data: 'Ago 2025', done: false },
-    ],
-  },
-  {
-    id: 'P005',
-    nome: 'Peperoni IGP Altopiano',
-    cat: 'ortaggi',
-    emoji: '🫑',
-    bio: false,
-    bg: '#fde8e8',
-    prezzo: '2,00',
-    unita: 'kg',
-    desc: "Peperoni dolci e carnosi, tipici dell'altopiano del Fucino. Ideali per peperonata e conserve.",
-    lotto: 'PEP-2025-005',
-    raccolta: '5 Ago 2025',
-    campo: 'Campo Sud – Loc. Celano',
-    varieta: 'Corno di bue',
-    metodo: 'Agricoltura integrata',
-    cert: 'IGP Fucino',
-    steps: [
-      { icon: '🌱', label: 'Trapianto', data: 'Apr 2025', done: true },
-      { icon: '🌿', label: 'Coltivazione in pieno campo', data: 'Apr – Ago 2025', done: true },
-      { icon: '🚜', label: 'Raccolta manuale', data: '5 Ago 2025', done: false },
-      { icon: '🏭', label: 'Selezione e confezionamento', data: '6 Ago 2025', done: false },
-      { icon: '🛒', label: 'Distribuzione', data: '7 Ago 2025', done: false },
-    ],
-  },
-  {
-    id: 'P006',
-    nome: 'Mele Rosa dei Monti Sibillini',
-    cat: 'frutta',
-    emoji: '🍎',
-    bio: true,
-    bg: '#fde8f0',
-    prezzo: '1,80',
-    unita: 'kg',
-    desc: 'Mele antiche a polpa croccante e profumata. Coltivazione biologica a 900m di altitudine.',
-    lotto: 'MEL-2025-006',
-    raccolta: '15 Set 2025',
-    campo: 'Meleto Montagna – Loc. Ortucchio',
-    varieta: 'Mela Rosa',
-    metodo: 'Biologico certificato',
-    cert: 'ICEA Bio',
-    steps: [
-      { icon: '🌸', label: 'Fioritura', data: 'Apr 2025', done: true },
-      { icon: '🌿', label: 'Crescita e diradamento', data: 'Mag – Ago 2025', done: true },
-      { icon: '🍎', label: 'Raccolta manuale', data: '15 Set 2025', done: false },
-      { icon: '🏭', label: 'Calibratura e confezionamento', data: '16 Set 2025', done: false },
-      { icon: '🛒', label: 'Distribuzione', data: '17 Set 2025', done: false },
-    ],
-  },
+
+  // ── CEREALI ──
+  { id: 'C001', nome: 'Grano Tenero', cat: 'cereali', emoji: '🌾', bio: false, bg: '#fdf6e3', prezzo: '— TODO —', unita: 'kg', desc: "I cereali disegnano il paesaggio e ne scandiscono il tempo. Dalla semina alla maturazione, accompagnano le stagioni con regolarità.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Grano Tenero', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Crescita', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Lavorazione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'C002', nome: 'Grano Duro', cat: 'cereali', emoji: '🌾', bio: false, bg: '#fdf6e3', prezzo: '— TODO —', unita: 'kg', desc: "I cereali disegnano il paesaggio e ne scandiscono il tempo. Dalla semina alla maturazione, accompagnano le stagioni con regolarità.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Grano Duro', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Crescita', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Lavorazione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'C003', nome: 'Grano Solina', cat: 'cereali', emoji: '🌾', bio: false, bg: '#fdf6e3', prezzo: '— TODO —', unita: 'kg', desc: "Varietà antica tipica dell'Appennino abruzzese, coltivata in quota. Dalla semina alla maturazione, accompagna le stagioni con regolarità.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Solina', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Crescita', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Lavorazione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'C004', nome: 'Grano Senatore Cappelli', cat: 'cereali', emoji: '🌾', bio: false, bg: '#fdf6e3', prezzo: '— TODO —', unita: 'kg', desc: "Varietà storica di grano duro, ricca di proteine e dal profilo nutrizionale eccellente. Materia prima essenziale, solida, profondamente legata al territorio.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Senatore Cappelli', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Crescita', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Lavorazione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'C005', nome: 'Orzo', cat: 'cereali', emoji: '🌾', bio: false, bg: '#fdf6e3', prezzo: '— TODO —', unita: 'kg', desc: "Cereale versatile e nutriente, coltivato nei campi del Fucino. Dalla semina alla maturazione, accompagna le stagioni con regolarità.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Orzo', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Crescita', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Lavorazione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'C006', nome: 'Mais', cat: 'cereali', emoji: '🌽', bio: false, bg: '#fdf6e3', prezzo: '— TODO —', unita: 'kg', desc: "Mais coltivato nelle fertili pianure del Fucino. Materia prima essenziale, solida, profondamente legata al territorio.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Mais', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Crescita', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Lavorazione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'C007', nome: 'Farro', cat: 'cereali', emoji: '🌾', bio: false, bg: '#fdf6e3', prezzo: '— TODO —', unita: 'kg', desc: "Antico cereale ricco di proteine, fibre e minerali. Coltivato in altura, disegna il paesaggio e ne scandisce il tempo.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Farro', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Crescita', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Lavorazione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+
+  // ── LEGUMI ──
+  { id: 'L001', nome: 'Fagioli Borlotti', cat: 'legumi', emoji: '🫘', bio: false, bg: '#fdf2e9', prezzo: '— TODO —', unita: 'kg', desc: "I legumi rappresentano l'essenza di una cucina semplice e nutriente. Coltivati con attenzione e selezionati dopo la raccolta.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Borlotti', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Crescita', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'L002', nome: 'Fagioli Cannellini', cat: 'legumi', emoji: '🫘', bio: false, bg: '#fdf2e9', prezzo: '— TODO —', unita: 'kg', desc: "I legumi rappresentano l'essenza di una cucina semplice e nutriente. Conservano intatto il loro carattere, fatto di sostanza e autenticità.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Cannellini', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Crescita', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'L003', nome: 'Ceci', cat: 'legumi', emoji: '🫘', bio: false, bg: '#fdf2e9', prezzo: '— TODO —', unita: 'kg', desc: "Ceci coltivati nelle campagne della Marsica. Conservano intatto il loro carattere, fatto di sostanza e autenticità.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Ceci', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Crescita', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'L004', nome: 'Lenticchie', cat: 'legumi', emoji: '🫘', bio: false, bg: '#fdf2e9', prezzo: '— TODO —', unita: 'kg', desc: "Lenticchie della Marsica, piccole e profumate. Coltivate con attenzione e selezionate dopo la raccolta, conservano intatto il loro carattere.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Lenticchie', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Crescita', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'L005', nome: 'Piselli', cat: 'legumi', emoji: '🟢', bio: false, bg: '#fdf2e9', prezzo: '— TODO —', unita: 'kg', desc: "Piselli freschi coltivati nelle campagne di Pescina. Conservano intatto il loro carattere, fatto di sostanza e autenticità.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Piselli', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Crescita', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+
+  // ── FARINE ──
+  { id: 'F001', nome: 'Farina di Grano Tenero', cat: 'farine', emoji: '🌾', bio: false, bg: '#fef9e7', prezzo: '— TODO —', unita: 'kg', desc: "Farina derivata da cereali coltivati nei nostri campi e lavorati per mantenere equilibrio e fragranza. Filiera completamente controllata.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Grano Tenero', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌾', label: 'Raccolta cereale', data: 'TODO', done: false },{ icon: '🏭', label: 'Molitura', data: 'TODO', done: false },{ icon: '🔬', label: 'Controllo qualità', data: 'TODO', done: false },{ icon: '📦', label: 'Confezionamento', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'F002', nome: 'Farina di Grano Duro', cat: 'farine', emoji: '🌾', bio: false, bg: '#fef9e7', prezzo: '— TODO —', unita: 'kg', desc: "Farina di semola da grano duro coltivato nei campi del Fucino. Risultato di una filiera controllata, pensata per chi apprezza materie prime sincere.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Grano Duro', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌾', label: 'Raccolta cereale', data: 'TODO', done: false },{ icon: '🏭', label: 'Molitura', data: 'TODO', done: false },{ icon: '🔬', label: 'Controllo qualità', data: 'TODO', done: false },{ icon: '📦', label: 'Confezionamento', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'F003', nome: 'Farina di Ceci', cat: 'farine', emoji: '🟡', bio: false, bg: '#fef9e7', prezzo: '— TODO —', unita: 'kg', desc: "Farina di ceci ottenuta da legumi coltivati in azienda. Filiera completamente controllata, dal campo alla confezione.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Ceci', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🫘', label: 'Raccolta ceci', data: 'TODO', done: false },{ icon: '🏭', label: 'Molitura', data: 'TODO', done: false },{ icon: '🔬', label: 'Controllo qualità', data: 'TODO', done: false },{ icon: '📦', label: 'Confezionamento', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'F004', nome: 'Farina di Farro', cat: 'farine', emoji: '🌾', bio: false, bg: '#fef9e7', prezzo: '— TODO —', unita: 'kg', desc: "Farina di farro macinata da cereale antico coltivato in azienda. Equilibrio e fragranza, il risultato di una filiera controllata.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Farro', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌾', label: 'Raccolta farro', data: 'TODO', done: false },{ icon: '🏭', label: 'Molitura', data: 'TODO', done: false },{ icon: '🔬', label: 'Controllo qualità', data: 'TODO', done: false },{ icon: '📦', label: 'Confezionamento', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+
+  // ── ORTAGGI ──
+  { id: 'O001', nome: 'Patate', cat: 'ortaggi', emoji: '🥔', bio: false, bg: '#f0f4e8', prezzo: '— TODO —', unita: 'kg', desc: "Patate coltivate nelle campagne di Pescina, nel cuore della Marsica. Terra fertile e autentica dove l'agricoltura segue il ritmo naturale delle stagioni.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Coltivazione', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'O002', nome: 'Carote', cat: 'ortaggi', emoji: '🥕', bio: false, bg: '#f0f4e8', prezzo: '— TODO —', unita: 'kg', desc: "Carote coltivate nei campi del Fucino con cura quotidiana e rispetto per la terra, tra campi aperti e aria di montagna.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Coltivazione', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'O003', nome: 'Cipolle', cat: 'ortaggi', emoji: '🧅', bio: false, bg: '#f0f4e8', prezzo: '— TODO —', unita: 'kg', desc: "Cipolle coltivate nel cuore della Marsica con cura quotidiana e rispetto per la terra.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Coltivazione', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'O004', nome: 'Aglio', cat: 'ortaggi', emoji: '🧄', bio: false, bg: '#f0f4e8', prezzo: '— TODO —', unita: 'kg', desc: "Aglio coltivato nelle campagne di Pescina, nel cuore della Marsica, con rispetto per la terra e le stagioni.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Coltivazione', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'O005', nome: 'Radicchio', cat: 'ortaggi', emoji: '🥬', bio: false, bg: '#f0f4e8', prezzo: '— TODO —', unita: 'kg', desc: "Radicchio fresco coltivato nei campi aperti della Marsica, dove l'agricoltura segue ancora il ritmo naturale delle stagioni.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Coltivazione', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'O006', nome: 'Finocchi', cat: 'ortaggi', emoji: '🌿', bio: false, bg: '#f0f4e8', prezzo: '— TODO —', unita: 'kg', desc: "Finocchi coltivati con cura quotidiana nel cuore della Marsica, in una terra fertile e autentica.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Coltivazione', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'O007', nome: 'Cavoli', cat: 'ortaggi', emoji: '🥦', bio: false, bg: '#f0f4e8', prezzo: '— TODO —', unita: 'kg', desc: "Cavoli coltivati nelle campagne di Pescina, tra campi aperti e aria di montagna, con rispetto per la terra.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Semina', data: 'TODO', done: false },{ icon: '🌿', label: 'Coltivazione', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'O008', nome: 'Pomodori', cat: 'ortaggi', emoji: '🍅', bio: false, bg: '#f0f4e8', prezzo: '— TODO —', unita: 'kg', desc: "Pomodori coltivati nel cuore della Marsica. Terra fertile e autentica dove l'agricoltura segue il ritmo naturale delle stagioni.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Trapianto', data: 'TODO', done: false },{ icon: '🌿', label: 'Coltivazione', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'O009', nome: 'Zucchine', cat: 'ortaggi', emoji: '🥒', bio: false, bg: '#f0f4e8', prezzo: '— TODO —', unita: 'kg', desc: "Zucchine coltivate nelle campagne di Pescina con cura quotidiana e rispetto per la terra.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Trapianto', data: 'TODO', done: false },{ icon: '🌿', label: 'Coltivazione', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'O010', nome: 'Melanzane', cat: 'ortaggi', emoji: '🍆', bio: false, bg: '#f0f4e8', prezzo: '— TODO —', unita: 'kg', desc: "Melanzane coltivate nel cuore della Marsica, tra campi aperti e aria di montagna.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌱', label: 'Trapianto', data: 'TODO', done: false },{ icon: '🌿', label: 'Coltivazione', data: 'TODO', done: false },{ icon: '🚜', label: 'Raccolta', data: 'TODO', done: false },{ icon: '🏭', label: 'Selezione', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+
+  // ── TRASFORMATI ──
+  { id: 'T001', nome: 'Passata di Pomodoro', cat: 'trasformati', emoji: '🍅', bio: false, bg: '#fde8e8', prezzo: '— TODO —', unita: 'vasetto', desc: "Passata ottenuta da pomodori coltivati in azienda. Lavorazioni semplici che rispettano l'identità dell'origine, capaci di custodire il valore del raccolto.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🍅', label: 'Raccolta pomodori', data: 'TODO', done: false },{ icon: '🏭', label: 'Lavorazione', data: 'TODO', done: false },{ icon: '🔬', label: 'Controllo qualità', data: 'TODO', done: false },{ icon: '🫙', label: 'Invasettamento', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'T002', nome: 'Aglio Marinato', cat: 'trasformati', emoji: '🧄', bio: false, bg: '#fde8e8', prezzo: '— TODO —', unita: 'vasetto', desc: "Aglio marinato con lavorazioni semplici che rispettano l'identità dell'origine. Prodotto pensato per durare, senza artifici.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🧄', label: 'Raccolta aglio', data: 'TODO', done: false },{ icon: '🏭', label: 'Preparazione', data: 'TODO', done: false },{ icon: '🔬', label: 'Controllo qualità', data: 'TODO', done: false },{ icon: '🫙', label: 'Invasettamento', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'T003', nome: 'Aglio in Polvere', cat: 'trasformati', emoji: '🧄', bio: false, bg: '#fde8e8', prezzo: '— TODO —', unita: 'confezione', desc: "Aglio in polvere ottenuto da aglio coltivato in azienda. Capace di custodire il valore del raccolto e di raccontare la terra da cui proviene.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🧄', label: 'Raccolta aglio', data: 'TODO', done: false },{ icon: '🏭', label: 'Essiccazione', data: 'TODO', done: false },{ icon: '⚙️', label: 'Macinazione', data: 'TODO', done: false },{ icon: '📦', label: 'Confezionamento', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'T004', nome: 'Sottaceti', cat: 'trasformati', emoji: '🥒', bio: false, bg: '#fde8e8', prezzo: '— TODO —', unita: 'vasetto', desc: "Verdure sottaceto preparate con lavorazioni semplici che rispettano l'identità dell'origine, pensate per durare nel tempo.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🥦', label: 'Raccolta verdure', data: 'TODO', done: false },{ icon: '🏭', label: 'Preparazione', data: 'TODO', done: false },{ icon: '🔬', label: 'Controllo qualità', data: 'TODO', done: false },{ icon: '🫙', label: 'Invasettamento', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+  { id: 'T005', nome: "Sott'oli", cat: 'trasformati', emoji: '🫙', bio: false, bg: '#fde8e8', prezzo: '— TODO —', unita: 'vasetto', desc: "Verdure sott'olio preparate con lavorazioni semplici, senza artifici. Capaci di custodire il valore del raccolto.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'TODO-VARIETA', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🥦', label: 'Raccolta verdure', data: 'TODO', done: false },{ icon: '🏭', label: 'Preparazione', data: 'TODO', done: false },{ icon: '🔬', label: 'Controllo qualità', data: 'TODO', done: false },{ icon: '🫙', label: 'Invasettamento', data: 'TODO', done: false },{ icon: '🛒', label: 'Distribuzione', data: 'TODO', done: false }] },
+
+  // ── PASTA ──
+  { id: 'PA001', nome: 'Pasta Senatore Cappelli', cat: 'pasta', emoji: '🍝', bio: false, bg: '#fdf6e3', prezzo: '— TODO —', unita: '500g', desc: "Pasta di semola di grano duro Senatore Cappelli, varietà storica coltivata in azienda. Filiera completamente controllata dal campo alla confezione.", lotto: 'TODO-LOTTO', raccolta: 'TODO-DATA', campo: 'TODO-CAMPO', varieta: 'Senatore Cappelli', metodo: 'TODO-METODO', cert: 'TODO-CERT', steps: [{ icon: '🌾', label: 'Raccolta grano', data: 'TODO', done: false },{ icon: '🏭', label: 'Molitura semola', data: 'TODO', done: false },{ icon: '⚙️', label: 'Trafilatura', data: 'TODO', done: false },{ icon: '🌬️', label: 'Essiccazione lenta', data: 'TODO', done: false },{ icon: '📦', label: 'Confezionamento', data: 'TODO', done: false }] },
 ]
 
 export const nomeCat = (cat: string) =>
-  ({ ortaggi: 'Ortaggio', legumi: 'Legume', cereali: 'Cereale', olio: 'Olio', frutta: 'Frutta' }[cat] ?? cat)
+  ({ ortaggi: 'Ortaggio', legumi: 'Legume', cereali: 'Cereale', farine: 'Farina', trasformati: 'Trasformato', pasta: 'Pasta' }[cat] ?? cat)
