@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { X } from "lucide-react";
 
 // Product data
@@ -175,7 +174,7 @@ function nomeCat(c: string) {
 
 type Product = (typeof prodotti)[number];
 
-export default function StorePage() {
+function StoreContent() {
   const searchParams = useSearchParams();
   const [activeFilter, setActiveFilter] = useState("tutti");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -555,5 +554,22 @@ export default function StorePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function StorePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="text-center">
+            <div className="mb-4 text-4xl">🌱</div>
+            <p className="text-muted-foreground">Caricamento...</p>
+          </div>
+        </div>
+      }
+    >
+      <StoreContent />
+    </Suspense>
   );
 }
