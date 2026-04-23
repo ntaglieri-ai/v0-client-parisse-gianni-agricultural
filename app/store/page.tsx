@@ -19,11 +19,11 @@ const CATEGORIE = [
 
 const DESCRIZIONI_CATEGORIE: Record<string, string> = {
   ortaggi: "I nostri ortaggi nascono nelle campagne di Pescina, nel cuore della Marsica, una terra fertile e autentica dove l'agricoltura segue ancora il ritmo naturale delle stagioni. Qui, tra campi aperti e aria di montagna, coltiviamo patate, aglio, cipolle, zucchine e altri ortaggi con cura quotidiana e rispetto per la terra.",
-  legumi: "I legumi della nostra azienda sono il frutto di una tradizione agricola che affonda le radici nella storia della Marsica. Coltiviamo lenticchie, ceci, fagioli e cicerchie con metodi sostenibili, rispettando i tempi della natura e preservando la biodiversità del nostro territorio.",
-  cereali: "I nostri cereali crescono sui terreni fertili del Fucino, beneficiando del clima unico di questa conca montana. Coltiviamo farro, orzo, grano e altri cereali antichi con tecniche che combinano tradizione e sostenibilità.",
-  farine: "Le nostre farine nascono dalla macinazione a pietra dei migliori cereali coltivati sui nostri campi. Un processo lento e naturale che preserva tutte le proprietà nutritive del chicco, per farine genuine e dal sapore autentico.",
-  trasformati: "I nostri prodotti trasformati racchiudono i sapori autentici della Marsica. Conserve, sottoli e preparazioni artigianali realizzate con le materie prime dei nostri campi, seguendo ricette tradizionali tramandate di generazione in generazione.",
-  pasta: "La nostra pasta artigianale nasce dall'unione delle migliori farine dei nostri cereali e dell'acqua pura del Fucino. Trafilata al bronzo e essiccata lentamente, conserva tutto il sapore e la consistenza della vera pasta fatta in casa.",
+  legumi: "Piccoli custodi di proteine e tradizione. I nostri legumi raccontano la pazienza del contadino e la generosita di un suolo che non dimentica. Lenticchie, ceci, fagioli: semi antichi che tornano in tavola con tutto il loro valore.",
+  cereali: "I cereali disegnano il paesaggio e ne scandiscono il tempo. Dalla semina alla maturazione, accompagnano le stagioni con regolarita, diventando materia prima essenziale, solida, profondamente legata al territorio.",
+  farine: "Dalla macina nasce la farina, polvere bianca che custodisce l'anima del chicco. Le nostre farine conservano il profumo del grano appena raccolto, la consistenza di una lavorazione lenta, il sapore di un tempo che non ha fretta.",
+  trasformati: "Conservare e la forma piu antica di rispetto. I nostri trasformati nascono dalla volonta di prolungare la stagione, di portare in tavola d'inverno il sole dell'estate. Ogni vasetto racconta una storia di attesa e di cura.",
+  pasta: "Acqua e farina, gesto semplice e antico. La nostra pasta nasce cosi, dalla sapienza delle mani e dalla qualita dei nostri cereali. Trafilata al bronzo, essiccata con calma, pronta ad accogliere ogni condimento.",
 }
 
 export default function StorePage() {
@@ -97,26 +97,43 @@ export default function StorePage() {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '50px 30px' }}>
           {catAttiva !== 'tutti' && DESCRIZIONI_CATEGORIE[catAttiva] && (
             <div style={{
-              background: '#fff',
-              borderRadius: 12,
-              padding: '24px 28px',
-              marginBottom: 32,
-              borderLeft: '4px solid #1a3a2a',
-              boxShadow: '0 2px 12px rgba(0,0,0,.04)',
+              background: 'linear-gradient(135deg, #fff 0%, #faf8f4 100%)',
+              borderRadius: 16,
+              padding: '36px 40px',
+              marginBottom: 40,
+              borderLeft: '5px solid #c9933a',
+              boxShadow: '0 8px 32px rgba(0,0,0,.06)',
+              position: 'relative',
+              overflow: 'hidden',
             }}>
+              <div style={{
+                position: 'absolute',
+                top: -20,
+                right: -20,
+                width: 120,
+                height: 120,
+                background: 'radial-gradient(circle, rgba(201,147,58,.08) 0%, transparent 70%)',
+                borderRadius: '50%',
+              }} />
               <h2 style={{
                 fontFamily: "'Playfair Display',serif",
-                fontSize: 22,
+                fontSize: 28,
+                fontWeight: 400,
+                fontStyle: 'italic',
                 color: '#1a3a2a',
-                marginBottom: 10,
+                marginBottom: 16,
+                letterSpacing: 0.5,
               }}>
-                {CATEGORIE.find(c => c.id === catAttiva)?.label}
+                {CATEGORIE.find(c => c.id === catAttiva)?.label.replace(/^[^\s]+\s/, '')}
               </h2>
               <p style={{
-                fontSize: 14,
-                color: '#555',
-                lineHeight: 1.7,
+                fontFamily: "'Playfair Display',serif",
+                fontSize: 17,
+                fontStyle: 'italic',
+                color: '#4a4a4a',
+                lineHeight: 1.9,
                 margin: 0,
+                maxWidth: 800,
               }}>
                 {DESCRIZIONI_CATEGORIE[catAttiva]}
               </p>
