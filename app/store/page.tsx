@@ -115,17 +115,6 @@ export default function StorePage() {
                 background: 'radial-gradient(circle, rgba(201,147,58,.08) 0%, transparent 70%)',
                 borderRadius: '50%',
               }} />
-              <h2 style={{
-                fontFamily: "'Playfair Display',serif",
-                fontSize: 28,
-                fontWeight: 400,
-                fontStyle: 'italic',
-                color: '#1a3a2a',
-                marginBottom: 16,
-                letterSpacing: 0.5,
-              }}>
-                {CATEGORIE.find(c => c.id === catAttiva)?.label.replace(/^[^\s]+\s/, '')}
-              </h2>
               <p style={{
                 fontFamily: "'Playfair Display',serif",
                 fontSize: 17,
