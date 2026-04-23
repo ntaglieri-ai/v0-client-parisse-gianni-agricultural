@@ -155,8 +155,21 @@ export default function StorePage() {
                   height: 200, background: p.bg,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 72, position: 'relative',
+                  overflow: 'hidden',
                 }}>
-                  {p.emoji}
+                  {p.img ? (
+                    <img
+                      src={p.img}
+                      alt={p.nome}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                  ) : (
+                    p.emoji
+                  )}
                   <span style={{
                     position: 'absolute', top: 12, left: 12,
                     background: '#1a3a2a', color: '#fff', fontSize: 10,
