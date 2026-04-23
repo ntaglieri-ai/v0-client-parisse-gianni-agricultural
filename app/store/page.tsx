@@ -17,6 +17,15 @@ const CATEGORIE = [
   { id: 'pasta', label: '🍝 Pasta' },
 ]
 
+const DESCRIZIONI_CATEGORIE: Record<string, string> = {
+  ortaggi: "I nostri ortaggi nascono nelle campagne di Pescina, nel cuore della Marsica, una terra fertile e autentica dove l'agricoltura segue ancora il ritmo naturale delle stagioni. Qui, tra campi aperti e aria di montagna, coltiviamo patate, aglio, cipolle, zucchine e altri ortaggi con cura quotidiana e rispetto per la terra.",
+  legumi: "I legumi della nostra azienda sono il frutto di una tradizione agricola che affonda le radici nella storia della Marsica. Coltiviamo lenticchie, ceci, fagioli e cicerchie con metodi sostenibili, rispettando i tempi della natura e preservando la biodiversità del nostro territorio.",
+  cereali: "I nostri cereali crescono sui terreni fertili del Fucino, beneficiando del clima unico di questa conca montana. Coltiviamo farro, orzo, grano e altri cereali antichi con tecniche che combinano tradizione e sostenibilità.",
+  farine: "Le nostre farine nascono dalla macinazione a pietra dei migliori cereali coltivati sui nostri campi. Un processo lento e naturale che preserva tutte le proprietà nutritive del chicco, per farine genuine e dal sapore autentico.",
+  trasformati: "I nostri prodotti trasformati racchiudono i sapori autentici della Marsica. Conserve, sottoli e preparazioni artigianali realizzate con le materie prime dei nostri campi, seguendo ricette tradizionali tramandate di generazione in generazione.",
+  pasta: "La nostra pasta artigianale nasce dall'unione delle migliori farine dei nostri cereali e dell'acqua pura del Fucino. Trafilata al bronzo e essiccata lentamente, conserva tutto il sapore e la consistenza della vera pasta fatta in casa.",
+}
+
 export default function StorePage() {
   const [catAttiva, setCatAttiva] = useState('tutti')
   const [prodottoAperto, setProdottoAperto] = useState<Prodotto | null>(null)
@@ -86,6 +95,33 @@ export default function StorePage() {
         </div>
 
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '50px 30px' }}>
+          {catAttiva !== 'tutti' && DESCRIZIONI_CATEGORIE[catAttiva] && (
+            <div style={{
+              background: '#fff',
+              borderRadius: 12,
+              padding: '24px 28px',
+              marginBottom: 32,
+              borderLeft: '4px solid #1a3a2a',
+              boxShadow: '0 2px 12px rgba(0,0,0,.04)',
+            }}>
+              <h2 style={{
+                fontFamily: "'Playfair Display',serif",
+                fontSize: 22,
+                color: '#1a3a2a',
+                marginBottom: 10,
+              }}>
+                {CATEGORIE.find(c => c.id === catAttiva)?.label}
+              </h2>
+              <p style={{
+                fontSize: 14,
+                color: '#555',
+                lineHeight: 1.7,
+                margin: 0,
+              }}>
+                {DESCRIZIONI_CATEGORIE[catAttiva]}
+              </p>
+            </div>
+          )}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))',
