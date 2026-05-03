@@ -1,12 +1,19 @@
 import { neon } from '@neondatabase/serverless'
 import { NextResponse } from 'next/server'
 
-const sql = neon(process.env.DATABASE_URL!)
+function getDb() {
+  const connectionString = process.env.DATABASE_URL
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is not configured')
+  }
+  return neon(connectionString)
+}
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const sql = getDb()
   try {
     const { id } = await params
     const body = await request.json()
@@ -43,6 +50,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const sql = getDb()
   try {
     const { id } = await params
     
