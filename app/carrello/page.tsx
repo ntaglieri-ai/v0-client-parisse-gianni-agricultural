@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 export default function CarrelloPage() {
-  const { items, removeItem, updateQuantity, clearCart, totalItems } = useCart()
+  const { items, rimuovi, aggiornaQuantita, svuota, totaleArticoli } = useCart()
   const router = useRouter()
 
   if (items.length === 0) {
@@ -80,7 +80,7 @@ export default function CarrelloPage() {
           color: '#5a6b5a',
           marginBottom: 32,
         }}>
-          {totalItems} {totalItems === 1 ? 'articolo' : 'articoli'}
+          {totaleArticoli} {totaleArticoli === 1 ? 'articolo' : 'articoli'}
         </p>
 
         <div style={{
@@ -155,7 +155,7 @@ export default function CarrelloPage() {
                 gap: 12,
               }}>
                 <button
-                  onClick={() => updateQuantity(item.id, item.quantita - 1)}
+                  onClick={() => aggiornaQuantita(item.id, item.quantita - 1)}
                   style={{
                     width: 32,
                     height: 32,
@@ -180,7 +180,7 @@ export default function CarrelloPage() {
                   {item.quantita}
                 </span>
                 <button
-                  onClick={() => updateQuantity(item.id, item.quantita + 1)}
+                  onClick={() => aggiornaQuantita(item.id, item.quantita + 1)}
                   style={{
                     width: 32,
                     height: 32,
@@ -200,7 +200,7 @@ export default function CarrelloPage() {
 
               {/* Remove Button */}
               <button
-                onClick={() => removeItem(item.id)}
+                onClick={() => rimuovi(item.id)}
                 style={{
                   padding: '8px 16px',
                   background: 'transparent',
@@ -235,7 +235,7 @@ export default function CarrelloPage() {
             borderBottom: '1px solid #eee',
           }}>
             <span style={{ fontSize: 18, color: '#1a3a2a' }}>Totale articoli:</span>
-            <span style={{ fontSize: 24, fontWeight: 700, color: '#1a3a2a' }}>{totalItems}</span>
+            <span style={{ fontSize: 24, fontWeight: 700, color: '#1a3a2a' }}>{totaleArticoli}</span>
           </div>
 
           <p style={{
@@ -252,7 +252,7 @@ export default function CarrelloPage() {
             flexWrap: 'wrap',
           }}>
             <button
-              onClick={clearCart}
+              onClick={svuota}
               style={{
                 padding: '12px 24px',
                 background: 'transparent',

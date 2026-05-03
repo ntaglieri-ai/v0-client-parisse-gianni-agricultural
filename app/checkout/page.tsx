@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function CheckoutPage() {
-  const { items, totalItems, clearCart } = useCart()
+  const { items, totaleArticoli, svuota } = useCart()
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -156,7 +156,7 @@ export default function CheckoutPage() {
             quantita: item.quantita,
             cat: item.cat,
           })),
-          totale_articoli: totalItems,
+          totale_articoli: totaleArticoli,
         }),
       })
 
@@ -168,7 +168,7 @@ export default function CheckoutPage() {
 
       setOrdineId(data.ordine_id)
       setSuccess(true)
-      clearCart()
+      svuota()
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore sconosciuto')
@@ -469,7 +469,7 @@ export default function CheckoutPage() {
                 fontWeight: 700,
                 color: '#1a3a2a',
               }}>
-                {totalItems}
+                {totaleArticoli}
               </span>
             </div>
 
