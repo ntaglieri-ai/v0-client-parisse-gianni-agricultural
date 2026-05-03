@@ -26,7 +26,14 @@ type Ordine = {
   updated_at: string
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
+const fetcher = async (url: string) => {
+  const res = await fetch(url)
+  const data = await res.json()
+  if (data.error) {
+    throw new Error(data.error)
+  }
+  return Array.isArray(data) ? data : []
+}
 
 const STATI = [
   { id: 'nuovo', label: 'Nuovo', color: '#3498db' },
@@ -64,9 +71,10 @@ export default function AdminOrdiniPage() {
     }
   }
 
-  const ordiniFiltrati = ordini?.filter(o => 
+  const ordiniArray = Array.isArray(ordini) ? ordini : []
+  const ordiniFiltrati = ordiniArray.filter(o => 
     filtroStato === 'tutti' || o.stato === filtroStato
-  ) || []
+  )
 
   const getStatoInfo = (stato: string) => 
     STATI.find(s => s.id === stato) || { id: stato, label: stato, color: '#666' }
@@ -127,7 +135,7 @@ export default function AdminOrdiniPage() {
           alignItems: 'center',
         }}>
           <span style={{ fontSize: 14, opacity: 0.8 }}>
-            {ordini?.length || 0} ordini totali
+            {ordiniArray.length} ordini totali
           </span>
           <a
             href="/store"
