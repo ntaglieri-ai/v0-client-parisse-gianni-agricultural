@@ -1,12 +1,10 @@
 import { neon } from '@neondatabase/serverless'
 import { NextResponse } from 'next/server'
 
+const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_fTAO9JBPFbi3@ep-delicate-voice-a2soxn5e-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require'
+
 function getDb() {
-  const connectionString = process.env.DATABASE_URL
-  if (!connectionString) {
-    throw new Error('DATABASE_URL is not configured')
-  }
-  return neon(connectionString)
+  return neon(DATABASE_URL)
 }
 
 export async function POST(request: Request) {
