@@ -65,7 +65,7 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <nav className="mx-auto flex max-w-7xl items-center px-4 py-4 lg:px-8">
+        <nav className="mx-auto flex max-w-7xl items-center px-4 py-2 lg:px-8">
           {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center md:flex-1">
             <Image
