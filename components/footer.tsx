@@ -97,6 +97,14 @@ export function Footer() {
             &copy; {new Date().getFullYear()} Azienda Agricola Parisse Gianni.
             Tutti i diritti riservati.
           </p>
+          <div className="mt-4 text-center">
+            <Link
+              href="/admin/ordini"
+              className="text-xs text-primary-foreground/40 transition-colors hover:text-primary-foreground/60"
+            >
+              Area riservata
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
