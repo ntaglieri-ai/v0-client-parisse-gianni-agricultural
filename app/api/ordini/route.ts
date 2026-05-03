@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless'
 import { NextResponse } from 'next/server'
 
-const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_fTAO9JBPFbi3@ep-delicate-voice-a2soxn5e-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require'
+const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_fTAO9JBPFbi3@ep-delicate-voice-alsoxn5e-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require'
 
 function getDb() {
   return neon(DATABASE_URL)
