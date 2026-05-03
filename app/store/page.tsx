@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { prodotti, nomeCat, Prodotto } from '@/lib/prodotti'
 import ProdottoModal from '@/components/ProdottoModal'
+import { useCart } from '@/contexts/CartContext'
 
 const QRCode = dynamic(() => import('@/components/QRCode'), { ssr: false })
 
@@ -30,10 +32,26 @@ export default function StorePage() {
   const [catAttiva, setCatAttiva] = useState('tutti')
   const [prodottoAperto, setProdottoAperto] = useState<Prodotto | null>(null)
   const [baseUrl, setBaseUrl] = useState('')
+  const { addItem, totalItems } = useCart()
+  const [addedFeedback, setAddedFeedback] = useState<string | null>(null)
 
   useEffect(() => {
     setBaseUrl(window.location.origin)
   }, [])
+
+  const handleAddToCart = (p: Prodotto, e: React.MouseEvent) => {
+    e.stopPropagation()
+    addItem({
+      id: p.id,
+      nome: p.nome,
+      cat: p.cat,
+      emoji: p.emoji,
+      bg: p.bg,
+      img: p.img,
+    })
+    setAddedFeedback(p.id)
+    setTimeout(() => setAddedFeedback(null), 1500)
+  }
 
   const filtrati = catAttiva === 'tutti' ? prodotti : prodotti.filter(p => p.cat === catAttiva)
 
@@ -48,14 +66,40 @@ export default function StorePage() {
           padding: 'clamp(50px,8vw,80px) 40px 60px',
           textAlign: 'center', position: 'relative', overflow: 'hidden',
         }}>
+{/* Cart Button */}
+          {totalItems > 0 && (
+            <Link
+              href="/carrello"
+              style={{
+                position: 'absolute',
+                top: 20,
+                right: 20,
+                background: '#c9933a',
+                color: '#fff',
+                padding: '12px 20px',
+                borderRadius: 30,
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontWeight: 600,
+                fontSize: 14,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                zIndex: 10,
+              }}
+            >
+              <span style={{ fontSize: 18 }}>🛒</span>
+              <span>{totalItems}</span>
+            </Link>
+          )}
           <div style={{
-            display: 'inline-block', background: 'rgba(201,147,58,.25)',
-            border: '1px solid #c9933a', color: '#e8b96a',
-            fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
-            padding: '5px 16px', borderRadius: 20, marginBottom: 18,
-          }}>
-            Dal Fucino alla Tua Tavola
-          </div>
+          display: 'inline-block', background: 'rgba(201,147,58,.25)',
+          border: '1px solid #c9933a', color: '#e8b96a',
+          fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
+          padding: '5px 16px', borderRadius: 20, marginBottom: 18,
+        }}>
+          Dal Fucino alla Tua Tavola
+        </div>
           <h1 style={{
             fontFamily: "'Playfair Display',serif",
             fontSize: 'clamp(36px,5vw,60px)', color: '#fff',
@@ -219,16 +263,43 @@ export default function StorePage() {
                     <button
                       onClick={e => { e.stopPropagation(); setProdottoAperto(p) }}
                       style={{
-                        flex: 1, background: '#1a3a2a', color: '#fff', border: 'none',
+                        background: 'transparent', color: '#1a3a2a', border: '1px solid #1a3a2a',
+                        padding: '10px 14px', borderRadius: 8, fontSize: 12,
+                        fontWeight: 700, letterSpacing: .4, cursor: 'pointer',
+                        fontFamily: "'Lato',sans-serif", textAlign: 'center',
+                        transition: 'all .2s',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = '#1a3a2a'
+                        e.currentTarget.style.color = '#fff'
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.color = '#1a3a2a'
+                      }}
+                    >
+                      Dettagli
+                    </button>
+                    <button
+                      onClick={e => handleAddToCart(p, e)}
+                      style={{
+                        flex: 1, 
+                        background: addedFeedback === p.id ? '#27ae60' : '#c9933a', 
+                        color: '#fff', 
+                        border: 'none',
                         padding: '10px 14px', borderRadius: 8, fontSize: 12,
                         fontWeight: 700, letterSpacing: .4, cursor: 'pointer',
                         fontFamily: "'Lato',sans-serif", textAlign: 'center',
                         transition: 'background .2s',
                       }}
-                      onMouseEnter={e => (e.currentTarget.style.background = '#c9933a')}
-                      onMouseLeave={e => (e.currentTarget.style.background = '#1a3a2a')}
+                      onMouseEnter={e => {
+                        if (addedFeedback !== p.id) e.currentTarget.style.background = '#1a3a2a'
+                      }}
+                      onMouseLeave={e => {
+                        if (addedFeedback !== p.id) e.currentTarget.style.background = '#c9933a'
+                      }}
                     >
-                      🔍 Dettagli &amp; Filiera
+                      {addedFeedback === p.id ? 'Aggiunto!' : '+ Aggiungi'}
                     </button>
                   </div>
                 </div>
