@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react'
 import useSWR, { mutate } from 'swr'
 
+// Credenziali admin hardcoded
+const ADMIN_USERNAME = 'admin'
+const ADMIN_PASSWORD = 'admin'
+
 type CartItem = {
   id: string
   nome: string
@@ -44,9 +48,238 @@ const STATI = [
   { id: 'annullato', label: 'Annullato', color: '#e74c3c' },
 ]
 
+// Componente Login
+function LoginForm({ onLogin }: { onLogin: () => void }) {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
+
+    // Simula un piccolo delay per feedback visivo
+    setTimeout(() => {
+      if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        sessionStorage.setItem('admin_auth', 'true')
+        onLogin()
+      } else {
+        setError('Credenziali non valide')
+      }
+      setIsLoading(false)
+    }, 500)
+  }
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #1a3a2a 0%, #2d5a3d 100%)',
+      fontFamily: "'Lato', sans-serif",
+    }}>
+      <div style={{
+        background: '#fff',
+        padding: 48,
+        borderRadius: 16,
+        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+        width: '100%',
+        maxWidth: 400,
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{
+            width: 64,
+            height: 64,
+            background: '#1a3a2a',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px',
+            fontSize: 28,
+          }}>
+            🔐
+          </div>
+          <h1 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 28,
+            color: '#1a3a2a',
+            margin: 0,
+          }}>
+            Area Riservata
+          </h1>
+          <p style={{ color: '#666', marginTop: 8, fontSize: 14 }}>
+            Azienda Agricola Parisse
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{
+              display: 'block',
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#333',
+              marginBottom: 8,
+            }}>
+              Username
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Inserisci username"
+              style={{
+                width: '100%',
+                padding: '14px 16px',
+                borderRadius: 8,
+                border: '1px solid #ddd',
+                fontSize: 16,
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s',
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#1a3a2a'}
+              onBlur={(e) => e.target.style.borderColor = '#ddd'}
+            />
+          </div>
+
+          <div style={{ marginBottom: 24 }}>
+            <label style={{
+              display: 'block',
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#333',
+              marginBottom: 8,
+            }}>
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Inserisci password"
+              style={{
+                width: '100%',
+                padding: '14px 16px',
+                borderRadius: 8,
+                border: '1px solid #ddd',
+                fontSize: 16,
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s',
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#1a3a2a'}
+              onBlur={(e) => e.target.style.borderColor = '#ddd'}
+            />
+          </div>
+
+          {error && (
+            <div style={{
+              background: '#fdf2f2',
+              border: '1px solid #f5c6c6',
+              color: '#c53030',
+              padding: '12px 16px',
+              borderRadius: 8,
+              marginBottom: 20,
+              fontSize: 14,
+              textAlign: 'center',
+            }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            style={{
+              width: '100%',
+              padding: '14px 24px',
+              background: isLoading ? '#666' : '#1a3a2a',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              transition: 'background 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoading) e.currentTarget.style.background = '#c9933a'
+            }}
+            onMouseLeave={(e) => {
+              if (!isLoading) e.currentTarget.style.background = '#1a3a2a'
+            }}
+          >
+            {isLoading ? 'Accesso in corso...' : 'Accedi'}
+          </button>
+        </form>
+
+        <div style={{
+          marginTop: 24,
+          paddingTop: 24,
+          borderTop: '1px solid #eee',
+          textAlign: 'center',
+        }}>
+          <a
+            href="/"
+            style={{
+              color: '#666',
+              fontSize: 14,
+              textDecoration: 'none',
+            }}
+          >
+            Torna al sito
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminOrdiniPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    // Controlla se l'utente e gia autenticato
+    const auth = sessionStorage.getItem('admin_auth')
+    setIsAuthenticated(auth === 'true')
+  }, [])
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('admin_auth')
+    setIsAuthenticated(false)
+  }
+
+  // Loading state mentre controlliamo l'autenticazione
+  if (isAuthenticated === null) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#f5f5f5',
+      }}>
+        <div style={{ color: '#666' }}>Caricamento...</div>
+      </div>
+    )
+  }
+
+  // Se non autenticato, mostra il form di login
+  if (!isAuthenticated) {
+    return <LoginForm onLogin={() => setIsAuthenticated(true)} />
+  }
+
+  // Se autenticato, mostra la dashboard ordini
+  return <AdminDashboard onLogout={handleLogout} />
+}
+
+// Dashboard Ordini (componente separato)
+function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const { data: ordini, error, isLoading } = useSWR<Ordine[]>('/api/ordini', fetcher, {
-    refreshInterval: 30000, // Refresh every 30 seconds
+    refreshInterval: 30000,
   })
   const [filtroStato, setFiltroStato] = useState<string>('tutti')
   const [ordineAperto, setOrdineAperto] = useState<Ordine | null>(null)
@@ -97,6 +330,20 @@ export default function AdminOrdiniPage() {
         }}>
           <h2 style={{ color: '#e74c3c', marginBottom: 16 }}>Errore</h2>
           <p>Impossibile caricare gli ordini</p>
+          <button
+            onClick={onLogout}
+            style={{
+              marginTop: 20,
+              padding: '10px 20px',
+              background: '#e74c3c',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              cursor: 'pointer',
+            }}
+          >
+            Esci
+          </button>
         </div>
       </div>
     )
@@ -150,6 +397,21 @@ export default function AdminOrdiniPage() {
           >
             Vai allo Store
           </a>
+          <button
+            onClick={onLogout}
+            style={{
+              background: 'rgba(231,76,60,0.8)',
+              color: '#fff',
+              padding: '10px 20px',
+              borderRadius: 8,
+              border: 'none',
+              fontSize: 14,
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
+          >
+            Esci
+          </button>
         </div>
       </div>
 
