@@ -151,10 +151,10 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           ...formData,
           items: items.map(item => ({
-            id: item.id,
-            nome: item.nome,
+            id: item.prodotto.id,
+            nome: item.prodotto.nome,
             quantita: item.quantita,
-            cat: item.cat,
+            cat: item.prodotto.cat,
           })),
           totale_articoli: totaleArticoli,
         }),
@@ -198,7 +198,7 @@ export default function CheckoutPage() {
     display: 'block',
     marginBottom: 8,
     fontSize: 14,
-    fontWeight: 500,
+    fontWeight: 500 as const,
     color: '#1a3a2a',
   }
 
@@ -396,7 +396,7 @@ export default function CheckoutPage() {
             }}>
               {items.map((item) => (
                 <div
-                  key={item.id}
+                  key={item.prodotto.id}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -409,7 +409,7 @@ export default function CheckoutPage() {
                     width: 50,
                     height: 50,
                     borderRadius: 8,
-                    background: item.bg || '#f0f4e8',
+                    background: item.prodotto.bg || '#f0f4e8',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -417,10 +417,10 @@ export default function CheckoutPage() {
                     flexShrink: 0,
                     overflow: 'hidden',
                   }}>
-                    {item.img ? (
+                    {item.prodotto.img ? (
                       <img
-                        src={item.img}
-                        alt={item.nome}
+                        src={item.prodotto.img}
+                        alt={item.prodotto.nome}
                         style={{
                           width: '100%',
                           height: '100%',
@@ -428,7 +428,7 @@ export default function CheckoutPage() {
                         }}
                       />
                     ) : (
-                      item.emoji
+                      item.prodotto.emoji
                     )}
                   </div>
                   <div style={{ flex: 1 }}>
@@ -437,7 +437,7 @@ export default function CheckoutPage() {
                       color: '#1a3a2a',
                       fontSize: 15,
                     }}>
-                      {item.nome}
+                      {item.prodotto.nome}
                     </div>
                     <div style={{
                       fontSize: 13,

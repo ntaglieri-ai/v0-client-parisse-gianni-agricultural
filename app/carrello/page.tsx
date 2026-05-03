@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 export default function CarrelloPage() {
-  const { items, rimuovi, aggiornaQuantita, svuota, totaleArticoli } = useCart()
+  const { items, rimuovi, aggiorna, svuota, totaleArticoli } = useCart()
   const router = useRouter()
 
   if (items.length === 0) {
@@ -91,7 +91,7 @@ export default function CarrelloPage() {
         }}>
           {items.map((item) => (
             <div
-              key={item.id}
+              key={item.prodotto.id}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -107,7 +107,7 @@ export default function CarrelloPage() {
                 width: 80,
                 height: 80,
                 borderRadius: 8,
-                background: item.bg || '#f0f4e8',
+                background: item.prodotto.bg || '#f0f4e8',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -115,10 +115,10 @@ export default function CarrelloPage() {
                 flexShrink: 0,
                 overflow: 'hidden',
               }}>
-                {item.img ? (
+                {item.prodotto.img ? (
                   <img
-                    src={item.img}
-                    alt={item.nome}
+                    src={item.prodotto.img}
+                    alt={item.prodotto.nome}
                     style={{
                       width: '100%',
                       height: '100%',
@@ -126,7 +126,7 @@ export default function CarrelloPage() {
                     }}
                   />
                 ) : (
-                  item.emoji
+                  item.prodotto.emoji
                 )}
               </div>
 
@@ -138,13 +138,13 @@ export default function CarrelloPage() {
                   color: '#1a3a2a',
                   marginBottom: 4,
                 }}>
-                  {item.nome}
+                  {item.prodotto.nome}
                 </h3>
                 <p style={{
                   fontSize: 14,
                   color: '#5a6b5a',
                 }}>
-                  {item.cat}
+                  {item.prodotto.cat}
                 </p>
               </div>
 
@@ -155,7 +155,7 @@ export default function CarrelloPage() {
                 gap: 12,
               }}>
                 <button
-                  onClick={() => aggiornaQuantita(item.id, item.quantita - 1)}
+                  onClick={() => aggiorna(item.prodotto.id, item.quantita - 1)}
                   style={{
                     width: 32,
                     height: 32,
@@ -180,7 +180,7 @@ export default function CarrelloPage() {
                   {item.quantita}
                 </span>
                 <button
-                  onClick={() => aggiornaQuantita(item.id, item.quantita + 1)}
+                  onClick={() => aggiorna(item.prodotto.id, item.quantita + 1)}
                   style={{
                     width: 32,
                     height: 32,
@@ -200,7 +200,7 @@ export default function CarrelloPage() {
 
               {/* Remove Button */}
               <button
-                onClick={() => rimuovi(item.id)}
+                onClick={() => rimuovi(item.prodotto.id)}
                 style={{
                   padding: '8px 16px',
                   background: 'transparent',
