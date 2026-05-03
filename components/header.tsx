@@ -29,7 +29,7 @@ export function Header() {
   const [contactMenuOpen, setContactMenuOpen] = useState(false);
   const [mobilePopup, setMobilePopup] = useState<"phone" | "email" | null>(null);
   const contactMenuRef = useRef<HTMLDivElement>(null);
-  const { totalItems } = useCart();
+  const { totaleArticoli } = useCart();
 
   // Close contact menu when clicking outside
   useEffect(() => {
@@ -142,12 +142,12 @@ export function Header() {
               aria-label="Carrello"
             >
               <ShoppingCart className="h-6 w-6" style={{ color: '#1a3a2a' }} />
-              {totalItems > 0 && (
+              {totaleArticoli > 0 && (
                 <span
                   className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white"
                   style={{ backgroundColor: '#c9933a' }}
                 >
-                  {totalItems > 99 ? '99+' : totalItems}
+                  {totaleArticoli > 99 ? '99+' : totaleArticoli}
                 </span>
               )}
             </Link>

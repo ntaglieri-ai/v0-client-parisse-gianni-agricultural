@@ -32,7 +32,7 @@ export default function StorePage() {
   const [catAttiva, setCatAttiva] = useState('tutti')
   const [prodottoAperto, setProdottoAperto] = useState<Prodotto | null>(null)
   const [baseUrl, setBaseUrl] = useState('')
-  const { addItem, totalItems } = useCart()
+  const { aggiungi, totaleArticoli } = useCart()
   const [addedFeedback, setAddedFeedback] = useState<string | null>(null)
 
   useEffect(() => {
@@ -41,14 +41,7 @@ export default function StorePage() {
 
   const handleAddToCart = (p: Prodotto, e: React.MouseEvent) => {
     e.stopPropagation()
-    addItem({
-      id: p.id,
-      nome: p.nome,
-      cat: p.cat,
-      emoji: p.emoji,
-      bg: p.bg,
-      img: p.img,
-    })
+    aggiungi(p)
     setAddedFeedback(p.id)
     setTimeout(() => setAddedFeedback(null), 1500)
   }
@@ -67,7 +60,7 @@ export default function StorePage() {
           textAlign: 'center', position: 'relative', overflow: 'hidden',
         }}>
 {/* Cart Button */}
-          {totalItems > 0 && (
+          {totaleArticoli > 0 && (
             <Link
               href="/carrello"
               style={{
@@ -89,7 +82,7 @@ export default function StorePage() {
               }}
             >
               <span style={{ fontSize: 18 }}>🛒</span>
-              <span>{totalItems}</span>
+              <span>{totaleArticoli}</span>
             </Link>
           )}
           <div style={{
