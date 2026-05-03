@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { Menu, X, Phone, Mail, MessageCircle } from "lucide-react";
+import { Menu, X, Phone, Mail, MessageCircle, ShoppingCart } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -28,6 +29,7 @@ export function Header() {
   const [contactMenuOpen, setContactMenuOpen] = useState(false);
   const [mobilePopup, setMobilePopup] = useState<"phone" | "email" | null>(null);
   const contactMenuRef = useRef<HTMLDivElement>(null);
+  const { totalItems } = useCart();
 
   // Close contact menu when clicking outside
   useEffect(() => {
@@ -65,7 +67,7 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <nav className="mx-auto flex max-w-7xl items-center px-4 py-2 lg:px-8">
+        <nav className="mx-auto flex max-w-7xl items-center px-4 py-4 lg:px-8">
           {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center md:flex-1">
             <Image
@@ -132,7 +134,23 @@ export function Header() {
           </div>
 
           {/* Desktop CTA with dropdown */}
-          <div className="relative hidden flex-1 items-center justify-end md:flex" ref={contactMenuRef}>
+          <div className="relative hidden flex-1 items-center justify-end gap-4 md:flex" ref={contactMenuRef}>
+            {/* Cart Icon */}
+            <Link
+              href="/carrello"
+              className="relative flex items-center justify-center p-2 transition-colors hover:opacity-80"
+              aria-label="Carrello"
+            >
+              <ShoppingCart className="h-6 w-6" style={{ color: '#1a3a2a' }} />
+              {totalItems > 0 && (
+                <span
+                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white"
+                  style={{ backgroundColor: '#c9933a' }}
+                >
+                  {totalItems > 99 ? '99+' : totalItems}
+                </span>
+              )}
+            </Link>
             <button
               type="button"
               onClick={() => setContactMenuOpen(!contactMenuOpen)}
