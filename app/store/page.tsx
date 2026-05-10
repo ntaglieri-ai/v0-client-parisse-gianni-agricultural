@@ -3,20 +3,40 @@
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { prodotti, nomeCat, Prodotto } from '@/lib/prodotti'
-import ProdottoModal from '@/components/ProdottoModal'
+import useSWR from 'swr'
 import { useCart } from '@/contexts/CartContext'
 
 const QRCode = dynamic(() => import('@/components/QRCode'), { ssr: false })
 
+// Types for the new data structure
+type Lotto = {
+  id: number
+  codice_lotto: string
+  prezzo: number
+  kg_disponibili: number
+  campo: string | null
+  comune: string | null
+  data_raccolta: string | null
+}
+
+type ProdottoFromAPI = {
+  id: number
+  nome: string
+  categoria: string
+  descrizione: string | null
+  unita: string
+  immagine: string | null
+  lotti: Lotto[] | null
+}
+
 const CATEGORIE = [
   { id: 'tutti', label: 'Tutti' },
-  { id: 'ortaggi', label: '🥦 Ortaggi' },
-  { id: 'legumi', label: '🫘 Legumi' },
-  { id: 'cereali', label: '🌾 Cereali' },
-  { id: 'farine', label: '🌾 Farine' },
-  { id: 'trasformati', label: '🫙 Trasformati' },
-  { id: 'pasta', label: '🍝 Pasta' },
+  { id: 'ortaggi', label: 'Ortaggi' },
+  { id: 'legumi', label: 'Legumi' },
+  { id: 'cereali', label: 'Cereali' },
+  { id: 'farine', label: 'Farine' },
+  { id: 'trasformati', label: 'Trasformati' },
+  { id: 'pasta', label: 'Pasta' },
 ]
 
 const DESCRIZIONI_CATEGORIE: Record<string, string> = {
@@ -28,25 +48,71 @@ const DESCRIZIONI_CATEGORIE: Record<string, string> = {
   pasta: "Acqua e farina, gesto semplice e antico. La nostra pasta nasce cosi, dalla sapienza delle mani e dalla qualita dei nostri cereali. Trafilata al bronzo, essiccata con calma, pronta ad accogliere ogni condimento.",
 }
 
+const fetcher = (url: string) => fetch(url).then(res => res.json())
+
 export default function StorePage() {
   const [catAttiva, setCatAttiva] = useState('tutti')
-  const [prodottoAperto, setProdottoAperto] = useState<Prodotto | null>(null)
   const [baseUrl, setBaseUrl] = useState('')
   const { aggiungi, totaleArticoli } = useCart()
-  const [addedFeedback, setAddedFeedback] = useState<string | null>(null)
+  const [addedFeedback, setAddedFeedback] = useState<number | null>(null)
+  const [selectedLotti, setSelectedLotti] = useState<Record<number, number>>({})
+
+  const { data: prodotti, error, isLoading } = useSWR<ProdottoFromAPI[]>('/api/store/prodotti', fetcher)
 
   useEffect(() => {
     setBaseUrl(window.location.origin)
   }, [])
 
-  const handleAddToCart = (p: Prodotto, e: React.MouseEvent) => {
+  // Initialize selected lotti when products load
+  useEffect(() => {
+    if (prodotti) {
+      const initial: Record<number, number> = {}
+      prodotti.forEach(p => {
+        if (p.lotti && p.lotti.length > 0) {
+          initial[p.id] = 0 // Default to first lotto
+        }
+      })
+      setSelectedLotti(initial)
+    }
+  }, [prodotti])
+
+  const handleAddToCart = (p: ProdottoFromAPI, e: React.MouseEvent) => {
     e.stopPropagation()
-    aggiungi(p)
+    if (!p.lotti || p.lotti.length === 0) return
+    
+    const lottoIndex = selectedLotti[p.id] || 0
+    const lotto = p.lotti[lottoIndex]
+    
+    // Create cart item with lotto info
+    const cartItem = {
+      id: `${p.id}-${lotto.id}`,
+      prodotto_id: p.id,
+      lotto_id: lotto.id,
+      codice_lotto: lotto.codice_lotto,
+      nome: p.nome,
+      prezzo: lotto.prezzo,
+      unita: p.unita,
+      immagine: p.immagine,
+      categoria: p.categoria,
+    }
+    
+    aggiungi(cartItem as any)
     setAddedFeedback(p.id)
     setTimeout(() => setAddedFeedback(null), 1500)
   }
 
-  const filtrati = catAttiva === 'tutti' ? prodotti : prodotti.filter(p => p.cat === catAttiva)
+  const handleLottoChange = (prodottoId: number, lottoIndex: number) => {
+    setSelectedLotti(prev => ({ ...prev, [prodottoId]: lottoIndex }))
+  }
+
+  const filtrati = prodotti 
+    ? (catAttiva === 'tutti' ? prodotti : prodotti.filter(p => p.categoria === catAttiva))
+    : []
+
+  const getSelectedLotto = (p: ProdottoFromAPI): Lotto | null => {
+    if (!p.lotti || p.lotti.length === 0) return null
+    return p.lotti[selectedLotti[p.id] || 0]
+  }
 
   return (
     <>
@@ -59,7 +125,6 @@ export default function StorePage() {
           padding: 'clamp(50px,8vw,80px) 40px 60px',
           textAlign: 'center', position: 'relative', overflow: 'hidden',
         }}>
-{/* Cart Button */}
           {totaleArticoli > 0 && (
             <Link
               href="/carrello"
@@ -86,13 +151,13 @@ export default function StorePage() {
             </Link>
           )}
           <div style={{
-          display: 'inline-block', background: 'rgba(201,147,58,.25)',
-          border: '1px solid #c9933a', color: '#e8b96a',
-          fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
-          padding: '5px 16px', borderRadius: 20, marginBottom: 18,
-        }}>
-          Dal Fucino alla Tua Tavola
-        </div>
+            display: 'inline-block', background: 'rgba(201,147,58,.25)',
+            border: '1px solid #c9933a', color: '#e8b96a',
+            fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
+            padding: '5px 16px', borderRadius: 20, marginBottom: 18,
+          }}>
+            Dal Fucino alla Tua Tavola
+          </div>
           <h1 style={{
             fontFamily: "'Playfair Display',serif",
             fontSize: 'clamp(36px,5vw,60px)', color: '#fff',
@@ -165,152 +230,230 @@ export default function StorePage() {
               </p>
             </div>
           )}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))',
-            gap: 28,
-          }}>
-            {filtrati.map(p => (
-              <div
-                key={p.id}
-                onClick={() => setProdottoAperto(p)}
-                style={{
+
+          {/* Loading skeleton */}
+          {isLoading && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))',
+              gap: 28,
+            }}>
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} style={{
                   background: '#fff', borderRadius: 14, overflow: 'hidden',
                   boxShadow: '0 4px 20px rgba(0,0,0,.06)',
-                  cursor: 'pointer', transition: 'transform .25s, box-shadow .25s',
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-5px)'
-                  ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 12px 35px rgba(0,0,0,.12)'
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLDivElement).style.transform = ''
-                  ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 20px rgba(0,0,0,.06)'
-                }}
-              >
-                <div style={{
-                  height: 200, background: p.bg,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 72, position: 'relative',
-                  overflow: 'hidden',
                 }}>
-                  {p.img ? (
-                    <img
-                      src={p.img}
-                      alt={p.nome}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
-                    />
-                  ) : (
-                    p.emoji
-                  )}
-                  <span style={{
-                    position: 'absolute', top: 12, left: 12,
-                    background: '#1a3a2a', color: '#fff', fontSize: 10,
-                    fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase',
-                    padding: '4px 10px', borderRadius: 20,
-                  }}>{nomeCat(p.cat)}</span>
-                  {p.bio && (
-                    <span style={{
-                      position: 'absolute', top: 12, right: 12,
-                      background: '#c9933a', color: '#fff', fontSize: 10,
-                      fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase',
-                      padding: '4px 10px', borderRadius: 20,
-                    }}>🌿 Bio</span>
-                  )}
-                </div>
-
-                <div style={{ padding: '18px 20px 20px' }}>
-                  <h3 style={{
-                    fontFamily: "'Playfair Display',serif", fontSize: 19,
-                    marginBottom: 6, color: '#1a3a2a',
-                  }}>{p.nome}</h3>
-                  <p style={{ fontSize: 13, color: '#666', lineHeight: 1.5, marginBottom: 14 }}>{p.desc}</p>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
-                    <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 700, color: '#c9933a', lineHeight: 1 }}>
-                      &euro; {p.prezzo}
-                      <span style={{ fontSize: 12, color: '#666', fontFamily: "'Lato',sans-serif", fontWeight: 400, marginLeft: 4 }}>
-                        / {p.unita}
-                      </span>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: '#999' }}>Lotto</div>
-                      <div style={{ fontSize: 11, color: '#444', fontWeight: 700 }}>{p.lotto}</div>
-                    </div>
-                  </div>
-
                   <div style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    borderTop: '1px solid #ede5d5', paddingTop: 14, gap: 12,
-                  }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                      <div style={{ borderRadius: 6, border: '2px solid #ede5d5', lineHeight: 0, overflow: 'hidden' }}>
-                        {baseUrl && <QRCode value={`${baseUrl}/store/traccia/${p.id}`} size={64} />}
-                      </div>
-                      <span style={{ fontSize: 9, color: '#999', textTransform: 'uppercase', letterSpacing: 1 }}>Traccia</span>
-                    </div>
-                    <button
-                      onClick={e => { e.stopPropagation(); setProdottoAperto(p) }}
-                      style={{
-                        background: 'transparent', color: '#1a3a2a', border: '1px solid #1a3a2a',
-                        padding: '10px 14px', borderRadius: 8, fontSize: 12,
-                        fontWeight: 700, letterSpacing: .4, cursor: 'pointer',
-                        fontFamily: "'Lato',sans-serif", textAlign: 'center',
-                        transition: 'all .2s',
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.background = '#1a3a2a'
-                        e.currentTarget.style.color = '#fff'
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = '#1a3a2a'
-                      }}
-                    >
-                      Dettagli
-                    </button>
-                    <button
-                      onClick={e => handleAddToCart(p, e)}
-                      style={{
-                        flex: 1, 
-                        background: addedFeedback === p.id ? '#27ae60' : '#c9933a', 
-                        color: '#fff', 
-                        border: 'none',
-                        padding: '10px 14px', borderRadius: 8, fontSize: 12,
-                        fontWeight: 700, letterSpacing: .4, cursor: 'pointer',
-                        fontFamily: "'Lato',sans-serif", textAlign: 'center',
-                        transition: 'background .2s',
-                      }}
-                      onMouseEnter={e => {
-                        if (addedFeedback !== p.id) e.currentTarget.style.background = '#1a3a2a'
-                      }}
-                      onMouseLeave={e => {
-                        if (addedFeedback !== p.id) e.currentTarget.style.background = '#c9933a'
-                      }}
-                    >
-                      {addedFeedback === p.id ? 'Aggiunto!' : '+ Aggiungi'}
-                    </button>
+                    height: 200, background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                    backgroundSize: '200% 100%',
+                    animation: 'shimmer 1.5s infinite',
+                  }} />
+                  <div style={{ padding: '18px 20px 20px' }}>
+                    <div style={{ height: 24, background: '#f0f0f0', borderRadius: 4, marginBottom: 8, width: '60%' }} />
+                    <div style={{ height: 14, background: '#f0f0f0', borderRadius: 4, marginBottom: 4, width: '100%' }} />
+                    <div style={{ height: 14, background: '#f0f0f0', borderRadius: 4, marginBottom: 16, width: '80%' }} />
+                    <div style={{ height: 32, background: '#f0f0f0', borderRadius: 4, width: '40%' }} />
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+              <style>{`
+                @keyframes shimmer {
+                  0% { background-position: -200% 0; }
+                  100% { background-position: 200% 0; }
+                }
+              `}</style>
+            </div>
+          )}
+
+          {/* Error state */}
+          {error && (
+            <div style={{
+              textAlign: 'center',
+              padding: '60px 20px',
+              color: '#666',
+            }}>
+              <p style={{ fontSize: 18, marginBottom: 8 }}>Errore nel caricamento dei prodotti</p>
+              <p style={{ fontSize: 14 }}>Riprova piu tardi</p>
+            </div>
+          )}
+
+          {/* Products grid */}
+          {!isLoading && !error && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))',
+              gap: 28,
+            }}>
+              {filtrati.map(p => {
+                const lotti = p.lotti || []
+                const hasLotti = lotti.length > 0
+                const selectedLotto = getSelectedLotto(p)
+                
+                return (
+                  <div
+                    key={p.id}
+                    style={{
+                      background: '#fff', borderRadius: 14, overflow: 'hidden',
+                      boxShadow: '0 4px 20px rgba(0,0,0,.06)',
+                      transition: 'transform .25s, box-shadow .25s',
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-5px)'
+                      ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 12px 35px rgba(0,0,0,.12)'
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLDivElement).style.transform = ''
+                      ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 20px rgba(0,0,0,.06)'
+                    }}
+                  >
+                    <div style={{
+                      height: 200, background: '#e8e4dc',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 72, position: 'relative',
+                      overflow: 'hidden',
+                    }}>
+                      {p.immagine ? (
+                        <img
+                          src={p.immagine}
+                          alt={p.nome}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: 48, opacity: 0.5 }}>📦</span>
+                      )}
+                      <span style={{
+                        position: 'absolute', top: 12, left: 12,
+                        background: '#1a3a2a', color: '#fff', fontSize: 10,
+                        fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase',
+                        padding: '4px 10px', borderRadius: 20,
+                      }}>{p.categoria}</span>
+                    </div>
+
+                    <div style={{ padding: '18px 20px 20px' }}>
+                      <h3 style={{
+                        fontFamily: "'Playfair Display',serif", fontSize: 19,
+                        marginBottom: 6, color: '#1a3a2a',
+                      }}>{p.nome}</h3>
+                      <p style={{ fontSize: 13, color: '#666', lineHeight: 1.5, marginBottom: 14 }}>
+                        {p.descrizione || 'Prodotto fresco dalla nostra azienda agricola.'}
+                      </p>
+
+                      {/* Lotto selector for multiple lotti */}
+                      {lotti.length > 1 && (
+                        <div style={{ marginBottom: 14 }}>
+                          <label style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 6 }}>
+                            Seleziona Lotto
+                          </label>
+                          <select
+                            value={selectedLotti[p.id] || 0}
+                            onChange={(e) => handleLottoChange(p.id, parseInt(e.target.value))}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              width: '100%',
+                              padding: '10px 12px',
+                              borderRadius: 8,
+                              border: '2px solid #ede5d5',
+                              background: '#fff',
+                              fontFamily: "'Lato',sans-serif",
+                              fontSize: 13,
+                              color: '#2c2c2c',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {lotti.map((l, idx) => (
+                              <option key={l.id} value={idx}>
+                                Lotto {l.codice_lotto} — €{Number(l.prezzo).toFixed(2)}/{p.unita}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
+                        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 700, color: hasLotti ? '#c9933a' : '#999', lineHeight: 1 }}>
+                          {hasLotti ? (
+                            <>
+                              €{Number(selectedLotto?.prezzo || 0).toFixed(2)}
+                              <span style={{ fontSize: 12, color: '#666', fontFamily: "'Lato',sans-serif", fontWeight: 400, marginLeft: 4 }}>
+                                / {p.unita}
+                              </span>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: 16 }}>Non disponibile</span>
+                          )}
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: '#999' }}>Lotto</div>
+                          <div style={{ fontSize: 11, color: '#444', fontWeight: 700 }}>
+                            {hasLotti ? selectedLotto?.codice_lotto : '—'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        borderTop: '1px solid #ede5d5', paddingTop: 14, gap: 12,
+                      }}>
+                        {hasLotti && baseUrl && (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                            <div style={{ borderRadius: 6, border: '2px solid #ede5d5', lineHeight: 0, overflow: 'hidden' }}>
+                              <QRCode value={`${baseUrl}/store/traccia/${selectedLotto?.codice_lotto}`} size={64} />
+                            </div>
+                            <span style={{ fontSize: 9, color: '#999', textTransform: 'uppercase', letterSpacing: 1 }}>Traccia</span>
+                          </div>
+                        )}
+                        {!hasLotti && (
+                          <div style={{ width: 64 }} />
+                        )}
+                        <button
+                          onClick={e => handleAddToCart(p, e)}
+                          disabled={!hasLotti}
+                          style={{
+                            flex: 1, 
+                            background: !hasLotti ? '#ccc' : (addedFeedback === p.id ? '#27ae60' : '#c9933a'), 
+                            color: '#fff', 
+                            border: 'none',
+                            padding: '12px 14px', borderRadius: 8, fontSize: 13,
+                            fontWeight: 700, letterSpacing: .4, 
+                            cursor: hasLotti ? 'pointer' : 'not-allowed',
+                            fontFamily: "'Lato',sans-serif", textAlign: 'center',
+                            transition: 'background .2s',
+                            opacity: hasLotti ? 1 : 0.7,
+                          }}
+                          onMouseEnter={e => {
+                            if (hasLotti && addedFeedback !== p.id) e.currentTarget.style.background = '#1a3a2a'
+                          }}
+                          onMouseLeave={e => {
+                            if (hasLotti && addedFeedback !== p.id) e.currentTarget.style.background = '#c9933a'
+                          }}
+                        >
+                          {!hasLotti ? 'Non disponibile' : (addedFeedback === p.id ? 'Aggiunto!' : '+ Aggiungi')}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!isLoading && !error && filtrati.length === 0 && (
+            <div style={{
+              textAlign: 'center',
+              padding: '60px 20px',
+              color: '#666',
+            }}>
+              <p style={{ fontSize: 18, marginBottom: 8 }}>Nessun prodotto trovato</p>
+              <p style={{ fontSize: 14 }}>Prova a selezionare una categoria diversa</p>
+            </div>
+          )}
         </div>
-
-        
       </div>
-
-      {prodottoAperto && (
-        <ProdottoModal
-          prodotto={prodottoAperto}
-          onClose={() => setProdottoAperto(null)}
-          baseUrl={baseUrl}
-        />
-      )}
     </>
   )
 }
