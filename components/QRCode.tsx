@@ -9,15 +9,15 @@ interface QRCodeProps {
 
 export default function QRCode({ value, size = 64 }: QRCodeProps) {
   const ref = useRef<HTMLDivElement>(null)
-  const generated = useRef(false)
+  const scriptLoaded = useRef(false)
 
   useEffect(() => {
-    if (!ref.current || generated.current) return
+    if (!ref.current) return
 
     const generate = () => {
       if (!ref.current) return
+      // Clear previous QR code
       ref.current.innerHTML = ''
-      generated.current = true
       // @ts-ignore
       new window.QRCode(ref.current, {
         text: value,
@@ -32,15 +32,10 @@ export default function QRCode({ value, size = 64 }: QRCodeProps) {
     // @ts-ignore
     if (window.QRCode) {
       generate()
-    } else {
-      const existing = document.querySelector('script[data-qr]')
-      if (existing) {
-        existing.addEventListener('load', generate)
-        return
-      }
+    } else if (!scriptLoaded.current) {
+      scriptLoaded.current = true
       const script = document.createElement('script')
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'
-      script.setAttribute('data-qr', '1')
       script.onload = generate
       document.head.appendChild(script)
     }
