@@ -210,29 +210,7 @@ export default function ProdottiPage() {
         </section>
       ))}
 
-      {/* Note */}
-      <section className="bg-primary py-16">
-        <div className="mx-auto max-w-7xl px-4 text-center lg:px-8">
-          <h2 className="font-serif text-2xl font-bold text-primary-foreground md:text-3xl">
-            <span className="text-balance">Nessun Carrello, Solo Qualita</span>
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-primary-foreground/80">
-            Non siamo un e-commerce. Preferiamo il contatto diretto per
-            garantirti prodotti freschi e consigliarti al meglio. Chiamaci o
-            scrivici per conoscere cosa abbiamo disponibile e organizzare il
-            ritiro o la consegna.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <a
-              href="tel:+393382726361"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-8 py-4 text-base font-semibold text-primary transition-colors hover:bg-white/90"
-            >
-              <Phone className="h-5 w-5" />
-              +39 338 272 6361
-            </a>
-          </div>
-        </div>
-      </section>
+      
     </>
   );
 }
