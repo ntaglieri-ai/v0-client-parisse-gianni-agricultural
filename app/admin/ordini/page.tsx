@@ -1,20 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { Playfair_Display } from 'next/font/google'
 import useSWR, { mutate } from 'swr'
 
-// Credenziali admin hardcoded
-const ADMIN_USERNAME = 'admin'
-const ADMIN_PASSWORD = 'admin'
+const playfair = Playfair_Display({ subsets: ['latin'] })
 
-type CartItem = {
-  id: string
-  nome: string
-  quantita: number
-  cat: string
+const fetcher = (url: string) => fetch(url).then(res => res.json())
+
+const stati = ['tutti', 'nuovo', 'in_lavorazione', 'spedito', 'consegnato']
+const statoColors: Record<string, { bg: string; text: string }> = {
+  nuovo: { bg: '#dbeafe', text: '#1e40af' },
+  in_lavorazione: { bg: '#fef3c7', text: '#92400e' },
+  spedito: { bg: '#d1fae5', text: '#065f46' },
+  consegnato: { bg: '#e0e7ff', text: '#3730a3' },
 }
 
-type Ordine = {
+interface Ordine {
   id: number
   nome: string
   email: string
@@ -23,779 +25,173 @@ type Ordine = {
   citta: string
   cap: string
   note: string
-  items: CartItem[]
+  items: any[]
   totale_articoli: number
   stato: string
   created_at: string
-  updated_at: string
-}
-
-const fetcher = async (url: string) => {
-  const res = await fetch(url)
-  const data = await res.json()
-  if (data.error) {
-    throw new Error(data.error)
-  }
-  return Array.isArray(data) ? data : []
-}
-
-const STATI = [
-  { id: 'nuovo', label: 'Nuovo', color: '#3498db' },
-  { id: 'confermato', label: 'Confermato', color: '#27ae60' },
-  { id: 'in_preparazione', label: 'In Preparazione', color: '#f39c12' },
-  { id: 'spedito', label: 'Spedito', color: '#9b59b6' },
-  { id: 'consegnato', label: 'Consegnato', color: '#1abc9c' },
-  { id: 'annullato', label: 'Annullato', color: '#e74c3c' },
-]
-
-// Componente Login
-function LoginForm({ onLogin }: { onLogin: () => void }) {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
-
-    // Simula un piccolo delay per feedback visivo
-    setTimeout(() => {
-      if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        sessionStorage.setItem('admin_auth', 'true')
-        onLogin()
-      } else {
-        setError('Credenziali non valide')
-      }
-      setIsLoading(false)
-    }, 500)
-  }
-
-  return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #1a3a2a 0%, #2d5a3d 100%)',
-      fontFamily: "'Lato', sans-serif",
-    }}>
-      <div style={{
-        background: '#fff',
-        padding: 48,
-        borderRadius: 16,
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-        width: '100%',
-        maxWidth: 400,
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            width: 64,
-            height: 64,
-            background: '#1a3a2a',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 16px',
-            fontSize: 28,
-          }}>
-            🔐
-          </div>
-          <h1 style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: 28,
-            color: '#1a3a2a',
-            margin: 0,
-          }}>
-            Area Riservata
-          </h1>
-          <p style={{ color: '#666', marginTop: 8, fontSize: 14 }}>
-            Azienda Agricola Parisse
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 20 }}>
-            <label style={{
-              display: 'block',
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#333',
-              marginBottom: 8,
-            }}>
-              Username
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Inserisci username"
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                borderRadius: 8,
-                border: '1px solid #ddd',
-                fontSize: 16,
-                boxSizing: 'border-box',
-                transition: 'border-color 0.2s',
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#1a3a2a'}
-              onBlur={(e) => e.target.style.borderColor = '#ddd'}
-            />
-          </div>
-
-          <div style={{ marginBottom: 24 }}>
-            <label style={{
-              display: 'block',
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#333',
-              marginBottom: 8,
-            }}>
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Inserisci password"
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                borderRadius: 8,
-                border: '1px solid #ddd',
-                fontSize: 16,
-                boxSizing: 'border-box',
-                transition: 'border-color 0.2s',
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#1a3a2a'}
-              onBlur={(e) => e.target.style.borderColor = '#ddd'}
-            />
-          </div>
-
-          {error && (
-            <div style={{
-              background: '#fdf2f2',
-              border: '1px solid #f5c6c6',
-              color: '#c53030',
-              padding: '12px 16px',
-              borderRadius: 8,
-              marginBottom: 20,
-              fontSize: 14,
-              textAlign: 'center',
-            }}>
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            style={{
-              width: '100%',
-              padding: '14px 24px',
-              background: isLoading ? '#666' : '#1a3a2a',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 8,
-              fontSize: 16,
-              fontWeight: 600,
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              transition: 'background 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoading) e.currentTarget.style.background = '#c9933a'
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoading) e.currentTarget.style.background = '#1a3a2a'
-            }}
-          >
-            {isLoading ? 'Accesso in corso...' : 'Accedi'}
-          </button>
-        </form>
-
-        <div style={{
-          marginTop: 24,
-          paddingTop: 24,
-          borderTop: '1px solid #eee',
-          textAlign: 'center',
-        }}>
-          <a
-            href="/"
-            style={{
-              color: '#666',
-              fontSize: 14,
-              textDecoration: 'none',
-            }}
-          >
-            Torna al sito
-          </a>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 export default function AdminOrdiniPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const [filtroStato, setFiltroStato] = useState('tutti')
+  const [expandedOrdine, setExpandedOrdine] = useState<number | null>(null)
+  const [updating, setUpdating] = useState<number | null>(null)
+  
+  const url = filtroStato === 'tutti' ? '/api/admin/ordini' : `/api/admin/ordini?stato=${filtroStato}`
+  const { data: ordini, error } = useSWR<Ordine[]>(url, fetcher)
 
-  useEffect(() => {
-    // Controlla se l'utente e gia autenticato
-    const auth = sessionStorage.getItem('admin_auth')
-    setIsAuthenticated(auth === 'true')
-  }, [])
-
-  const handleLogout = () => {
-    sessionStorage.removeItem('admin_auth')
-    setIsAuthenticated(false)
-  }
-
-  // Loading state mentre controlliamo l'autenticazione
-  if (isAuthenticated === null) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#f5f5f5',
-      }}>
-        <div style={{ color: '#666' }}>Caricamento...</div>
-      </div>
-    )
-  }
-
-  // Se non autenticato, mostra il form di login
-  if (!isAuthenticated) {
-    return <LoginForm onLogin={() => setIsAuthenticated(true)} />
-  }
-
-  // Se autenticato, mostra la dashboard ordini
-  return <AdminDashboard onLogout={handleLogout} />
-}
-
-// Dashboard Ordini (componente separato)
-function AdminDashboard({ onLogout }: { onLogout: () => void }) {
-  const { data: ordini, error, isLoading } = useSWR<Ordine[]>('/api/ordini', fetcher, {
-    refreshInterval: 30000,
-  })
-  const [filtroStato, setFiltroStato] = useState<string>('tutti')
-  const [ordineAperto, setOrdineAperto] = useState<Ordine | null>(null)
-  const [isUpdating, setIsUpdating] = useState(false)
-
-  const updateStato = async (ordineId: number, nuovoStato: string) => {
-    setIsUpdating(true)
+  const handleChangeStato = async (ordineId: number, nuovoStato: string) => {
+    setUpdating(ordineId)
     try {
-      await fetch(`/api/ordini/${ordineId}`, {
-        method: 'PATCH',
+      await fetch(`/api/admin/ordini/${ordineId}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stato: nuovoStato }),
       })
-      mutate('/api/ordini')
-      if (ordineAperto && ordineAperto.id === ordineId) {
-        setOrdineAperto({ ...ordineAperto, stato: nuovoStato })
-      }
-    } catch (err) {
-      console.error('Error updating order:', err)
-    } finally {
-      setIsUpdating(false)
+      mutate(url)
+    } catch (error) {
+      console.error('Error updating stato:', error)
     }
+    setUpdating(null)
   }
 
-  const ordiniArray = Array.isArray(ordini) ? ordini : []
-  const ordiniFiltrati = ordiniArray.filter(o => 
-    filtroStato === 'tutti' || o.stato === filtroStato
-  )
-
-  const getStatoInfo = (stato: string) => 
-    STATI.find(s => s.id === stato) || { id: stato, label: stato, color: '#666' }
-
   if (error) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#f5f5f5',
-      }}>
-        <div style={{
-          background: '#fff',
-          padding: 40,
-          borderRadius: 12,
-          textAlign: 'center',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
-        }}>
-          <h2 style={{ color: '#e74c3c', marginBottom: 16 }}>Errore</h2>
-          <p>Impossibile caricare gli ordini</p>
-          <button
-            onClick={onLogout}
-            style={{
-              marginTop: 20,
-              padding: '10px 20px',
-              background: '#e74c3c',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 8,
-              cursor: 'pointer',
-            }}
-          >
-            Esci
-          </button>
-        </div>
-      </div>
-    )
+    return <div style={{ padding: 40, textAlign: 'center', background: '#fef2f2', borderRadius: 12 }}><p style={{ color: '#dc2626' }}>Errore nel caricamento ordini</p></div>
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f5f5f5',
-      fontFamily: "'Lato', sans-serif",
-    }}>
-      {/* Header */}
-      <div style={{
-        background: '#1a3a2a',
-        padding: '24px 40px',
-        color: '#fff',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
-        <div>
-          <h1 style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: 28,
-            margin: 0,
-          }}>
-            Gestione Ordini
-          </h1>
-          <p style={{ opacity: 0.7, margin: '8px 0 0', fontSize: 14 }}>
-            Azienda Agricola Parisse
-          </p>
-        </div>
-        <div style={{
-          display: 'flex',
-          gap: 16,
-          alignItems: 'center',
-        }}>
-          <span style={{ fontSize: 14, opacity: 0.8 }}>
-            {ordiniArray.length} ordini totali
-          </span>
-          <a
-            href="/store"
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              color: '#fff',
-              padding: '10px 20px',
-              borderRadius: 8,
-              textDecoration: 'none',
-              fontSize: 14,
-            }}
-          >
-            Vai allo Store
-          </a>
-          <button
-            onClick={onLogout}
-            style={{
-              background: 'rgba(231,76,60,0.8)',
-              color: '#fff',
-              padding: '10px 20px',
-              borderRadius: 8,
-              border: 'none',
-              fontSize: 14,
-              cursor: 'pointer',
-              fontWeight: 600,
-            }}
-          >
-            Esci
-          </button>
-        </div>
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+        <h1 className={playfair.className} style={{ color: '#1a3a2a', fontSize: 32, fontWeight: 700 }}>Ordini</h1>
+        <span style={{ color: '#666', fontSize: 14 }}>{ordini?.length || 0} ordini</span>
       </div>
 
-      {/* Filters */}
-      <div style={{
-        background: '#fff',
-        padding: '16px 40px',
-        borderBottom: '1px solid #eee',
-        display: 'flex',
-        gap: 10,
-        flexWrap: 'wrap',
-        alignItems: 'center',
-      }}>
-        <span style={{ fontSize: 13, color: '#666', marginRight: 8 }}>Filtra per stato:</span>
-        <button
-          onClick={() => setFiltroStato('tutti')}
-          style={{
-            padding: '8px 16px',
-            borderRadius: 20,
-            border: `2px solid ${filtroStato === 'tutti' ? '#1a3a2a' : '#ddd'}`,
-            background: filtroStato === 'tutti' ? '#1a3a2a' : '#fff',
-            color: filtroStato === 'tutti' ? '#fff' : '#333',
-            cursor: 'pointer',
-            fontSize: 13,
-            fontWeight: 600,
-          }}
-        >
-          Tutti
-        </button>
-        {STATI.map(s => (
+      {/* Filtri */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        {stati.map(stato => (
           <button
-            key={s.id}
-            onClick={() => setFiltroStato(s.id)}
+            key={stato}
+            onClick={() => setFiltroStato(stato)}
             style={{
               padding: '8px 16px',
-              borderRadius: 20,
-              border: `2px solid ${filtroStato === s.id ? s.color : '#ddd'}`,
-              background: filtroStato === s.id ? s.color : '#fff',
-              color: filtroStato === s.id ? '#fff' : '#333',
-              cursor: 'pointer',
+              background: filtroStato === stato ? '#1a3a2a' : '#fff',
+              color: filtroStato === stato ? '#fff' : '#666',
+              border: '1px solid #ddd',
+              borderRadius: 6,
               fontSize: 13,
-              fontWeight: 600,
+              cursor: 'pointer',
+              textTransform: 'capitalize',
             }}
           >
-            {s.label}
+            {stato.replace('_', ' ')}
           </button>
         ))}
       </div>
 
-      {/* Orders List */}
-      <div style={{ padding: '30px 40px', maxWidth: 1400, margin: '0 auto' }}>
-        {isLoading ? (
-          <div style={{ textAlign: 'center', padding: 60, color: '#666' }}>
-            Caricamento ordini...
-          </div>
-        ) : ordiniFiltrati.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: 60,
-            background: '#fff',
-            borderRadius: 12,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📦</div>
-            <h3 style={{ color: '#333', marginBottom: 8 }}>Nessun ordine trovato</h3>
-            <p style={{ color: '#666' }}>
-              {filtroStato === 'tutti' 
-                ? 'Non ci sono ancora ordini'
-                : `Non ci sono ordini con stato "${getStatoInfo(filtroStato).label}"`
-              }
-            </p>
-          </div>
+      {/* Lista Ordini */}
+      <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+        {!ordini || ordini.length === 0 ? (
+          <p style={{ padding: 40, textAlign: 'center', color: '#666' }}>Nessun ordine trovato</p>
         ) : (
-          <div style={{
-            display: 'grid',
-            gap: 16,
-          }}>
-            {ordiniFiltrati.map(ordine => {
-              const statoInfo = getStatoInfo(ordine.stato)
-              return (
-                <div
-                  key={ordine.id}
-                  style={{
-                    background: '#fff',
-                    borderRadius: 12,
-                    padding: 24,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 2fr 1fr',
-                    gap: 24,
-                    alignItems: 'start',
-                    borderLeft: `4px solid ${statoInfo.color}`,
-                  }}
-                >
-                  {/* Order Info */}
-                  <div>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
-                      marginBottom: 12,
-                    }}>
-                      <span style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontSize: 20,
-                        fontWeight: 700,
-                        color: '#1a3a2a',
-                      }}>
-                        #{ordine.id}
-                      </span>
-                      <span style={{
-                        background: statoInfo.color,
-                        color: '#fff',
-                        padding: '4px 12px',
-                        borderRadius: 20,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                      }}>
-                        {statoInfo.label}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 13, color: '#666' }}>
-                      {new Date(ordine.created_at).toLocaleDateString('it-IT', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Customer & Items */}
-                  <div>
-                    <div style={{ marginBottom: 12 }}>
-                      <strong style={{ color: '#1a3a2a' }}>{ordine.nome}</strong>
-                      <div style={{ fontSize: 13, color: '#666', marginTop: 4 }}>
-                        {ordine.email} | {ordine.telefono}
-                      </div>
-                      <div style={{ fontSize: 13, color: '#666' }}>
-                        {ordine.indirizzo}, {ordine.cap} {ordine.citta}
-                      </div>
-                    </div>
-                    <div style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: 8,
-                    }}>
-                      {ordine.items.map((item, i) => (
-                        <span
-                          key={i}
-                          style={{
-                            background: '#f0f4e8',
-                            padding: '4px 10px',
-                            borderRadius: 16,
-                            fontSize: 12,
-                            color: '#1a3a2a',
-                          }}
-                        >
-                          {item.nome} x{item.quantita}
-                        </span>
-                      ))}
-                    </div>
-                    {ordine.note && (
-                      <div style={{
-                        marginTop: 12,
-                        padding: 12,
-                        background: '#fef9e7',
-                        borderRadius: 8,
-                        fontSize: 13,
-                        color: '#666',
-                        fontStyle: 'italic',
-                      }}>
-                        Note: {ordine.note}
-                      </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f8f8f8' }}>
+                <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#666' }}>ID</th>
+                <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#666' }}>Data</th>
+                <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#666' }}>Cliente</th>
+                <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#666' }}>Articoli</th>
+                <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#666' }}>Stato</th>
+                <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#666' }}>Dettagli</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ordini.map(ordine => {
+                const statoStyle = statoColors[ordine.stato] || statoColors.nuovo
+                const isExpanded = expandedOrdine === ordine.id
+                
+                return (
+                  <>
+                    <tr key={ordine.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                      <td style={{ padding: '14px 16px', fontSize: 14, color: '#1a3a2a', fontWeight: 600 }}>#{ordine.id}</td>
+                      <td style={{ padding: '14px 16px', fontSize: 14, color: '#666' }}>{new Date(ordine.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                      <td style={{ padding: '14px 16px', fontSize: 14, color: '#333' }}>{ordine.nome}</td>
+                      <td style={{ padding: '14px 16px', fontSize: 14, color: '#666' }}>{ordine.totale_articoli} articoli</td>
+                      <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                        <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: statoStyle.bg, color: statoStyle.text, textTransform: 'capitalize' }}>{ordine.stato?.replace('_', ' ')}</span>
+                      </td>
+                      <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                        <button onClick={() => setExpandedOrdine(isExpanded ? null : ordine.id)} style={{ background: '#f0f0f0', border: 'none', padding: '6px 12px', borderRadius: 4, fontSize: 13, cursor: 'pointer', color: '#1a3a2a' }}>{isExpanded ? 'Chiudi' : 'Vedi'}</button>
+                      </td>
+                    </tr>
+                    
+                    {isExpanded && (
+                      <tr key={`${ordine.id}-details`}>
+                        <td colSpan={6} style={{ padding: 0, background: '#f9f9f9' }}>
+                          <div style={{ padding: 24 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 24, marginBottom: 24 }}>
+                              {/* Dati Cliente */}
+                              <div style={{ background: '#fff', padding: 16, borderRadius: 8 }}>
+                                <h4 style={{ color: '#1a3a2a', fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Dati Cliente</h4>
+                                <p style={{ fontSize: 13, color: '#333', marginBottom: 4 }}><strong>Nome:</strong> {ordine.nome}</p>
+                                <p style={{ fontSize: 13, color: '#333', marginBottom: 4 }}><strong>Email:</strong> {ordine.email}</p>
+                                <p style={{ fontSize: 13, color: '#333', marginBottom: 4 }}><strong>Telefono:</strong> {ordine.telefono}</p>
+                              </div>
+                              
+                              {/* Indirizzo */}
+                              <div style={{ background: '#fff', padding: 16, borderRadius: 8 }}>
+                                <h4 style={{ color: '#1a3a2a', fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Indirizzo Consegna</h4>
+                                <p style={{ fontSize: 13, color: '#333', marginBottom: 4 }}>{ordine.indirizzo}</p>
+                                <p style={{ fontSize: 13, color: '#333' }}>{ordine.cap} {ordine.citta}</p>
+                                {ordine.note && <p style={{ fontSize: 13, color: '#666', marginTop: 8 }}><strong>Note:</strong> {ordine.note}</p>}
+                              </div>
+                              
+                              {/* Cambia Stato */}
+                              <div style={{ background: '#fff', padding: 16, borderRadius: 8 }}>
+                                <h4 style={{ color: '#1a3a2a', fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Cambia Stato</h4>
+                                <select
+                                  value={ordine.stato}
+                                  onChange={(e) => handleChangeStato(ordine.id, e.target.value)}
+                                  disabled={updating === ordine.id}
+                                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14 }}
+                                >
+                                  <option value="nuovo">Nuovo</option>
+                                  <option value="in_lavorazione">In Lavorazione</option>
+                                  <option value="spedito">Spedito</option>
+                                  <option value="consegnato">Consegnato</option>
+                                </select>
+                              </div>
+                            </div>
+                            
+                            {/* Prodotti */}
+                            <div style={{ background: '#fff', padding: 16, borderRadius: 8 }}>
+                              <h4 style={{ color: '#1a3a2a', fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Prodotti Ordinati</h4>
+                              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                  <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                    <th style={{ textAlign: 'left', padding: '8px 0', fontSize: 12, fontWeight: 600, color: '#666' }}>Prodotto</th>
+                                    <th style={{ textAlign: 'center', padding: '8px 0', fontSize: 12, fontWeight: 600, color: '#666' }}>Quantita</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {(ordine.items || []).map((item: any, idx: number) => (
+                                    <tr key={idx} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                      <td style={{ padding: '10px 0', fontSize: 13, color: '#333' }}>{item.prodotto?.nome || item.nome || 'Prodotto'}</td>
+                                      <td style={{ padding: '10px 0', fontSize: 13, color: '#666', textAlign: 'center' }}>{item.quantita || 1}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
                     )}
-                  </div>
-
-                  {/* Actions */}
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 8,
-                    alignItems: 'flex-end',
-                  }}>
-                    <div style={{
-                      fontSize: 24,
-                      fontWeight: 700,
-                      color: '#c9933a',
-                      marginBottom: 8,
-                    }}>
-                      {ordine.totale_articoli} articoli
-                    </div>
-                    <select
-                      value={ordine.stato}
-                      onChange={(e) => updateStato(ordine.id, e.target.value)}
-                      disabled={isUpdating}
-                      style={{
-                        padding: '10px 16px',
-                        borderRadius: 8,
-                        border: '1px solid #ddd',
-                        fontSize: 14,
-                        cursor: 'pointer',
-                        minWidth: 160,
-                      }}
-                    >
-                      {STATI.map(s => (
-                        <option key={s.id} value={s.id}>{s.label}</option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={() => setOrdineAperto(ordine)}
-                      style={{
-                        padding: '10px 20px',
-                        background: '#1a3a2a',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: 8,
-                        cursor: 'pointer',
-                        fontSize: 13,
-                        fontWeight: 600,
-                        minWidth: 160,
-                      }}
-                    >
-                      Dettagli
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                  </>
+                )
+              })}
+            </tbody>
+          </table>
         )}
       </div>
-
-      {/* Order Detail Modal */}
-      {ordineAperto && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: 20,
-          }}
-          onClick={() => setOrdineAperto(null)}
-        >
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: 16,
-              maxWidth: 600,
-              width: '100%',
-              maxHeight: '90vh',
-              overflow: 'auto',
-              padding: 32,
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: 24,
-            }}>
-              <h2 style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: 24,
-                color: '#1a3a2a',
-                margin: 0,
-              }}>
-                Ordine #{ordineAperto.id}
-              </h2>
-              <button
-                onClick={() => setOrdineAperto(null)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: 24,
-                  cursor: 'pointer',
-                  color: '#666',
-                }}
-              >
-                x
-              </button>
-            </div>
-
-            <div style={{ marginBottom: 24 }}>
-              <h4 style={{ color: '#1a3a2a', marginBottom: 8 }}>Cliente</h4>
-              <p style={{ margin: 0, color: '#333' }}><strong>{ordineAperto.nome}</strong></p>
-              <p style={{ margin: '4px 0', color: '#666', fontSize: 14 }}>{ordineAperto.email}</p>
-              <p style={{ margin: '4px 0', color: '#666', fontSize: 14 }}>{ordineAperto.telefono}</p>
-            </div>
-
-            <div style={{ marginBottom: 24 }}>
-              <h4 style={{ color: '#1a3a2a', marginBottom: 8 }}>Indirizzo</h4>
-              <p style={{ margin: 0, color: '#666', fontSize: 14 }}>
-                {ordineAperto.indirizzo}<br />
-                {ordineAperto.cap} {ordineAperto.citta}
-              </p>
-            </div>
-
-            <div style={{ marginBottom: 24 }}>
-              <h4 style={{ color: '#1a3a2a', marginBottom: 12 }}>Prodotti</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {ordineAperto.items.map((item, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      padding: '12px 16px',
-                      background: '#f5f5f5',
-                      borderRadius: 8,
-                    }}
-                  >
-                    <span style={{ fontWeight: 500 }}>{item.nome}</span>
-                    <span style={{ color: '#666' }}>x {item.quantita}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {ordineAperto.note && (
-              <div style={{ marginBottom: 24 }}>
-                <h4 style={{ color: '#1a3a2a', marginBottom: 8 }}>Note</h4>
-                <p style={{
-                  margin: 0,
-                  padding: 12,
-                  background: '#fef9e7',
-                  borderRadius: 8,
-                  color: '#666',
-                  fontStyle: 'italic',
-                }}>
-                  {ordineAperto.note}
-                </p>
-              </div>
-            )}
-
-            <div style={{ marginBottom: 24 }}>
-              <h4 style={{ color: '#1a3a2a', marginBottom: 8 }}>Stato Ordine</h4>
-              <select
-                value={ordineAperto.stato}
-                onChange={(e) => updateStato(ordineAperto.id, e.target.value)}
-                disabled={isUpdating}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: 8,
-                  border: '1px solid #ddd',
-                  fontSize: 16,
-                  cursor: 'pointer',
-                }}
-              >
-                {STATI.map(s => (
-                  <option key={s.id} value={s.id}>{s.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingTop: 16,
-              borderTop: '1px solid #eee',
-            }}>
-              <div style={{ fontSize: 13, color: '#666' }}>
-                Creato: {new Date(ordineAperto.created_at).toLocaleString('it-IT')}
-              </div>
-              <div style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: '#c9933a',
-              }}>
-                {ordineAperto.totale_articoli} articoli
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
