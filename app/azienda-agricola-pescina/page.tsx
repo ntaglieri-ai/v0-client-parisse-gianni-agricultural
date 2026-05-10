@@ -98,7 +98,7 @@ export default function AziendaPage() {
               </span>
               <h2 className="mt-4 font-serif text-3xl font-bold text-foreground md:text-4xl">
                 <span className="text-balance">
-                  La Marsica e il Fucino: Un Terroir Unico
+                  La Marsica e il Fucino: Un Territorio Unico
                 </span>
               </h2>
               <div className="mt-6 space-y-4 text-muted-foreground">
