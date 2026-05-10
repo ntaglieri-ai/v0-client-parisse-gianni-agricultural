@@ -1,18 +1,26 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import type { Prodotto } from '@/lib/prodotti'
 
+// New cart item structure that supports lotto info
 export type CartItem = {
-  prodotto: Prodotto
+  id: string // unique identifier: prodotto_id-lotto_id
+  prodotto_id: number
+  lotto_id: number
+  codice_lotto: string
+  nome: string
+  prezzo: number
+  unita: string
+  immagine: string | null
+  categoria: string
   quantita: number
 }
 
 type CartContextType = {
   items: CartItem[]
-  aggiungi: (prodotto: Prodotto, quantita?: number) => void
-  rimuovi: (prodottoId: string) => void
-  aggiorna: (prodottoId: string, quantita: number) => void
+  aggiungi: (item: Omit<CartItem, 'quantita'>, quantita?: number) => void
+  rimuovi: (itemId: string) => void
+  aggiorna: (itemId: string, quantita: number) => void
   svuota: () => void
   totaleArticoli: number
   isOpen: boolean
@@ -46,32 +54,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items, isHydrated])
 
-  const aggiungi = (prodotto: Prodotto, quantita = 1) => {
+  const aggiungi = (item: Omit<CartItem, 'quantita'>, quantita = 1) => {
     setItems(prev => {
-      const existing = prev.find(i => i.prodotto.id === prodotto.id)
+      const existing = prev.find(i => i.id === item.id)
       if (existing) {
         return prev.map(i =>
-          i.prodotto.id === prodotto.id
+          i.id === item.id
             ? { ...i, quantita: i.quantita + quantita }
             : i
         )
       }
-      return [...prev, { prodotto, quantita }]
+      return [...prev, { ...item, quantita }]
     })
   }
 
-  const rimuovi = (prodottoId: string) => {
-    setItems(prev => prev.filter(i => i.prodotto.id !== prodottoId))
+  const rimuovi = (itemId: string) => {
+    setItems(prev => prev.filter(i => i.id !== itemId))
   }
 
-  const aggiorna = (prodottoId: string, quantita: number) => {
+  const aggiorna = (itemId: string, quantita: number) => {
     if (quantita <= 0) {
-      rimuovi(prodottoId)
+      rimuovi(itemId)
       return
     }
     setItems(prev =>
       prev.map(i =>
-        i.prodotto.id === prodottoId ? { ...i, quantita } : i
+        i.id === itemId ? { ...i, quantita } : i
       )
     )
   }
