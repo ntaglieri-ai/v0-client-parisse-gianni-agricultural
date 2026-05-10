@@ -32,6 +32,13 @@ export function TraceabilitySection() {
               Ogni Prodotto Ha una Storia. Noi Te la Raccontiamo.
             </span>
           </h2>
+          <p className="mx-auto mt-6 max-w-3xl text-lg text-primary-foreground/80">
+            Crediamo che la fiducia nasca dalla trasparenza. Per questo ogni nostro prodotto 
+            e dotato di un sistema di tracciabilita completo: dal seme alla confezione, 
+            puoi seguire ogni passaggio della filiera. Basta scansionare il QR code presente 
+            sulla confezione per accedere a tutte le informazioni: il campo di coltivazione, 
+            le tecniche agronomiche utilizzate, la data di raccolta e ogni fase della lavorazione.
+          </p>
         </div>
 
         <div className="mt-16 grid gap-8 md:grid-cols-3">
