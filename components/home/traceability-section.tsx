@@ -21,7 +21,7 @@ const features = [
 
 export function TraceabilitySection() {
   return (
-    <section className="bg-primary py-20 lg:py-28">
+    <section id="tracciabilita" className="bg-primary py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
         <div className="text-center">
           <span className="text-sm font-medium uppercase tracking-wider text-accent">

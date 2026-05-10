@@ -13,6 +13,7 @@ const navigation = [
   { name: "Azienda", href: "/azienda-agricola-pescina" },
   { name: "Prodotti", href: "/prodotti-agricoli-marsica" },
   { name: "Store", href: "/store" },
+  { name: "Tracciabilita", href: "/#tracciabilita" },
   { name: "Contatti", href: "/contatti" },
 ];
 
@@ -21,6 +22,7 @@ const desktopNavigation = [
   { name: "Azienda", href: "/azienda-agricola-pescina" },
   { name: "Prodotti", href: "/prodotti-agricoli-marsica" },
   { name: "Store", href: "/store" },
+  { name: "Tracciabilita", href: "/#tracciabilita" },
 ];
 
 export function Header() {
