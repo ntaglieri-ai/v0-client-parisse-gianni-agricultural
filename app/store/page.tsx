@@ -63,16 +63,18 @@ export default function StorePage() {
     setBaseUrl(window.location.origin)
   }, [])
 
-  // Initialize selected lotti when products load
+  // Initialize selected lotti when products load - only set defaults for products not already selected
   useEffect(() => {
     if (prodotti) {
-      const initial: Record<number, number> = {}
-      prodotti.forEach(p => {
-        if (p.lotti && p.lotti.length > 0) {
-          initial[p.id] = 0 // Default to first lotto
-        }
+      setSelectedLotti(prev => {
+        const updated = { ...prev }
+        prodotti.forEach(p => {
+          if (p.lotti && p.lotti.length > 0 && updated[p.id] === undefined) {
+            updated[p.id] = 0 // Default to first lotto only if not already set
+          }
+        })
+        return updated
       })
-      setSelectedLotti(initial)
     }
   }, [prodotti])
 
@@ -288,8 +290,7 @@ export default function StorePage() {
                 const lotti = p.lotti || []
                 const hasLotti = lotti.length > 0
                 const lottoIndex = selectedLotti[p.id] ?? 0
-                const selectedLotto = hasLotti ? lotti[lottoIndex] : null
-                console.log('[v0] Product:', p.nome, 'LottoIndex:', lottoIndex, 'SelectedLotto:', selectedLotto?.codice_lotto)
+                const selectedLotto = hasLotti ? lotti[lottoIndex] || lotti[0] : null
                 
                 return (
                   <div
