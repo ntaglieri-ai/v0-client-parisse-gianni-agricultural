@@ -404,7 +404,7 @@ export default function StorePage() {
                         {hasLotti && baseUrl && (
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                             <div style={{ borderRadius: 6, border: '2px solid #ede5d5', lineHeight: 0, overflow: 'hidden' }}>
-                              <QRCode value={`${baseUrl}/store/traccia/${selectedLotto?.codice_lotto}`} size={64} />
+                              <QRCode key={`qr-${p.id}-${selectedLotto?.codice_lotto}`} value={`${baseUrl}/store/traccia/${selectedLotto?.codice_lotto}`} size={64} />
                             </div>
                             <span style={{ fontSize: 9, color: '#999', textTransform: 'uppercase', letterSpacing: 1 }}>Traccia</span>
                           </div>
