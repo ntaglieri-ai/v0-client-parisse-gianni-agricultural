@@ -345,7 +345,7 @@ export default function StorePage() {
                         {p.descrizione || 'Prodotto fresco dalla nostra azienda agricola.'}
                       </p>
 
-                      {/* Lotto selector for multiple lotti */}
+                      {/* TODO: ripristinare quando i lotti sono inseriti
                       {lotti.length > 1 && (
                         <div style={{ marginBottom: 14 }}>
                           <label style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 6 }}>
@@ -437,6 +437,34 @@ export default function StorePage() {
                           {!hasLotti ? 'Non disponibile' : (addedFeedback === p.id ? 'Aggiunto!' : '+ Aggiungi')}
                         </button>
                       </div>
+                      */}
+
+                      <Link
+                        href={`/store/prodotto/${p.id}`}
+                        style={{
+                          display: 'block',
+                          background: '#1a3a2a',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '12px 14px',
+                          borderRadius: 8,
+                          fontSize: 13,
+                          fontWeight: 700,
+                          letterSpacing: .4,
+                          fontFamily: "'Lato',sans-serif",
+                          textAlign: 'center',
+                          textDecoration: 'none',
+                          transition: 'background .2s',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = '#c9933a'
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = '#1a3a2a'
+                        }}
+                      >
+                        Dettagli
+                      </Link>
                     </div>
                   </div>
                 )
