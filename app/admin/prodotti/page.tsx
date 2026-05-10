@@ -186,6 +186,26 @@ export default function AdminProdottiPage() {
     }
   }
 
+  const handleDeleteLotto = async (lotto: Lotto) => {
+    if (!confirm(`Sei sicuro di voler eliminare il lotto "${lotto.codice_lotto}"? Questa azione non puo essere annullata.`)) {
+      return
+    }
+    try {
+      await fetch(`/api/admin/lotti/${lotto.id}`, {
+        method: 'DELETE',
+      })
+      mutate('/api/admin/lotti')
+    } catch (error) {
+      console.error('Error deleting lotto:', error)
+    }
+  }
+
+  const openNewLottoForm = (prodottoId: number) => {
+    setLottoFormData({ ...lottoFormData, prodotto_id: prodottoId })
+    setShowLottoForm(prodottoId)
+    setExpandedProdotto(prodottoId)
+  }
+
   const getLottiForProdotto = (prodottoId: number) => lotti?.filter(l => l.prodotto_id === prodottoId) || []
 
   if (prodottiError) {
@@ -290,10 +310,11 @@ export default function AdminProdottiPage() {
                           <td style={{ padding: '14px 16px', textAlign: 'center' }}>
                             <button onClick={() => setExpandedProdotto(isExpanded ? null : prodotto.id)} style={{ background: '#f0f0f0', border: 'none', padding: '4px 12px', borderRadius: 4, fontSize: 13, cursor: 'pointer', color: '#1a3a2a' }}>{lottiProdotto.length} lotti {isExpanded ? '▲' : '▼'}</button>
                           </td>
-                          <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                            <button onClick={() => handleEdit(prodotto)} style={{ background: 'transparent', border: '1px solid #c9933a', color: '#c9933a', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', marginRight: 8 }}>Modifica</button>
-                            <button onClick={() => handleToggleAttivo(prodotto)} style={{ background: 'transparent', border: '1px solid #999', color: '#666', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>{prodotto.attivo ? 'Disattiva' : 'Attiva'}</button>
-                          </td>
+<td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                                            <button onClick={() => openNewLottoForm(prodotto.id)} style={{ background: '#c9933a', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', marginRight: 8 }}>+ Lotto</button>
+                                            <button onClick={() => handleEdit(prodotto)} style={{ background: 'transparent', border: '1px solid #c9933a', color: '#c9933a', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', marginRight: 8 }}>Modifica</button>
+                                            <button onClick={() => handleToggleAttivo(prodotto)} style={{ background: 'transparent', border: '1px solid #999', color: '#666', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>{prodotto.attivo ? 'Disattiva' : 'Attiva'}</button>
+                                          </td>
                         </tr>
                         {isExpanded && (
                           <tr key={`${prodotto.id}-lotti`}>
@@ -347,7 +368,8 @@ export default function AdminProdottiPage() {
                                           <td style={{ padding: '10px 12px', textAlign: 'center' }}><span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, background: lotto.attivo ? '#d1fae5' : '#fee2e2', color: lotto.attivo ? '#065f46' : '#dc2626' }}>{lotto.attivo ? 'Attivo' : 'Disattivo'}</span></td>
                                           <td style={{ padding: '10px 12px', textAlign: 'right' }}>
                                             <button onClick={() => handleEditLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#c9933a', fontSize: 12, cursor: 'pointer', marginRight: 8 }}>Modifica</button>
-                                            <button onClick={() => handleToggleLottoAttivo(lotto)} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 12, cursor: 'pointer' }}>{lotto.attivo ? 'Disattiva' : 'Attiva'}</button>
+                                            <button onClick={() => handleToggleLottoAttivo(lotto)} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 12, cursor: 'pointer', marginRight: 8 }}>{lotto.attivo ? 'Disattiva' : 'Attiva'}</button>
+                                            <button onClick={() => handleDeleteLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>Elimina</button>
                                           </td>
                                         </tr>
                                       ))}
