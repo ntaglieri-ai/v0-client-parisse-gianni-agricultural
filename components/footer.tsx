@@ -99,7 +99,7 @@ export function Footer() {
           </p>
           <div className="mt-4 text-center">
             <Link
-              href="/admin/ordini"
+              href="/admin"
               className="text-xs text-primary-foreground/40 transition-colors hover:text-primary-foreground/60"
             >
               Area riservata

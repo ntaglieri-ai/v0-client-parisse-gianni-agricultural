@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 // Credenziali admin hardcoded
 const ADMIN_USERNAME = 'admin'
@@ -297,7 +298,7 @@ function ProdottiDashboard({ onLogout }: { onLogout: () => void }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <Link
-            href="/admin/ordini"
+            href="/admin"
             style={{
               color: '#fff',
               textDecoration: 'none',
@@ -306,7 +307,7 @@ function ProdottiDashboard({ onLogout }: { onLogout: () => void }) {
               transition: 'opacity 0.2s',
             }}
           >
-            Ordini
+            Area Riservata
           </Link>
           <button
             onClick={onLogout}
@@ -321,7 +322,7 @@ function ProdottiDashboard({ onLogout }: { onLogout: () => void }) {
               transition: 'background 0.2s',
             }}
           >
-            Esci
+            Torna alla Home
           </button>
         </div>
       </header>
@@ -843,6 +844,7 @@ function ModificaProdottoModal({
 export default function AdminProdottiPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     const authStatus = sessionStorage.getItem('admin_auth')
@@ -856,7 +858,7 @@ export default function AdminProdottiPage() {
 
   const handleLogout = () => {
     sessionStorage.removeItem('admin_auth')
-    setIsAuthenticated(false)
+    router.push('/')
   }
 
   if (isLoading) {

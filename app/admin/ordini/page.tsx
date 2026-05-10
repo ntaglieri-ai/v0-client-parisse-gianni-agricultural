@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import useSWR, { mutate } from 'swr'
 
 // Credenziali admin hardcoded
@@ -240,6 +241,7 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
 
 export default function AdminOrdiniPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     // Controlla se l'utente e gia autenticato
@@ -249,7 +251,7 @@ export default function AdminOrdiniPage() {
 
   const handleLogout = () => {
     sessionStorage.removeItem('admin_auth')
-    setIsAuthenticated(false)
+    router.push('/')
   }
 
   // Loading state mentre controlliamo l'autenticazione
@@ -385,7 +387,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             {ordiniArray.length} ordini totali
           </span>
           <a
-            href="/store"
+            href="/admin"
             style={{
               background: 'rgba(255,255,255,0.15)',
               color: '#fff',
@@ -395,12 +397,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               fontSize: 14,
             }}
           >
-            Vai allo Store
+            Area Riservata
           </a>
           <button
             onClick={onLogout}
             style={{
-              background: 'rgba(231,76,60,0.8)',
+              background: 'rgba(255,255,255,0.2)',
               color: '#fff',
               padding: '10px 20px',
               borderRadius: 8,
@@ -410,7 +412,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               fontWeight: 600,
             }}
           >
-            Esci
+            Torna alla Home
           </button>
         </div>
       </div>
