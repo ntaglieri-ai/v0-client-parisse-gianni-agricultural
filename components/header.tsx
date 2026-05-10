@@ -11,8 +11,7 @@ import { cn } from "@/lib/utils";
 const navigation = [
   { name: "Home", href: "/" },
   { name: "Azienda", href: "/azienda-agricola-pescina" },
-  { name: "Prodotti", href: "/prodotti-agricoli-marsica" },
-  { name: "Store", href: "/store" },
+  { name: "Prodotti & Shop", href: "/store" },
   { name: "Tracciabilita", href: "/#tracciabilita" },
   { name: "Contatti", href: "/contatti" },
 ];
@@ -20,8 +19,7 @@ const navigation = [
 const desktopNavigation = [
   { name: "Home", href: "/" },
   { name: "Azienda", href: "/azienda-agricola-pescina" },
-  { name: "Prodotti", href: "/prodotti-agricoli-marsica" },
-  { name: "Store", href: "/store" },
+  { name: "Prodotti & Shop", href: "/store" },
   { name: "Tracciabilita", href: "/#tracciabilita" },
 ];
 

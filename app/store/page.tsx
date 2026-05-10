@@ -301,14 +301,7 @@ export default function StorePage() {
           </div>
         </div>
 
-        <footer style={{
-          background: '#1a3a2a', color: 'rgba(255,255,255,.7)',
-          textAlign: 'center', padding: 30, fontSize: 13,
-        }}>
-          <strong style={{ color: '#fff' }}>Gianni Parisse – Azienda Agricola</strong><br />
-          Pescina (AQ) · Altopiano del Fucino<br />
-          <span style={{ fontSize: 11, opacity: .6 }}>© 2025 – Tutti i diritti riservati</span>
-        </footer>
+        
       </div>
 
       {prodottoAperto && (
