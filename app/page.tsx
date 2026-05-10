@@ -1,10 +1,10 @@
 import { HeroSection } from "@/components/home/hero-section";
-import { TerritorySection } from "@/components/home/territory-section"; // La Marsica section
+import { TerritorySection } from "@/components/home/territory-section";
 import { TrustSection } from "@/components/home/trust-section";
 import { ProductCategories } from "@/components/home/product-categories";
-import { HowItWorks } from "@/components/home/how-it-works";
+import { TraceabilitySection } from "@/components/home/traceability-section";
 import { PackagingSection } from "@/components/home/packaging-section";
-import { FinalCta } from "@/components/home/final-cta";
+import { PurchaseSection } from "@/components/home/purchase-section";
 
 export default function HomePage() {
   return (
@@ -13,9 +13,9 @@ export default function HomePage() {
       <TerritorySection />
       <TrustSection />
       <ProductCategories />
-      <HowItWorks />
+      <TraceabilitySection />
       <PackagingSection />
-      <FinalCta />
+      <PurchaseSection />
     </>
   );
 }
