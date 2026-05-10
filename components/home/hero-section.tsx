@@ -9,7 +9,7 @@ export function HeroSection() {
           src="/images/hero-farm.jpg"
           alt="Campi agricoli del Fucino"
           fill
-          className="object-cover"
+          className="object-cover scale-95"
           priority
         />
         <div className="absolute inset-0 bg-primary/60" />
