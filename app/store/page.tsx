@@ -287,7 +287,9 @@ export default function StorePage() {
               {filtrati.map(p => {
                 const lotti = p.lotti || []
                 const hasLotti = lotti.length > 0
-                const selectedLotto = getSelectedLotto(p)
+                const lottoIndex = selectedLotti[p.id] ?? 0
+                const selectedLotto = hasLotti ? lotti[lottoIndex] : null
+                console.log('[v0] Product:', p.nome, 'LottoIndex:', lottoIndex, 'SelectedLotto:', selectedLotto?.codice_lotto)
                 
                 return (
                   <div
