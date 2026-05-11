@@ -118,13 +118,13 @@ export function Header() {
           </div>
 
           {/* Desktop Navigation - Centered */}
-          <div className="hidden flex-1 items-center justify-center gap-8 md:flex">
+          <div className="hidden flex-[2] items-center justify-center gap-6 lg:gap-8 md:flex">
             {desktopNavigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
+                  "whitespace-nowrap text-sm font-medium transition-colors hover:text-primary",
                   pathname === item.href
                     ? "text-primary"
                     : "text-muted-foreground"
