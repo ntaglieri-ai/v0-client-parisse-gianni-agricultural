@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Playfair_Display } from 'next/font/google'
 import useSWR, { mutate } from 'swr'
+import QRCode from '@/components/QRCode'
 
 const playfair = Playfair_Display({ subsets: ['latin'] })
 
@@ -399,20 +400,27 @@ export default function AdminProdottiPage() {
                           {lottiProdotto.length === 0 ? (
                             <p style={{ fontSize: 11, color: '#999' }}>Nessun lotto</p>
                           ) : (
-                            lottiProdotto.map(lotto => (
-                              <div key={lotto.id} style={{ background: '#fff', padding: 8, borderRadius: 4, marginBottom: 6, border: '1px solid #eee' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                                  <span style={{ fontSize: 12, fontWeight: 600, color: '#1a3a2a' }}>{lotto.codice_lotto}</span>
-                                  <span style={{ padding: '2px 6px', borderRadius: 8, fontSize: 9, background: lotto.attivo ? '#d1fae5' : '#fee2e2', color: lotto.attivo ? '#065f46' : '#dc2626' }}>{lotto.attivo ? 'On' : 'Off'}</span>
-                                </div>
-                                <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>€{Number(lotto.prezzo).toFixed(2)} | {lotto.kg_disponibili}/{lotto.kg_totali}kg</div>
-                                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                                  <button onClick={() => handleEditLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#c9933a', fontSize: 10, cursor: 'pointer', padding: 0 }}>Modifica</button>
-                                  <button onClick={() => handleToggleLottoAttivo(lotto)} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 10, cursor: 'pointer', padding: 0 }}>{lotto.attivo ? 'Disattiva' : 'Attiva'}</button>
-                                  <button onClick={() => handleDeleteLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: 10, cursor: 'pointer', padding: 0, fontWeight: 600 }}>Elimina</button>
-                                </div>
-                              </div>
-                            ))
+lottiProdotto.map(lotto => (
+                                              <div key={lotto.id} style={{ background: '#fff', padding: 8, borderRadius: 4, marginBottom: 6, border: '1px solid #eee' }}>
+                                                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                                  <div style={{ flexShrink: 0, borderRadius: 4, overflow: 'hidden', border: '1px solid #e0e0e0' }}>
+                                                    <QRCode key={`qr-mobile-${lotto.id}`} value={`https://gianniparisse.it/store/traccia/${lotto.codice_lotto}`} size={48} />
+                                                  </div>
+                                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                                      <span style={{ fontSize: 12, fontWeight: 600, color: '#1a3a2a' }}>{lotto.codice_lotto}</span>
+                                                      <span style={{ padding: '2px 6px', borderRadius: 8, fontSize: 9, background: lotto.attivo ? '#d1fae5' : '#fee2e2', color: lotto.attivo ? '#065f46' : '#dc2626' }}>{lotto.attivo ? 'On' : 'Off'}</span>
+                                                    </div>
+                                                    <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>€{Number(lotto.prezzo).toFixed(2)} | {lotto.kg_disponibili}/{lotto.kg_totali}kg</div>
+                                                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                                      <button onClick={() => handleEditLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#c9933a', fontSize: 10, cursor: 'pointer', padding: 0 }}>Modifica</button>
+                                                      <button onClick={() => handleToggleLottoAttivo(lotto)} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 10, cursor: 'pointer', padding: 0 }}>{lotto.attivo ? 'Disattiva' : 'Attiva'}</button>
+                                                      <button onClick={() => handleDeleteLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: 10, cursor: 'pointer', padding: 0, fontWeight: 600 }}>Elimina</button>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            ))
                           )}
                         </div>
                       )}
@@ -490,34 +498,40 @@ export default function AdminProdottiPage() {
                                   {lottiProdotto.length === 0 ? (
                                     <p style={{ color: '#999', fontSize: 13 }}>Nessun lotto</p>
                                   ) : (
-                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                      <thead>
-                                        <tr style={{ borderBottom: '1px solid #e0e0e0' }}>
-                                          <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Codice</th>
-                                          <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Campo</th>
-                                          <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Prezzo</th>
-                                          <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Disp.</th>
-                                          <th style={{ textAlign: 'center', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Stato</th>
-                                          <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Azioni</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {lottiProdotto.map(lotto => (
-                                          <tr key={lotto.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                            <td style={{ padding: '10px 12px', fontSize: 13, color: '#1a3a2a', fontWeight: 500 }}>{lotto.codice_lotto}</td>
-                                            <td style={{ padding: '10px 12px', fontSize: 13, color: '#666' }}>{lotto.campo || '-'}</td>
-                                            <td style={{ padding: '10px 12px', fontSize: 13, color: '#333', textAlign: 'right' }}>€{Number(lotto.prezzo).toFixed(2)}</td>
-                                            <td style={{ padding: '10px 12px', fontSize: 13, color: '#333', textAlign: 'right' }}>{lotto.kg_disponibili}/{lotto.kg_totali}kg</td>
-                                            <td style={{ padding: '10px 12px', textAlign: 'center' }}><span style={{ padding: '2px 8px', borderRadius: 10, fontSize: 11, background: lotto.attivo ? '#d1fae5' : '#fee2e2', color: lotto.attivo ? '#065f46' : '#dc2626' }}>{lotto.attivo ? 'On' : 'Off'}</span></td>
-                                            <td style={{ padding: '10px 12px', textAlign: 'right' }}>
-                                              <button onClick={() => handleEditLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#c9933a', fontSize: 12, cursor: 'pointer', marginRight: 8 }}>Modifica</button>
-                                              <button onClick={() => handleToggleLottoAttivo(lotto)} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 12, cursor: 'pointer', marginRight: 8 }}>{lotto.attivo ? 'Disattiva' : 'Attiva'}</button>
-                                              <button onClick={() => handleDeleteLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>Elimina</button>
-                                            </td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
+<table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                      <thead>
+                                                        <tr style={{ borderBottom: '1px solid #e0e0e0' }}>
+                                                          <th style={{ textAlign: 'center', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666', width: 80 }}>QR</th>
+                                                          <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Codice</th>
+                                                          <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Campo</th>
+                                                          <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Prezzo</th>
+                                                          <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Disp.</th>
+                                                          <th style={{ textAlign: 'center', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Stato</th>
+                                                          <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Azioni</th>
+                                                        </tr>
+                                                      </thead>
+                                                      <tbody>
+                                                        {lottiProdotto.map(lotto => (
+                                                          <tr key={lotto.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                                            <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                                                              <div style={{ display: 'inline-block', borderRadius: 4, overflow: 'hidden', border: '1px solid #e0e0e0' }}>
+                                                                <QRCode key={`qr-desktop-${lotto.id}`} value={`https://gianniparisse.it/store/traccia/${lotto.codice_lotto}`} size={56} />
+                                                              </div>
+                                                            </td>
+                                                            <td style={{ padding: '10px 12px', fontSize: 13, color: '#1a3a2a', fontWeight: 500 }}>{lotto.codice_lotto}</td>
+                                                            <td style={{ padding: '10px 12px', fontSize: 13, color: '#666' }}>{lotto.campo || '-'}</td>
+                                                            <td style={{ padding: '10px 12px', fontSize: 13, color: '#333', textAlign: 'right' }}>€{Number(lotto.prezzo).toFixed(2)}</td>
+                                                            <td style={{ padding: '10px 12px', fontSize: 13, color: '#333', textAlign: 'right' }}>{lotto.kg_disponibili}/{lotto.kg_totali}kg</td>
+                                                            <td style={{ padding: '10px 12px', textAlign: 'center' }}><span style={{ padding: '2px 8px', borderRadius: 10, fontSize: 11, background: lotto.attivo ? '#d1fae5' : '#fee2e2', color: lotto.attivo ? '#065f46' : '#dc2626' }}>{lotto.attivo ? 'On' : 'Off'}</span></td>
+                                                            <td style={{ padding: '10px 12px', textAlign: 'right' }}>
+                                                              <button onClick={() => handleEditLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#c9933a', fontSize: 12, cursor: 'pointer', marginRight: 8 }}>Modifica</button>
+                                                              <button onClick={() => handleToggleLottoAttivo(lotto)} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 12, cursor: 'pointer', marginRight: 8 }}>{lotto.attivo ? 'Disattiva' : 'Attiva'}</button>
+                                                              <button onClick={() => handleDeleteLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>Elimina</button>
+                                                            </td>
+                                                          </tr>
+                                                        ))}
+                                                      </tbody>
+                                                    </table>
                                   )}
                                 </div>
                               </td>
