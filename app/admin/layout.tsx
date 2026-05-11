@@ -29,6 +29,8 @@ const navItems = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -36,6 +38,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const auth = localStorage.getItem('admin_auth')
     setIsAuthenticated(auth === 'true')
   }, [])
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Close sidebar when route changes on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false)
+    }
+  }, [pathname, isMobile])
 
   const login = () => {
     localStorage.setItem('admin_auth', 'true')
@@ -81,30 +99,92 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <AuthContext.Provider value={{ isAuthenticated: isAuthenticated || false, login, logout }}>
       <div style={{ minHeight: '100vh', background: '#f5f0e8', display: 'flex' }}>
-        {/* Sidebar */}
-        <aside style={{
-          width: 260,
-          background: '#1a3a2a',
-          minHeight: '100vh',
-          padding: '24px 0',
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          bottom: 0,
-        }}>
-          <div style={{ padding: '0 24px', marginBottom: 40 }}>
+        
+        {/* Mobile Header */}
+        {isMobile && (
+          <header style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 60,
+            background: '#1a3a2a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 16px',
+            zIndex: 1001,
+          }}>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                fontSize: 24,
+                cursor: 'pointer',
+                padding: 8,
+              }}
+            >
+              {sidebarOpen ? '✕' : '☰'}
+            </button>
             <h1 className={playfair.className} style={{
               color: '#fff',
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: 700,
               margin: 0,
             }}>
               Area Riservata
             </h1>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 4 }}>
-              Gianni Parisse
-            </p>
-          </div>
+            <div style={{ width: 40 }} /> {/* Spacer for centering */}
+          </header>
+        )}
+
+        {/* Overlay for mobile */}
+        {isMobile && sidebarOpen && (
+          <div
+            onClick={() => setSidebarOpen(false)}
+            style={{
+              position: 'fixed',
+              top: 60,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.5)',
+              zIndex: 999,
+            }}
+          />
+        )}
+
+        {/* Sidebar */}
+        <aside style={{
+          width: 260,
+          background: '#1a3a2a',
+          minHeight: '100vh',
+          padding: isMobile ? '16px 0' : '24px 0',
+          position: 'fixed',
+          left: isMobile ? (sidebarOpen ? 0 : -260) : 0,
+          top: isMobile ? 60 : 0,
+          bottom: 0,
+          zIndex: 1000,
+          transition: 'left 0.3s ease',
+          overflowY: 'auto',
+        }}>
+          {!isMobile && (
+            <div style={{ padding: '0 24px', marginBottom: 40 }}>
+              <h1 className={playfair.className} style={{
+                color: '#fff',
+                fontSize: 22,
+                fontWeight: 700,
+                margin: 0,
+              }}>
+                Area Riservata
+              </h1>
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 4 }}>
+                Gianni Parisse
+              </p>
+            </div>
+          )}
 
           <nav>
             {navItems.map((item) => {
@@ -135,11 +215,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
 
           <div style={{
-            position: 'absolute',
-            bottom: 24,
+            position: isMobile ? 'relative' : 'absolute',
+            bottom: isMobile ? 'auto' : 24,
             left: 0,
             right: 0,
-            padding: '0 24px',
+            padding: '24px',
+            marginTop: isMobile ? 24 : 0,
             display: 'flex',
             flexDirection: 'column',
             gap: 8,
@@ -188,9 +269,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Main content */}
         <main style={{
           flex: 1,
-          marginLeft: 260,
-          padding: 32,
-          minHeight: '100vh',
+          marginLeft: isMobile ? 0 : 260,
+          marginTop: isMobile ? 60 : 0,
+          padding: isMobile ? 16 : 32,
+          minHeight: isMobile ? 'calc(100vh - 60px)' : '100vh',
         }}>
           {children}
         </main>
