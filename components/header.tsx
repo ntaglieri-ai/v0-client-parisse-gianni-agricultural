@@ -22,6 +22,7 @@ const desktopNavigation = [
   { name: "Azienda", href: "/azienda-agricola-pescina" },
   { name: "Prodotti & Shop", href: "/store" },
   { name: "Tracciabilita", href: "/#tracciabilita" },
+  { name: "Area Riservata", href: "/admin" },
 ];
 
 export function Header() {
