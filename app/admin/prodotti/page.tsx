@@ -213,6 +213,103 @@ export default function AdminProdottiPage() {
 
   const getLottiForProdotto = (prodottoId: number) => lotti?.filter(l => l.prodotto_id === prodottoId) || []
 
+  const handlePrintQR = (lotto: Lotto, prodottoNome: string) => {
+    const url = `https://gianniparisse.it/store/traccia/${lotto.codice_lotto}`
+    const printWindow = window.open('', '_blank', 'width=600,height=700')
+    if (!printWindow) return
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>QR Code - ${lotto.codice_lotto}</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          @page { size: auto; margin: 10mm; }
+          body { 
+            font-family: Arial, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            background: #fff;
+          }
+          .container {
+            text-align: center;
+            padding: 20px;
+          }
+          .qr-wrapper {
+            display: inline-block;
+            padding: 16px;
+            border: 3px solid #000;
+            border-radius: 12px;
+            margin-bottom: 16px;
+          }
+          #qrcode {
+            display: inline-block;
+          }
+          #qrcode canvas, #qrcode img {
+            display: block !important;
+          }
+          .product-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+          }
+          .lotto-code {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+          }
+          .url {
+            font-size: 11px;
+            color: #666;
+            word-break: break-all;
+            max-width: 300px;
+            margin: 0 auto;
+          }
+          .brand {
+            margin-top: 16px;
+            font-size: 14px;
+            color: #444;
+            font-weight: 600;
+          }
+          @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="qr-wrapper">
+            <div id="qrcode"></div>
+          </div>
+          <div class="product-name">${prodottoNome}</div>
+          <div class="lotto-code">Lotto: ${lotto.codice_lotto}</div>
+          <div class="url">${url}</div>
+          <div class="brand">Gianni Parisse - Azienda Agricola</div>
+        </div>
+        <script>
+          new QRCode(document.getElementById("qrcode"), {
+            text: "${url}",
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+          });
+          setTimeout(function() { window.print(); }, 500);
+        </script>
+      </body>
+      </html>
+    `)
+    printWindow.document.close()
+  }
+
   if (prodottiError) {
     return <div style={{ padding: 20, textAlign: 'center', background: '#fef2f2', borderRadius: 8 }}><p style={{ color: '#dc2626', fontSize: 13 }}>Errore caricamento</p></div>
   }
@@ -413,6 +510,7 @@ lottiProdotto.map(lotto => (
                                                     </div>
                                                     <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>€{Number(lotto.prezzo).toFixed(2)} | {lotto.kg_disponibili}/{lotto.kg_totali}kg</div>
                                                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                                      <button onClick={() => handlePrintQR(lotto, prodotto.nome)} style={{ background: '#1a3a2a', border: 'none', color: '#fff', fontSize: 10, cursor: 'pointer', padding: '3px 6px', borderRadius: 3 }}>Stampa QR</button>
                                                       <button onClick={() => handleEditLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#c9933a', fontSize: 10, cursor: 'pointer', padding: 0 }}>Modifica</button>
                                                       <button onClick={() => handleToggleLottoAttivo(lotto)} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 10, cursor: 'pointer', padding: 0 }}>{lotto.attivo ? 'Disattiva' : 'Attiva'}</button>
                                                       <button onClick={() => handleDeleteLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: 10, cursor: 'pointer', padding: 0, fontWeight: 600 }}>Elimina</button>
@@ -524,6 +622,7 @@ lottiProdotto.map(lotto => (
                                                             <td style={{ padding: '10px 12px', fontSize: 13, color: '#333', textAlign: 'right' }}>{lotto.kg_disponibili}/{lotto.kg_totali}kg</td>
                                                             <td style={{ padding: '10px 12px', textAlign: 'center' }}><span style={{ padding: '2px 8px', borderRadius: 10, fontSize: 11, background: lotto.attivo ? '#d1fae5' : '#fee2e2', color: lotto.attivo ? '#065f46' : '#dc2626' }}>{lotto.attivo ? 'On' : 'Off'}</span></td>
                                                             <td style={{ padding: '10px 12px', textAlign: 'right' }}>
+                                                              <button onClick={() => handlePrintQR(lotto, prodotto.nome)} style={{ background: '#1a3a2a', border: 'none', color: '#fff', fontSize: 12, cursor: 'pointer', marginRight: 8, padding: '4px 10px', borderRadius: 4 }}>Stampa QR</button>
                                                               <button onClick={() => handleEditLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#c9933a', fontSize: 12, cursor: 'pointer', marginRight: 8 }}>Modifica</button>
                                                               <button onClick={() => handleToggleLottoAttivo(lotto)} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 12, cursor: 'pointer', marginRight: 8 }}>{lotto.attivo ? 'Disattiva' : 'Attiva'}</button>
                                                               <button onClick={() => handleDeleteLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>Elimina</button>
