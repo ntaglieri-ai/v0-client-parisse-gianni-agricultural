@@ -5,6 +5,7 @@ import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { CartProvider } from "@/contexts/CartContext";
+import { LayoutWrapper } from "@/components/layout-wrapper";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -82,9 +83,12 @@ export default function RootLayout({
     <html lang="it" data-scroll-behavior="smooth" className={`${inter.variable} ${playfair.variable}`}>
       <body className="font-sans antialiased">
         <CartProvider>
-          <Header />
-          <main>{children}</main>
-          <Footer />
+          <LayoutWrapper
+            header={<Header />}
+            footer={<Footer />}
+          >
+            {children}
+          </LayoutWrapper>
         </CartProvider>
         <Analytics />
       </body>
