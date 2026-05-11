@@ -14,6 +14,7 @@ const navigation = [
   { name: "Prodotti & Shop", href: "/store" },
   { name: "Tracciabilita", href: "/#tracciabilita" },
   { name: "Contatti", href: "/contatti" },
+  { name: "Area Riservata", href: "/admin" },
 ];
 
 const desktopNavigation = [
