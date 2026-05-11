@@ -82,8 +82,12 @@ export default function StorePage() {
     e.stopPropagation()
     if (!p.lotti || p.lotti.length === 0) return
     
+    // Filter only available lotti
+    const lottiDisponibili = p.lotti.filter(l => l.kg_disponibili > 0)
+    if (lottiDisponibili.length === 0) return
+    
     const lottoIndex = selectedLotti[p.id] || 0
-    const lotto = p.lotti[lottoIndex]
+    const lotto = lottiDisponibili[lottoIndex] || lottiDisponibili[0]
     
     // Create cart item with lotto info
     const cartItem = {
@@ -288,9 +292,12 @@ export default function StorePage() {
             }}>
               {filtrati.map(p => {
                 const lotti = p.lotti || []
-                const hasLotti = lotti.length > 0
+                // Filter only available lotti (kg_disponibili > 0)
+                const lottiDisponibili = lotti.filter(l => l.kg_disponibili > 0)
+                const isDisponibile = lottiDisponibili.length > 0
                 const lottoIndex = selectedLotti[p.id] ?? 0
-                const selectedLotto = hasLotti ? lotti[lottoIndex] || lotti[0] : null
+                const selectedLotto = isDisponibile ? lottiDisponibili[lottoIndex] || lottiDisponibili[0] : null
+                const whatsappUrl = `https://wa.me/393382726361?text=${encodeURIComponent(`Salve, vorrei informazioni su ${p.nome}`)}`
                 
                 return (
                   <div
@@ -330,10 +337,11 @@ export default function StorePage() {
                       )}
                       <span style={{
                         position: 'absolute', top: 12, left: 12,
-                        background: '#1a3a2a', color: '#fff', fontSize: 10,
+                        background: isDisponibile ? '#1a3a2a' : '#e67e22', 
+                        color: '#fff', fontSize: 10,
                         fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase',
                         padding: '4px 10px', borderRadius: 20,
-                      }}>{p.categoria}</span>
+                      }}>{isDisponibile ? p.categoria : 'Esaurito'}</span>
                     </div>
 
                     <div style={{ padding: '18px 20px 20px' }}>
@@ -345,7 +353,7 @@ export default function StorePage() {
                         {p.descrizione || 'Prodotto fresco dalla nostra azienda agricola.'}
                       </p>
 
-                      {lotti.length > 1 && (
+                      {isDisponibile && lottiDisponibili.length > 1 && (
                         <div style={{ marginBottom: 14 }}>
                           <label style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 6 }}>
                             Seleziona Lotto
@@ -366,7 +374,7 @@ export default function StorePage() {
                               cursor: 'pointer',
                             }}
                           >
-                            {lotti.map((l, idx) => (
+                            {lottiDisponibili.map((l, idx) => (
                               <option key={l.id} value={idx}>
                                 Lotto {l.codice_lotto} — €{Number(l.prezzo).toFixed(2)}/{p.unita}
                               </option>
@@ -376,8 +384,8 @@ export default function StorePage() {
                       )}
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
-                        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 700, color: hasLotti ? '#c9933a' : '#999', lineHeight: 1 }}>
-                          {hasLotti ? (
+                        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: isDisponibile ? 26 : 15, fontWeight: 700, color: isDisponibile ? '#c9933a' : '#888', lineHeight: 1 }}>
+                          {isDisponibile ? (
                             <>
                               €{Number(selectedLotto?.prezzo || 0).toFixed(2)}
                               <span style={{ fontSize: 12, color: '#666', fontFamily: "'Lato',sans-serif", fontWeight: 400, marginLeft: 4 }}>
@@ -385,22 +393,24 @@ export default function StorePage() {
                               </span>
                             </>
                           ) : (
-                            <span style={{ fontSize: 16 }}>Non disponibile</span>
+                            <span>Non disponibile al momento</span>
                           )}
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: '#999' }}>Lotto</div>
-                          <div style={{ fontSize: 11, color: '#444', fontWeight: 700 }}>
-                            {hasLotti ? selectedLotto?.codice_lotto : '—'}
+                        {isDisponibile && (
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: '#999' }}>Lotto</div>
+                            <div style={{ fontSize: 11, color: '#444', fontWeight: 700 }}>
+                              {selectedLotto?.codice_lotto}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       <div style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                         borderTop: '1px solid #ede5d5', paddingTop: 14, gap: 12,
                       }}>
-                        {hasLotti && baseUrl && (
+                        {isDisponibile && baseUrl && (
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                             <div style={{ borderRadius: 6, border: '2px solid #ede5d5', lineHeight: 0, overflow: 'hidden' }}>
                               <QRCode key={`qr-${p.id}-${selectedLotto?.codice_lotto}`} value={`${baseUrl}/store/traccia/${selectedLotto?.codice_lotto}`} size={64} />
@@ -408,33 +418,57 @@ export default function StorePage() {
                             <span style={{ fontSize: 9, color: '#999', textTransform: 'uppercase', letterSpacing: 1 }}>Traccia</span>
                           </div>
                         )}
-                        {!hasLotti && (
-                          <div style={{ width: 64 }} />
+                        {isDisponibile ? (
+                          <button
+                            onClick={e => handleAddToCart(p, e)}
+                            style={{
+                              flex: 1, 
+                              background: addedFeedback === p.id ? '#27ae60' : '#c9933a', 
+                              color: '#fff', 
+                              border: 'none',
+                              padding: '12px 14px', borderRadius: 8, fontSize: 13,
+                              fontWeight: 700, letterSpacing: .4, 
+                              cursor: 'pointer',
+                              fontFamily: "'Lato',sans-serif", textAlign: 'center',
+                              transition: 'background .2s',
+                            }}
+                            onMouseEnter={e => {
+                              if (addedFeedback !== p.id) e.currentTarget.style.background = '#1a3a2a'
+                            }}
+                            onMouseLeave={e => {
+                              if (addedFeedback !== p.id) e.currentTarget.style.background = '#c9933a'
+                            }}
+                          >
+                            {addedFeedback === p.id ? 'Aggiunto!' : '+ Aggiungi'}
+                          </button>
+                        ) : (
+                          <a
+                            href={whatsappUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              flex: 1, 
+                              background: '#25D366', 
+                              color: '#fff', 
+                              border: 'none',
+                              padding: '12px 14px', borderRadius: 8, fontSize: 13,
+                              fontWeight: 700, letterSpacing: .4, 
+                              cursor: 'pointer',
+                              fontFamily: "'Lato',sans-serif", textAlign: 'center',
+                              textDecoration: 'none',
+                              display: 'block',
+                              transition: 'background .2s',
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.background = '#128C7E'
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.background = '#25D366'
+                            }}
+                          >
+                            Contattaci
+                          </a>
                         )}
-                        <button
-                          onClick={e => handleAddToCart(p, e)}
-                          disabled={!hasLotti}
-                          style={{
-                            flex: 1, 
-                            background: !hasLotti ? '#ccc' : (addedFeedback === p.id ? '#27ae60' : '#c9933a'), 
-                            color: '#fff', 
-                            border: 'none',
-                            padding: '12px 14px', borderRadius: 8, fontSize: 13,
-                            fontWeight: 700, letterSpacing: .4, 
-                            cursor: hasLotti ? 'pointer' : 'not-allowed',
-                            fontFamily: "'Lato',sans-serif", textAlign: 'center',
-                            transition: 'background .2s',
-                            opacity: hasLotti ? 1 : 0.7,
-                          }}
-                          onMouseEnter={e => {
-                            if (hasLotti && addedFeedback !== p.id) e.currentTarget.style.background = '#1a3a2a'
-                          }}
-                          onMouseLeave={e => {
-                            if (hasLotti && addedFeedback !== p.id) e.currentTarget.style.background = '#c9933a'
-                          }}
-                        >
-                          {!hasLotti ? 'Non disponibile' : (addedFeedback === p.id ? 'Aggiunto!' : '+ Aggiungi')}
-                        </button>
                       </div>
                     </div>
                   </div>
