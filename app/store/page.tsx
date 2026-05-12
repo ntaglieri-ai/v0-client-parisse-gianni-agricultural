@@ -337,11 +337,11 @@ export default function StorePage() {
                       )}
                       <span style={{
                         position: 'absolute', top: 12, left: 12,
-                        background: isDisponibile ? '#1a3a2a' : '#e67e22', 
+                        background: '#1a3a2a', 
                         color: '#fff', fontSize: 10,
                         fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase',
                         padding: '4px 10px', borderRadius: 20,
-                      }}>{isDisponibile ? p.categoria : 'In Arrivo'}</span>
+                      }}>{p.categoria}</span>
                     </div>
 
                     <div style={{ padding: '18px 20px 20px' }}>
@@ -353,6 +353,7 @@ export default function StorePage() {
                         {p.descrizione || 'Prodotto fresco dalla nostra azienda agricola.'}
                       </p>
 
+                      {/* TODO: ripristinare quando i lotti sono inseriti
                       {isDisponibile && lottiDisponibili.length > 1 && (
                         <div style={{ marginBottom: 14 }}>
                           <label style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 6 }}>
@@ -470,6 +471,34 @@ export default function StorePage() {
                           </a>
                         )}
                       </div>
+                      */}
+
+                      <Link
+                        href={`/store/prodotto/${p.id}`}
+                        style={{
+                          display: 'block',
+                          background: '#1a3a2a',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '12px 14px',
+                          borderRadius: 8,
+                          fontSize: 13,
+                          fontWeight: 700,
+                          letterSpacing: .4,
+                          fontFamily: "'Lato',sans-serif",
+                          textAlign: 'center',
+                          textDecoration: 'none',
+                          transition: 'background .2s',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = '#c9933a'
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = '#1a3a2a'
+                        }}
+                      >
+                        Dettagli
+                      </Link>
                     </div>
                   </div>
                 )
