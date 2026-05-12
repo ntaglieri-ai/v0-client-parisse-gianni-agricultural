@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
@@ -24,12 +25,15 @@ export const metadata: Metadata = {
   description:
     "Vendita diretta di ortaggi, legumi e cereali dalla Marsica. Azienda agricola a Pescina (AQ).",
   generator: "v0.app",
-  metadataBase: new URL("https://parisse.it"),
+  metadataBase: new URL("https://www.gianniparisse.it"),
+  alternates: {
+    canonical: "https://www.gianniparisse.it",
+  },
   openGraph: {
     title: "Azienda Agricola Parisse Gianni | Prodotti del Fucino",
     description:
       "Vendita diretta di ortaggi, legumi e cereali dalla Marsica. Azienda agricola a Pescina (AQ).",
-    url: "https://parisse.it",
+    url: "https://www.gianniparisse.it",
     siteName: "Azienda Agricola Parisse Gianni",
     images: [
       {
@@ -91,6 +95,7 @@ export default function RootLayout({
           </LayoutWrapper>
         </CartProvider>
         <Analytics />
+        <GoogleAnalytics gaId="G-XGW82L09K3" />
       </body>
     </html>
   );
