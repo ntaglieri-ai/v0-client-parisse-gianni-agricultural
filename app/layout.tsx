@@ -29,6 +29,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.gianniparisse.it",
   },
+  verification: {
+    google: "RMskpWCnXArvUaN-4Q63KbDlI79YyJaEO7AfQu1DQoo",
+  },
   openGraph: {
     title: "Azienda Agricola Parisse Gianni | Prodotti del Fucino",
     description:
