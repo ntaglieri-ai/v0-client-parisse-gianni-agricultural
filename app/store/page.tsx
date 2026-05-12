@@ -341,7 +341,7 @@ export default function StorePage() {
                         color: '#fff', fontSize: 10,
                         fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase',
                         padding: '4px 10px', borderRadius: 20,
-                      }}>{isDisponibile ? p.categoria : 'Esaurito'}</span>
+                      }}>{isDisponibile ? p.categoria : 'In Arrivo'}</span>
                     </div>
 
                     <div style={{ padding: '18px 20px 20px' }}>
@@ -393,7 +393,7 @@ export default function StorePage() {
                               </span>
                             </>
                           ) : (
-                            <span>Non disponibile al momento</span>
+                            <span>In Arrivo</span>
                           )}
                         </div>
                         {isDisponibile && (
