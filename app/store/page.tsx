@@ -337,11 +337,11 @@ export default function StorePage() {
                       )}
                       <span style={{
                         position: 'absolute', top: 12, left: 12,
-                        background: isDisponibile ? '#1a3a2a' : '#e67e22', 
+                        background: '#1a3a2a', 
                         color: '#fff', fontSize: 10,
                         fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase',
                         padding: '4px 10px', borderRadius: 20,
-                      }}>{isDisponibile ? p.categoria : 'In Arrivo'}</span>
+                      }}>{p.categoria}</span>
                     </div>
 
                     <div style={{ padding: '18px 20px 20px' }}>
