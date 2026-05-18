@@ -38,7 +38,7 @@ export function HeroSection() {
         {/* CTA */}
         <div className="mt-10">
           <a
-            href="#contattaci"
+            href="/store"
             className="inline-flex items-center justify-center rounded-lg border-2 border-white bg-transparent px-8 py-4 text-base font-semibold text-white transition-all duration-200 hover:border-black hover:bg-white hover:text-black active:border-black active:bg-white active:text-black"
           >
             Vedi i Prodotti Disponibili
