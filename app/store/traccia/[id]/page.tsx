@@ -53,7 +53,7 @@ export default function TracciaPage() {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/traccia/${encodeURIComponent(id)}`)
+    fetch(`/api/store/traccia/${encodeURIComponent(id)}`)
       .then(res => {
         if (res.status === 404) { setNotFound(true); setLoading(false); return null; }
         return res.json();
