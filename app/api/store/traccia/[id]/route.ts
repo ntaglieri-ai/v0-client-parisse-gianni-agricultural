@@ -15,7 +15,10 @@ export async function GET(
     const result = await sql`
       SELECT 
         l.*, 
-        p.nome, p.categoria, p.descrizione, p.immagine, p.unita
+        l.tmc,
+        l.condizioni_conservazione,
+        p.nome, p.categoria, p.descrizione, p.immagine, p.unita,
+        p.ingredienti, p.valori_nutrizionali, p.allergeni, p.categoria_etichetta
       FROM lotti l
       JOIN prodotti p ON p.id = l.prodotto_id
       WHERE l.codice_lotto = ${codice_lotto}
