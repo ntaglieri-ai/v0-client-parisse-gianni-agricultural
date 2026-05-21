@@ -26,19 +26,19 @@ export async function POST(request: Request) {
     const { 
       prodotto_id, codice_lotto, campo, comune, 
       data_semina, data_raccolta, kg_totali, kg_disponibili, 
-      prezzo, certificazioni, note, attivo 
+      prezzo, tmc, condizioni_conservazione, certificazioni, note, attivo 
     } = body
     
     const result = await sql`
       INSERT INTO lotti (
         prodotto_id, codice_lotto, campo, comune, 
         data_semina, data_raccolta, kg_totali, kg_disponibili, 
-        prezzo, certificazioni, note, attivo, created_at
+        prezzo, tmc, condizioni_conservazione, certificazioni, note, attivo, created_at
       )
       VALUES (
         ${prodotto_id}, ${codice_lotto}, ${campo}, ${comune}, 
         ${data_semina || null}, ${data_raccolta || null}, ${kg_totali}, ${kg_disponibili}, 
-        ${prezzo}, ${certificazioni}, ${note}, ${attivo ?? true}, NOW()
+        ${prezzo}, ${tmc || null}, ${condizioni_conservazione || null}, ${certificazioni}, ${note}, ${attivo ?? true}, NOW()
       )
       RETURNING *
     `
