@@ -1,287 +1,241 @@
-import { getDb } from '@/lib/admin-db'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import Image from 'next/image'
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+
+interface ValoriNutrizionali {
+  energia_kj: number;
+  energia_kcal: number;
+  grassi: number;
+  grassi_saturi: number;
+  carboidrati: number;
+  zuccheri: number;
+  fibre: number;
+  proteine: number;
+  sale: number;
+}
 
 interface LottoData {
-  id: number
-  prodotto_id: number
-  codice_lotto: string
-  campo: string
-  comune: string
-  data_semina: string
-  data_raccolta: string
-  kg_disponibili: number
-  certificazioni: string
-  note: string
-  attivo: boolean
-  nome: string
-  categoria: string
-  descrizione: string
-  immagine: string
-  unita: string
+  codice_lotto: string;
+  campo: string;
+  comune: string;
+  data_semina: string;
+  data_raccolta: string;
+  kg_totali: number;
+  tmc: string;
+  condizioni_conservazione: string;
+  certificazioni: string;
+  note: string;
+  nome: string;
+  categoria: string;
+  descrizione: string;
+  immagine: string;
+  unita: string;
+  ingredienti: string;
+  valori_nutrizionali: ValoriNutrizionali;
+  allergeni: string;
+  categoria_etichetta: string;
 }
 
-async function getLottoData(codice_lotto: string): Promise<LottoData | null> {
-  try {
-    const sql = getDb()
-    const result = await sql`
-      SELECT 
-        l.*, 
-        p.nome, p.categoria, p.descrizione, p.immagine, p.unita
-      FROM lotti l
-      JOIN prodotti p ON p.id = l.prodotto_id
-      WHERE l.codice_lotto = ${codice_lotto}
-    `
-    return result.length > 0 ? result[0] as LottoData : null
-  } catch (error) {
-    console.error('Error fetching lotto:', error)
-    return null
-  }
+function formatDate(dateStr: string) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('it-IT');
 }
 
-function formatDate(dateString: string | null): string {
-  if (!dateString) return '-'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
-}
+export default function TracciaPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const [data, setData] = useState<LottoData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-export default async function TracciaPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const lotto = await getLottoData(decodeURIComponent(id))
-  
-  if (!lotto) {
-    return (
-      <>
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
-        <div style={{ fontFamily: "'Lato',sans-serif", background: '#f5f0e8', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-          <div style={{
-            background: 'linear-gradient(135deg,#1a3a2a,#2d5c3f)',
-            padding: '50px 30px', textAlign: 'center',
-          }}>
-            <div style={{ fontSize: 64, marginBottom: 16 }}>❌</div>
-            <h1 style={{
-              fontFamily: "'Playfair Display',serif", color: '#fff',
-              fontSize: 'clamp(28px,5vw,40px)', marginBottom: 10,
-            }}>
-              Lotto Non Trovato
-            </h1>
-            <p style={{ color: 'rgba(255,255,255,.75)', fontSize: 16 }}>
-              Il codice lotto scansionato non corrisponde a nessun prodotto nel nostro database.
-            </p>
-          </div>
-          
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px' }}>
-            <p style={{ color: '#666', fontSize: 16, marginBottom: 32, textAlign: 'center', maxWidth: 400 }}>
-              Se ritieni che questo sia un errore, contattaci per assistenza.
-            </p>
-            <Link href="/store" style={{
-              background: '#c9933a', color: '#fff', textDecoration: 'none',
-              padding: '14px 32px', borderRadius: 8, fontSize: 15,
-              fontWeight: 700, fontFamily: "'Lato',sans-serif", display: 'inline-flex', alignItems: 'center', gap: 8,
-            }}>
-              ← Torna allo Store
-            </Link>
-          </div>
-          
-          <footer style={{
-            background: '#1a3a2a', color: 'rgba(255,255,255,.7)',
-            textAlign: 'center', padding: 24, fontSize: 13,
-          }}>
-            <strong style={{ color: '#fff' }}>Gianni Parisse - Azienda Agricola</strong><br />
-            <span style={{ fontSize: 11, opacity: .6 }}>Pescina (AQ) - Altopiano del Fucino</span>
-          </footer>
-        </div>
-      </>
-    )
-  }
+  useEffect(() => {
+    fetch(`/api/store/traccia/${encodeURIComponent(id)}`)
+      .then(res => {
+        if (res.status === 404) { setNotFound(true); setLoading(false); return null; }
+        return res.json();
+      })
+      .then(json => {
+        if (json) { setData(json); setLoading(false); }
+      })
+      .catch(() => { setNotFound(true); setLoading(false); });
+  }, [id]);
+
+  if (loading) return (
+    <div className="min-h-screen bg-[#f5f0e8] animate-pulse">
+      <div className="h-48 bg-[#1a3a2a]" />
+      <div className="max-w-2xl mx-auto p-8 space-y-4">
+        <div className="h-8 bg-gray-200 rounded w-3/4" />
+        <div className="h-4 bg-gray-200 rounded w-full" />
+        <div className="h-4 bg-gray-200 rounded w-2/3" />
+      </div>
+    </div>
+  );
+
+  if (notFound) return (
+    <div className="min-h-screen bg-[#f5f0e8]">
+      <header className="bg-[#1a3a2a] py-10 text-center">
+        <img src="/images/logo.png" className="h-16 mx-auto brightness-0 invert" alt="Logo" />
+        <p className="text-white font-serif text-2xl font-bold mt-3">Azienda Agricola Parisse Gianni</p>
+        <p className="text-white/70 text-sm mt-1">Via II Traversa delle Croci, 16 - 67057 Pescina (AQ) – Italia</p>
+        <p className="text-[#c9933a] text-sm">Italia – Altopiano del Fucino</p>
+      </header>
+      <div className="max-w-2xl mx-auto text-center py-20 px-4">
+        <p className="font-serif text-3xl text-[#1a3a2a] font-bold">Lotto non trovato</p>
+        <p className="text-gray-500 mt-3">Il codice lotto cercato non esiste o non è più disponibile.</p>
+        <Link href="/store" className="inline-block mt-8 px-6 py-3 bg-[#1a3a2a] text-white rounded-lg hover:bg-[#1a3a2a]/90">
+          ← Torna allo Store
+        </Link>
+      </div>
+    </div>
+  );
+
+  if (!data) return null;
+
+  const vn = data.valori_nutrizionali;
 
   return (
-    <>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
-      <div style={{ fontFamily: "'Lato',sans-serif", background: '#f5f0e8', minHeight: '100vh' }}>
+    <div className="min-h-screen bg-[#f5f0e8]">
+      {/* HEADER */}
+      <header className="bg-[#1a3a2a] py-10 text-center px-4">
+        <img src="/images/logo.png" className="h-16 mx-auto brightness-0 invert" alt="Logo" />
+        <p className="text-white font-serif text-2xl font-bold mt-3">Azienda Agricola Parisse Gianni</p>
+        <p className="text-white/70 text-sm mt-1">Via II Traversa delle Croci, 16 - 67057 Pescina (AQ) – Italia</p>
+        <p className="text-[#c9933a] text-sm mt-1">Italia – Altopiano del Fucino</p>
+        <p className="text-white/50 text-xs mt-1">www.gianniparisse.it</p>
+        <span className="inline-block mt-4 px-4 py-1.5 bg-[#c9933a] text-white text-sm rounded-full font-medium">
+          ✓ Prodotto Verificato
+        </span>
+      </header>
 
-        {/* Header con verifica */}
-        <div style={{
-          background: 'linear-gradient(135deg,#1a3a2a,#2d5c3f)',
-          padding: '50px 30px', textAlign: 'center',
-        }}>
-          <div style={{ 
-            width: 80, height: 80, borderRadius: '50%', 
-            background: 'rgba(255,255,255,0.15)', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 20px',
-            border: '3px solid #c9933a'
-          }}>
-            <span style={{ fontSize: 40, color: '#c9933a' }}>✓</span>
-          </div>
-          <h1 style={{
-            fontFamily: "'Playfair Display',serif", color: '#fff',
-            fontSize: 'clamp(28px,5vw,40px)', marginBottom: 10,
-          }}>
-            Prodotto Autentico Verificato
-          </h1>
-          <p style={{ color: 'rgba(255,255,255,.75)', fontSize: 16 }}>
-            Hai scansionato il QR code di{' '}
-            <strong style={{ color: '#c9933a' }}>{lotto.nome}</strong>
-          </p>
-        </div>
-
-        <div style={{ maxWidth: 700, margin: '0 auto', padding: '40px 24px' }}>
-          
-          {/* Immagine prodotto */}
-          {lotto.immagine && (
-            <div style={{ 
-              borderRadius: 16, overflow: 'hidden', marginBottom: 32,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-              position: 'relative',
-              height: 280
-            }}>
-              <Image 
-                src={lotto.immagine} 
-                alt={lotto.nome}
-                fill
-                style={{ objectFit: 'cover' }}
-              />
+      {/* SEZIONE 1: IL PRODOTTO */}
+      <section className="bg-[#f5f0e8] py-12 px-4">
+        <div className="max-w-2xl mx-auto">
+          {data.immagine && (
+            <div className="relative aspect-[4/3] max-w-sm mx-auto rounded-xl overflow-hidden">
+              <Image src={data.immagine} alt={data.nome} fill className="object-cover" />
             </div>
           )}
-
-          {/* Nome e categoria */}
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <p style={{ 
-              fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, 
-              color: '#c9933a', marginBottom: 8, fontWeight: 600 
-            }}>
-              {lotto.categoria}
-            </p>
-            <h2 style={{ 
-              fontFamily: "'Playfair Display',serif", 
-              fontSize: 32, color: '#1a3a2a', margin: 0 
-            }}>
-              {lotto.nome}
-            </h2>
-            {lotto.descrizione && (
-              <p style={{ color: '#666', fontSize: 14, marginTop: 12, lineHeight: 1.6 }}>
-                {lotto.descrizione}
-              </p>
-            )}
+          <div className="mt-4 text-center">
+            <span className="inline-block px-3 py-1 bg-[#1a3a2a] text-white text-xs uppercase rounded-full">
+              {data.categoria}
+            </span>
+            <h1 className="font-serif text-3xl font-bold text-[#1a3a2a] mt-2">{data.nome}</h1>
+            <p className="text-gray-600 mt-2">{data.descrizione}</p>
           </div>
 
-          {/* Codice lotto */}
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{
-              background: '#fff', borderRadius: 12, padding: '24px 32px',
-              display: 'inline-block', boxShadow: '0 4px 16px rgba(0,0,0,.06)',
-              border: '2px solid #c9933a'
-            }}>
-              <p style={{ fontSize: 11, color: '#999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1.5 }}>
-                Codice Lotto
-              </p>
-              <p style={{ fontSize: 22, fontWeight: 700, color: '#1a3a2a', letterSpacing: 1, margin: 0 }}>
-                {lotto.codice_lotto}
-              </p>
-            </div>
-          </div>
-
-          {/* Info coltivazione */}
-          <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#666', marginBottom: 16 }}>
-            Informazioni di Coltivazione
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 32 }}>
-            <div style={{ background: '#fff', borderRadius: 10, padding: '16px 18px', boxShadow: '0 2px 8px rgba(0,0,0,.04)' }}>
-              <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#999', marginBottom: 6 }}>Campo</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#1a3a2a' }}>{lotto.campo || '-'}</div>
-            </div>
-            <div style={{ background: '#fff', borderRadius: 10, padding: '16px 18px', boxShadow: '0 2px 8px rgba(0,0,0,.04)' }}>
-              <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#999', marginBottom: 6 }}>Comune</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#1a3a2a' }}>{lotto.comune || '-'}</div>
-            </div>
-            <div style={{ background: '#fff', borderRadius: 10, padding: '16px 18px', boxShadow: '0 2px 8px rgba(0,0,0,.04)' }}>
-              <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#999', marginBottom: 6 }}>Data Semina</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#1a3a2a' }}>{formatDate(lotto.data_semina)}</div>
-            </div>
-            <div style={{ background: '#fff', borderRadius: 10, padding: '16px 18px', boxShadow: '0 2px 8px rgba(0,0,0,.04)' }}>
-              <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#999', marginBottom: 6 }}>Data Raccolta</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#1a3a2a' }}>{formatDate(lotto.data_raccolta)}</div>
-            </div>
-          </div>
-
-          {/* Disponibilita */}
-          <div style={{ 
-            background: '#1a3a2a', borderRadius: 12, padding: '20px 24px', 
-            marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-          }}>
-            <div>
-              <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>
-                Disponibilita
-              </div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: '#fff' }}>
-                {lotto.kg_disponibili} <span style={{ fontSize: 14, fontWeight: 400 }}>{lotto.unita}</span>
-              </div>
-            </div>
-            <div style={{ 
-              background: lotto.kg_disponibili > 0 ? '#c9933a' : '#dc2626', 
-              color: '#fff', padding: '8px 16px', borderRadius: 20, fontSize: 12, fontWeight: 600 
-            }}>
-              {lotto.kg_disponibili > 0 ? 'Disponibile' : 'Esaurito'}
-            </div>
-          </div>
-
-          {/* Certificazioni e note */}
-          {(lotto.certificazioni || lotto.note) && (
-            <div style={{ marginBottom: 32 }}>
-              {lotto.certificazioni && (
-                <div style={{ background: '#fff', borderRadius: 10, padding: '16px 18px', boxShadow: '0 2px 8px rgba(0,0,0,.04)', marginBottom: 12 }}>
-                  <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#999', marginBottom: 6 }}>Certificazioni</div>
-                  <div style={{ fontSize: 14, color: '#1a3a2a', lineHeight: 1.5 }}>{lotto.certificazioni}</div>
+          {data.categoria_etichetta === 'completo' && (
+            <div className="mt-6 space-y-3">
+              {data.ingredienti && (
+                <div className="bg-white rounded-xl p-4">
+                  <p className="text-xs uppercase text-[#c9933a] font-semibold tracking-wider">Ingredienti</p>
+                  <p className="text-sm mt-1">{data.ingredienti}</p>
                 </div>
               )}
-              {lotto.note && (
-                <div style={{ background: '#fff', borderRadius: 10, padding: '16px 18px', boxShadow: '0 2px 8px rgba(0,0,0,.04)' }}>
-                  <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#999', marginBottom: 6 }}>Note</div>
-                  <div style={{ fontSize: 14, color: '#666', lineHeight: 1.5 }}>{lotto.note}</div>
+
+              {data.allergeni && (
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                  <p className="text-sm font-bold">⚠️ ALLERGENI: {data.allergeni}</p>
+                </div>
+              )}
+
+              {vn && (
+                <div className="bg-white rounded-xl p-4">
+                  <p className="text-xs uppercase text-[#c9933a] font-semibold tracking-wider mb-3">
+                    Valori Nutrizionali medi per 100 g
+                  </p>
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {[
+                        ['Energia', `${vn.energia_kj} kJ / ${vn.energia_kcal} kcal`],
+                        ['Grassi', `${vn.grassi} g`],
+                        ['di cui acidi grassi saturi', `${vn.grassi_saturi} g`],
+                        ['Carboidrati', `${vn.carboidrati} g`],
+                        ['di cui zuccheri', `${vn.zuccheri} g`],
+                        ['Fibre', `${vn.fibre} g`],
+                        ['Proteine', `${vn.proteine} g`],
+                        ['Sale', `${vn.sale} g`],
+                      ].map(([label, value], i) => (
+                        <tr key={label} className={i % 2 === 0 ? 'bg-[#f5f0e8]' : ''}>
+                          <td className="py-1.5 px-2 text-gray-600">{label}</td>
+                          <td className="py-1.5 px-2 text-right font-medium">{value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
           )}
 
-          {/* Azienda */}
-          <div style={{ 
-            background: 'linear-gradient(135deg, rgba(26,58,42,0.05), rgba(201,147,58,0.08))', 
-            borderRadius: 12, padding: '24px', textAlign: 'center', marginBottom: 32,
-            border: '1px solid rgba(201,147,58,0.2)'
-          }}>
-            <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#999', marginBottom: 8 }}>
-              Prodotto da
-            </p>
-            <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: '#1a3a2a', margin: 0, fontWeight: 700 }}>
-              Gianni Parisse - Azienda Agricola
-            </p>
-            <p style={{ fontSize: 13, color: '#666', marginTop: 6 }}>
-              Pescina (AQ) - Altopiano del Fucino
-            </p>
+          {data.categoria_etichetta === 'ortaggio_fresco' && (
+            <div className="bg-white rounded-xl p-4 mt-6">
+              <p className="text-sm">🌱 Prodotto fresco, non trasformato</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* SEZIONE 2: TRACCIABILITÀ */}
+      <section className="bg-white py-12 px-4">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="font-serif text-2xl font-bold text-[#1a3a2a]">Tracciabilità del Lotto</h2>
+          <span className="inline-block mt-2 px-3 py-1 bg-[#f5f0e8] text-xs font-mono rounded">
+            {data.codice_lotto}
+          </span>
+
+          <div className="grid grid-cols-2 gap-4 mt-6">
+            {[
+              ['Campo', data.campo],
+              ['Comune', data.comune],
+              ['Data Semina', formatDate(data.data_semina)],
+              ['Data Raccolta', formatDate(data.data_raccolta)],
+              ['Quantità prodotta', `${data.kg_totali} kg`],
+              ['Da consumarsi entro', data.tmc],
+            ].map(([label, value]) => (
+              <div key={label} className="bg-[#f5f0e8] rounded-xl p-4">
+                <p className="text-xs uppercase text-[#c9933a] font-semibold tracking-wider">{label}</p>
+                <p className="text-sm font-medium mt-1">{value || '—'}</p>
+              </div>
+            ))}
           </div>
 
-          {/* Torna allo store */}
-          <div style={{ textAlign: 'center' }}>
-            <Link href="/store" style={{
-              background: '#c9933a', color: '#fff', textDecoration: 'none',
-              padding: '14px 32px', borderRadius: 8, fontSize: 15,
-              fontWeight: 700, fontFamily: "'Lato',sans-serif", display: 'inline-flex', alignItems: 'center', gap: 8,
-            }}>
-              ← Torna allo Store
-            </Link>
+          {data.condizioni_conservazione && (
+            <div className="bg-[#f5f0e8] rounded-xl p-4 mt-4">
+              <p className="text-xs uppercase text-[#c9933a] font-semibold tracking-wider">Conservazione</p>
+              <p className="text-sm mt-1">{data.condizioni_conservazione}</p>
+            </div>
+          )}
+
+          {data.certificazioni && (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mt-3">
+              <p className="text-sm font-medium">✓ CERTIFICAZIONI: {data.certificazioni}</p>
+            </div>
+          )}
+
+          <div className="text-center mt-6">
+            <span className="inline-block px-4 py-2 bg-[#1a3a2a] text-[#c9933a] text-sm rounded-full font-medium">
+              🌾 Filiera Tracciata ✓
+            </span>
           </div>
         </div>
+      </section>
 
-        <footer style={{
-          background: '#1a3a2a', color: 'rgba(255,255,255,.7)',
-          textAlign: 'center', padding: 24, fontSize: 13, marginTop: 40,
-        }}>
-          <strong style={{ color: '#fff' }}>Gianni Parisse - Azienda Agricola</strong><br />
-          <span style={{ fontSize: 11, opacity: .6 }}>Pescina (AQ) - Altopiano del Fucino</span>
-        </footer>
-      </div>
-    </>
-  )
+      {/* FOOTER */}
+      <footer className="bg-[#f5f0e8] py-6 text-center px-4">
+        <Link href="/store" className="text-[#1a3a2a] hover:underline font-medium">
+          ← Torna allo Store
+        </Link>
+        <p className="text-xs text-gray-500 mt-2">
+          Peso netto: 1 kg / 500g · Da consumarsi preferibilmente entro: vedi confezione
+        </p>
+        <p className="text-xs text-gray-500 mt-1">
+          Prodotto e confezionato da: Gianni Parisse Az. Agri. · Pescina (AQ) – Italia
+        </p>
+      </footer>
+    </div>
+  );
 }
