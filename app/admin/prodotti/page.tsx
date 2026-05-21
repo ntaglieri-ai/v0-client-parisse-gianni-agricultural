@@ -62,11 +62,13 @@ export default function AdminProdottiPage() {
   const { data: lotti } = useSWR<Lotto[]>('/api/admin/lotti', fetcher)
   
   const [selectedProdotto, setSelectedProdotto] = useState<Prodotto | null>(null)
+  const [isReadOnlyMode, setIsReadOnlyMode] = useState(false) // true = solo lettura prodotto, form lotto aperto
   const [showNewProdottoForm, setShowNewProdottoForm] = useState(false)
   const [showLottoForm, setShowLottoForm] = useState(false)
   const [editingLotto, setEditingLotto] = useState<Lotto | null>(null)
   const [saving, setSaving] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [expandedProdottoId, setExpandedProdottoId] = useState<number | null>(null)
   
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -128,6 +130,10 @@ export default function AdminProdottiPage() {
     return lottiProdotto.reduce((sum, l) => sum + (Number(l.kg_totali) || 0), 0)
   }
 
+  const getLottiAttiviCount = (prodottoId: number) => {
+    return getLottiForProdotto(prodottoId).filter(l => l.attivo).length
+  }
+
   const loadProdottoIntoForm = (prodotto: Prodotto) => {
     const vn = prodotto.valori_nutrizionali || {}
     setFormData({
@@ -165,15 +171,24 @@ export default function AdminProdottiPage() {
     setShowLottoForm(false)
   }
 
-  const handleSelectProdotto = (prodotto: Prodotto) => {
+  const handleSelectProdotto = (prodotto: Prodotto, readOnly: boolean = false) => {
     setSelectedProdotto(prodotto)
+    setIsReadOnlyMode(readOnly)
     loadProdottoIntoForm(prodotto)
-    setShowLottoForm(false)
+    if (readOnly) {
+      // Modalita + Lotto: apri form nuovo lotto
+      resetLottoForm()
+      setShowLottoForm(true)
+    } else {
+      // Modalita Modifica: form lotto chiuso
+      setShowLottoForm(false)
+    }
     setEditingLotto(null)
   }
 
   const handleBackToList = () => {
     setSelectedProdotto(null)
+    setIsReadOnlyMode(false)
     resetForm()
     resetLottoForm()
   }
@@ -375,7 +390,32 @@ export default function AdminProdottiPage() {
             {selectedProdotto.nome}
           </h2>
           
-          <form onSubmit={handleSubmit}>
+          {isReadOnlyMode ? (
+            // Modalita sola lettura
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 12 : 16, marginBottom: 16 }}>
+                <div><label style={styles.label}>Nome</label><div style={{ padding: '10px 12px', background: '#f5f5f5', borderRadius: 6, fontSize: 14, color: '#333' }}>{formData.nome}</div></div>
+                <div><label style={styles.label}>Categoria</label><div style={{ padding: '10px 12px', background: '#f5f5f5', borderRadius: 6, fontSize: 14, color: '#333', textTransform: 'capitalize' }}>{formData.categoria}</div></div>
+                <div><label style={styles.label}>Unita</label><div style={{ padding: '10px 12px', background: '#f5f5f5', borderRadius: 6, fontSize: 14, color: '#333' }}>{formData.unita}</div></div>
+              </div>
+              {formData.immagine && <div style={{ marginBottom: 16 }}><label style={styles.label}>Immagine</label><div style={{ padding: '10px 12px', background: '#f5f5f5', borderRadius: 6, fontSize: 14, color: '#333', wordBreak: 'break-all' }}>{formData.immagine}</div></div>}
+              {formData.descrizione && <div style={{ marginBottom: 16 }}><label style={styles.label}>Descrizione</label><div style={{ padding: '10px 12px', background: '#f5f5f5', borderRadius: 6, fontSize: 14, color: '#333', whiteSpace: 'pre-wrap' }}>{formData.descrizione}</div></div>}
+              
+              {/* Info etichetta read-only */}
+              <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: 20, marginTop: 20 }}>
+                <h4 style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600, color: '#1a3a2a', marginBottom: 16 }}>Informazioni Etichetta</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16, marginBottom: 16 }}>
+                  <div><label style={styles.label}>Categoria Etichetta</label><div style={{ padding: '10px 12px', background: '#f5f5f5', borderRadius: 6, fontSize: 14, color: '#333' }}>{formData.categoria_etichetta === 'completo' ? 'Completo' : 'Ortaggio Fresco'}</div></div>
+                  <div><label style={styles.label}>Origine</label><div style={{ padding: '10px 12px', background: '#f5f5f5', borderRadius: 6, fontSize: 14, color: '#333' }}>{formData.origine || '-'}</div></div>
+                  <div><label style={styles.label}>Peso Netto</label><div style={{ padding: '10px 12px', background: '#f5f5f5', borderRadius: 6, fontSize: 14, color: '#333' }}>{formData.peso_netto || '-'}</div></div>
+                </div>
+                {formData.ingredienti && <div style={{ marginBottom: 16 }}><label style={styles.label}>Ingredienti</label><div style={{ padding: '10px 12px', background: '#f5f5f5', borderRadius: 6, fontSize: 14, color: '#333', whiteSpace: 'pre-wrap' }}>{formData.ingredienti}</div></div>}
+                {formData.allergeni && <div style={{ marginBottom: 16 }}><label style={styles.label}>Allergeni</label><div style={{ padding: '10px 12px', background: '#f5f5f5', borderRadius: 6, fontSize: 14, color: '#333' }}>{formData.allergeni}</div></div>}
+              </div>
+            </div>
+          ) : (
+            // Modalita modifica
+            <form onSubmit={handleSubmit}>
             {/* Campi base */}
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 12 : 16, marginBottom: 16 }}>
               <div>
@@ -483,6 +523,7 @@ export default function AdminProdottiPage() {
               {saving ? 'Salvataggio...' : 'Salva Modifiche'}
             </button>
           </form>
+          )}
         </div>
 
         {/* Sezione Lotti */}
@@ -687,57 +728,146 @@ export default function AdminProdottiPage() {
                 const percentuale = totaleTotale > 0 ? (totaleDisponibile / totaleTotale) * 100 : 0
                 const isLow = totaleDisponibile < 50 && totaleDisponibile > 0
                 const isEmpty = totaleDisponibile === 0
+                const lottiAttiviCount = getLottiAttiviCount(prodotto.id)
+                const isExpanded = expandedProdottoId === prodotto.id
+                const lottiProdotto = getLottiForProdotto(prodotto.id)
                 
                 return (
-                  <div 
-                    key={prodotto.id} 
-                    style={{ 
-                      padding: isMobile ? '14px 16px' : '16px 20px', 
-                      borderBottom: idx < prodottiCat.length - 1 ? '1px solid #f0f0f0' : 'none',
-                      background: isLow ? '#fef2f2' : (isEmpty ? '#f9fafb' : '#fff'),
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 16 }}>
-                      {/* Info prodotto */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                          <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 600, color: '#1a3a2a' }}>{prodotto.nome}</span>
-                          {!prodotto.attivo && <span style={{ background: '#9ca3af', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>INATTIVO</span>}
-                          {isLow && <span style={{ background: '#dc2626', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>SCORTE BASSE</span>}
+                  <div key={prodotto.id}>
+                    <div 
+                      style={{ 
+                        padding: isMobile ? '14px 16px' : '16px 20px', 
+                        borderBottom: (idx < prodottiCat.length - 1 && !isExpanded) ? '1px solid #f0f0f0' : 'none',
+                        background: isLow ? '#fef2f2' : (isEmpty ? '#f9fafb' : '#fff'),
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 16 }}>
+                        {/* Info prodotto */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 600, color: '#1a3a2a' }}>{prodotto.nome}</span>
+                            {!prodotto.attivo && <span style={{ background: '#9ca3af', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>INATTIVO</span>}
+                            {isLow && <span style={{ background: '#dc2626', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>SCORTE BASSE</span>}
+                            {/* Badge lotti cliccabile */}
+                            <button
+                              onClick={() => setExpandedProdottoId(isExpanded ? null : prodotto.id)}
+                              style={{
+                                background: lottiAttiviCount > 0 ? '#e0f2fe' : '#f3f4f6',
+                                color: lottiAttiviCount > 0 ? '#0369a1' : '#6b7280',
+                                border: 'none',
+                                fontSize: 11,
+                                padding: '3px 10px',
+                                borderRadius: 12,
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              {lottiAttiviCount} {lottiAttiviCount === 1 ? 'lotto' : 'lotti'}
+                              <span style={{ fontSize: 10, transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+                            </button>
+                          </div>
+                          
+                          {/* Progress bar e kg */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ flex: 1, maxWidth: 200, background: '#e5e7eb', borderRadius: 4, height: 8, overflow: 'hidden' }}>
+                              <div style={{
+                                width: `${Math.min(percentuale, 100)}%`,
+                                height: '100%',
+                                background: isEmpty ? '#9ca3af' : (isLow ? '#dc2626' : (percentuale < 30 ? '#f59e0b' : '#22c55e')),
+                                borderRadius: 4,
+                              }} />
+                            </div>
+                            <span style={{ fontSize: 13, color: isEmpty ? '#9ca3af' : (isLow ? '#dc2626' : '#666'), fontWeight: 600, whiteSpace: 'nowrap' }}>
+                              {totaleDisponibile.toFixed(0)} / {totaleTotale.toFixed(0)} kg
+                            </span>
+                          </div>
                         </div>
                         
-                        {/* Progress bar e kg */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ flex: 1, maxWidth: 200, background: '#e5e7eb', borderRadius: 4, height: 8, overflow: 'hidden' }}>
-                            <div style={{
-                              width: `${Math.min(percentuale, 100)}%`,
-                              height: '100%',
-                              background: isEmpty ? '#9ca3af' : (isLow ? '#dc2626' : (percentuale < 30 ? '#f59e0b' : '#22c55e')),
-                              borderRadius: 4,
-                            }} />
-                          </div>
-                          <span style={{ fontSize: 13, color: isEmpty ? '#9ca3af' : (isLow ? '#dc2626' : '#666'), fontWeight: 600, whiteSpace: 'nowrap' }}>
-                            {totaleDisponibile.toFixed(0)} / {totaleTotale.toFixed(0)} kg
-                          </span>
+                        {/* Bottoni */}
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button 
+                            onClick={() => handleSelectProdotto(prodotto, true)}
+                            style={{ padding: '8px 14px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                          >
+                            + Lotto
+                          </button>
+                          <button 
+                            onClick={() => handleSelectProdotto(prodotto, false)}
+                            style={{ padding: '8px 14px', background: '#c9933a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                          >
+                            Modifica
+                          </button>
                         </div>
                       </div>
-                      
-                      {/* Bottoni */}
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button 
-                          onClick={() => { setSelectedProdotto(prodotto); loadProdottoIntoForm(prodotto); setShowLottoForm(true); resetLottoForm(); setShowLottoForm(true) }}
-                          style={{ padding: '8px 14px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-                        >
-                          + Lotto
-                        </button>
-                        <button 
-                          onClick={() => handleSelectProdotto(prodotto)}
-                          style={{ padding: '8px 14px', background: '#c9933a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-                        >
-                          Modifica
-                        </button>
-                      </div>
                     </div>
+                    
+                    {/* Sezione espansa lotti inline */}
+                    {isExpanded && lottiProdotto.length > 0 && (
+                      <div style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', borderBottom: idx < prodottiCat.length - 1 ? '1px solid #e2e8f0' : 'none', padding: isMobile ? 12 : 16 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          {lottiProdotto.map(lotto => (
+                            <div key={lotto.id} style={{ 
+                              background: '#fff', 
+                              borderRadius: 10, 
+                              padding: isMobile ? 12 : 16,
+                              border: lotto.attivo ? '1px solid #e5e7eb' : '1px solid #d1d5db',
+                              opacity: lotto.attivo ? 1 : 0.7,
+                            }}>
+                              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 12 : 16, alignItems: isMobile ? 'stretch' : 'flex-start' }}>
+                                {/* QR Code */}
+                                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                                  <div style={{ background: '#fff', padding: 4, borderRadius: 6, border: '1px solid #e5e7eb' }}>
+                                    <QRCode value={`https://gianniparisse.it/store/traccia/${lotto.codice_lotto}`} size={80} />
+                                  </div>
+                                  <span style={{ fontSize: 9, color: '#666', textTransform: 'uppercase' }}>Traccia</span>
+                                </div>
+                                
+                                {/* Info lotto */}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                    <span style={{ fontSize: 15, fontWeight: 700, color: '#1a3a2a' }}>{lotto.codice_lotto}</span>
+                                    {!lotto.attivo && <span style={{ background: '#9ca3af', color: '#fff', fontSize: 9, padding: '2px 6px', borderRadius: 8 }}>INATTIVO</span>}
+                                  </div>
+                                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 8, fontSize: 12, color: '#555' }}>
+                                    <div><strong>Campo:</strong> {lotto.campo || '-'}</div>
+                                    <div><strong>Comune:</strong> {lotto.comune || '-'}</div>
+                                    <div><strong>Raccolta:</strong> {lotto.data_raccolta ? new Date(lotto.data_raccolta).toLocaleDateString('it-IT') : '-'}</div>
+                                    <div><strong>Disponibili:</strong> <span style={{ color: Number(lotto.kg_disponibili) < 50 ? '#dc2626' : '#16a34a', fontWeight: 600 }}>{lotto.kg_disponibili}</span>/{lotto.kg_totali} kg</div>
+                                    <div><strong>Prezzo:</strong> €{Number(lotto.prezzo).toFixed(2)}/{prodotto.unita}</div>
+                                    <div><strong>TMC:</strong> {lotto.tmc ? new Date(lotto.tmc).toLocaleDateString('it-IT') : '-'}</div>
+                                  </div>
+                                </div>
+                                
+                                {/* Bottoni lotto */}
+                                <div style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: 6, flexShrink: 0 }}>
+                                  <button 
+                                    onClick={() => { handleSelectProdotto(prodotto, false); setTimeout(() => handleEditLotto(lotto), 100) }}
+                                    style={{ padding: '6px 12px', background: '#c9933a', color: '#fff', border: 'none', borderRadius: 5, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                                  >
+                                    Modifica
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteLotto(lotto)}
+                                    style={{ padding: '6px 12px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 5, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                                  >
+                                    Elimina
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {isExpanded && lottiProdotto.length === 0 && (
+                      <div style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', borderBottom: idx < prodottiCat.length - 1 ? '1px solid #e2e8f0' : 'none', padding: 16, textAlign: 'center', color: '#666', fontSize: 13 }}>
+                        Nessun lotto presente per questo prodotto
+                      </div>
+                    )}
                   </div>
                 )
               })}
