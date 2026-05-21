@@ -21,6 +21,22 @@ interface Prodotto {
   prezzo_base: number
   immagine: string
   attivo: boolean
+  ingredienti?: string
+  allergeni?: string
+  categoria_etichetta?: string
+  origine?: string
+  peso_netto?: string
+  valori_nutrizionali?: {
+    energia_kj?: number
+    energia_kcal?: number
+    grassi?: number
+    grassi_saturi?: number
+    carboidrati?: number
+    zuccheri?: number
+    fibre?: number
+    proteine?: number
+    sale?: number
+  }
 }
 
 interface Lotto {
@@ -66,6 +82,20 @@ export default function AdminProdottiPage() {
     prezzo_base: '',
     immagine: '',
     attivo: true,
+    ingredienti: '',
+    allergeni: '',
+    categoria_etichetta: 'ortaggio_fresco',
+    origine: 'Italia – Altopiano del Fucino',
+    peso_netto: '',
+    energia_kj: '',
+    energia_kcal: '',
+    grassi: '',
+    grassi_saturi: '',
+    carboidrati: '',
+    zuccheri: '',
+    fibre: '',
+    proteine: '',
+    sale: '',
   })
   
   const [lottoFormData, setLottoFormData] = useState({
@@ -84,7 +114,7 @@ export default function AdminProdottiPage() {
   })
 
   const resetForm = () => {
-    setFormData({ nome: '', categoria: 'cereali', descrizione: '', unita: 'kg', prezzo_base: '', immagine: '', attivo: true })
+    setFormData({ nome: '', categoria: 'cereali', descrizione: '', unita: 'kg', prezzo_base: '', immagine: '', attivo: true, ingredienti: '', allergeni: '', categoria_etichetta: 'ortaggio_fresco', origine: 'Italia – Altopiano del Fucino', peso_netto: '', energia_kj: '', energia_kcal: '', grassi: '', grassi_saturi: '', carboidrati: '', zuccheri: '', fibre: '', proteine: '', sale: '' })
     setEditingProdotto(null)
     setShowForm(false)
   }
@@ -96,6 +126,7 @@ export default function AdminProdottiPage() {
   }
 
   const handleEdit = (prodotto: Prodotto) => {
+    const vn = prodotto.valori_nutrizionali || {}
     setFormData({
       nome: prodotto.nome,
       categoria: prodotto.categoria,
@@ -104,6 +135,20 @@ export default function AdminProdottiPage() {
       prezzo_base: prodotto.prezzo_base?.toString() || '',
       immagine: prodotto.immagine || '',
       attivo: prodotto.attivo,
+      ingredienti: prodotto.ingredienti || '',
+      allergeni: prodotto.allergeni || '',
+      categoria_etichetta: prodotto.categoria_etichetta || 'ortaggio_fresco',
+      origine: prodotto.origine || 'Italia – Altopiano del Fucino',
+      peso_netto: prodotto.peso_netto || '',
+      energia_kj: vn.energia_kj?.toString() || '',
+      energia_kcal: vn.energia_kcal?.toString() || '',
+      grassi: vn.grassi?.toString() || '',
+      grassi_saturi: vn.grassi_saturi?.toString() || '',
+      carboidrati: vn.carboidrati?.toString() || '',
+      zuccheri: vn.zuccheri?.toString() || '',
+      fibre: vn.fibre?.toString() || '',
+      proteine: vn.proteine?.toString() || '',
+      sale: vn.sale?.toString() || '',
     })
     setEditingProdotto(prodotto)
     setShowForm(true)
@@ -113,11 +158,26 @@ export default function AdminProdottiPage() {
     e.preventDefault()
     setSaving(true)
     try {
+      const valori_nutrizionali = {
+        energia_kj: parseFloat(formData.energia_kj) || null,
+        energia_kcal: parseFloat(formData.energia_kcal) || null,
+        grassi: parseFloat(formData.grassi) || null,
+        grassi_saturi: parseFloat(formData.grassi_saturi) || null,
+        carboidrati: parseFloat(formData.carboidrati) || null,
+        zuccheri: parseFloat(formData.zuccheri) || null,
+        fibre: parseFloat(formData.fibre) || null,
+        proteine: parseFloat(formData.proteine) || null,
+        sale: parseFloat(formData.sale) || null,
+      }
       const url = editingProdotto ? `/api/admin/prodotti/${editingProdotto.id}` : '/api/admin/prodotti'
       await fetch(url, {
         method: editingProdotto ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, prezzo_base: parseFloat(formData.prezzo_base) || 0 }),
+        body: JSON.stringify({ 
+          ...formData, 
+          prezzo_base: parseFloat(formData.prezzo_base) || 0,
+          valori_nutrizionali,
+        }),
       })
       mutate('/api/admin/prodotti')
       resetForm()
@@ -429,6 +489,80 @@ export default function AdminProdottiPage() {
               <label style={styles.label}>Descrizione</label>
               <textarea value={formData.descrizione} onChange={(e) => setFormData({ ...formData, descrizione: e.target.value })} style={{ ...styles.input, minHeight: 60 }} />
             </div>
+            
+            {/* Nuovi campi etichetta */}
+            <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: isMobile ? 12 : 16, marginTop: isMobile ? 12 : 16, marginBottom: isMobile ? 12 : 16 }}>
+              <h4 style={{ fontSize: isMobile ? 13 : 15, fontWeight: 600, color: '#1a3a2a', marginBottom: isMobile ? 10 : 14 }}>Informazioni Etichetta</h4>
+              <div style={styles.formGrid}>
+                <div>
+                  <label style={styles.label}>Categoria Etichetta</label>
+                  <select value={formData.categoria_etichetta} onChange={(e) => setFormData({ ...formData, categoria_etichetta: e.target.value })} style={styles.input}>
+                    <option value="ortaggio_fresco">Ortaggio Fresco</option>
+                    <option value="completo">Completo</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={styles.label}>Origine</label>
+                  <input type="text" value={formData.origine} onChange={(e) => setFormData({ ...formData, origine: e.target.value })} style={styles.input} placeholder="Italia – Altopiano del Fucino" />
+                </div>
+                <div>
+                  <label style={styles.label}>Peso Netto</label>
+                  <input type="text" value={formData.peso_netto} onChange={(e) => setFormData({ ...formData, peso_netto: e.target.value })} style={styles.input} placeholder="es. 1 kg / 500g" />
+                </div>
+              </div>
+              <div style={{ marginBottom: isMobile ? 12 : 16 }}>
+                <label style={styles.label}>Ingredienti</label>
+                <textarea value={formData.ingredienti} onChange={(e) => setFormData({ ...formData, ingredienti: e.target.value })} style={{ ...styles.input, minHeight: 60 }} placeholder="Elenco ingredienti..." />
+              </div>
+              <div style={{ marginBottom: isMobile ? 12 : 16 }}>
+                <label style={styles.label}>Allergeni</label>
+                <input type="text" value={formData.allergeni} onChange={(e) => setFormData({ ...formData, allergeni: e.target.value })} style={styles.input} placeholder="es. Contiene GLUTINE" />
+              </div>
+            </div>
+            
+            {/* Valori Nutrizionali */}
+            <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: isMobile ? 12 : 16, marginBottom: isMobile ? 12 : 16 }}>
+              <h4 style={{ fontSize: isMobile ? 13 : 15, fontWeight: 600, color: '#1a3a2a', marginBottom: isMobile ? 10 : 14 }}>Valori Nutrizionali (per 100g)</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 8 : 12 }}>
+                <div>
+                  <label style={styles.label}>Energia (kJ)</label>
+                  <input type="number" step="0.1" value={formData.energia_kj} onChange={(e) => setFormData({ ...formData, energia_kj: e.target.value })} style={styles.input} />
+                </div>
+                <div>
+                  <label style={styles.label}>Energia (kcal)</label>
+                  <input type="number" step="0.1" value={formData.energia_kcal} onChange={(e) => setFormData({ ...formData, energia_kcal: e.target.value })} style={styles.input} />
+                </div>
+                <div>
+                  <label style={styles.label}>Grassi (g)</label>
+                  <input type="number" step="0.1" value={formData.grassi} onChange={(e) => setFormData({ ...formData, grassi: e.target.value })} style={styles.input} />
+                </div>
+                <div>
+                  <label style={styles.label}>di cui Saturi (g)</label>
+                  <input type="number" step="0.1" value={formData.grassi_saturi} onChange={(e) => setFormData({ ...formData, grassi_saturi: e.target.value })} style={styles.input} />
+                </div>
+                <div>
+                  <label style={styles.label}>Carboidrati (g)</label>
+                  <input type="number" step="0.1" value={formData.carboidrati} onChange={(e) => setFormData({ ...formData, carboidrati: e.target.value })} style={styles.input} />
+                </div>
+                <div>
+                  <label style={styles.label}>di cui Zuccheri (g)</label>
+                  <input type="number" step="0.1" value={formData.zuccheri} onChange={(e) => setFormData({ ...formData, zuccheri: e.target.value })} style={styles.input} />
+                </div>
+                <div>
+                  <label style={styles.label}>Fibre (g)</label>
+                  <input type="number" step="0.1" value={formData.fibre} onChange={(e) => setFormData({ ...formData, fibre: e.target.value })} style={styles.input} />
+                </div>
+                <div>
+                  <label style={styles.label}>Proteine (g)</label>
+                  <input type="number" step="0.1" value={formData.proteine} onChange={(e) => setFormData({ ...formData, proteine: e.target.value })} style={styles.input} />
+                </div>
+                <div>
+                  <label style={styles.label}>Sale (g)</label>
+                  <input type="number" step="0.01" value={formData.sale} onChange={(e) => setFormData({ ...formData, sale: e.target.value })} style={styles.input} />
+                </div>
+              </div>
+            </div>
+            
             <div style={{ display: 'flex', gap: 10 }}>
               <button type="submit" disabled={saving} style={{ padding: isMobile ? '8px 14px' : '10px 20px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 6, fontSize: isMobile ? 12 : 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? 'Salvo...' : 'Salva'}</button>
               <button type="button" onClick={resetForm} style={{ padding: isMobile ? '8px 14px' : '10px 20px', background: '#f0f0f0', color: '#666', border: 'none', borderRadius: 6, fontSize: isMobile ? 12 : 14, cursor: 'pointer' }}>Annulla</button>

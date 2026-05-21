@@ -10,7 +10,10 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
-    const { nome, categoria, descrizione, unita, prezzo_base, immagine, attivo } = body
+    const { 
+      nome, categoria, descrizione, unita, prezzo_base, immagine, attivo,
+      ingredienti, allergeni, categoria_etichetta, origine, peso_netto, valori_nutrizionali
+    } = body
     
     const result = await sql`
       UPDATE prodotti 
@@ -21,7 +24,13 @@ export async function PUT(
         unita = ${unita},
         prezzo_base = ${prezzo_base || null},
         immagine = ${immagine || null},
-        attivo = ${attivo}
+        attivo = ${attivo},
+        ingredienti = ${ingredienti || null},
+        allergeni = ${allergeni || null},
+        categoria_etichetta = ${categoria_etichetta || null},
+        origine = ${origine || null},
+        peso_netto = ${peso_netto || null},
+        valori_nutrizionali = ${valori_nutrizionali ? JSON.stringify(valori_nutrizionali) : null}
       WHERE id = ${id}
       RETURNING *
     `
