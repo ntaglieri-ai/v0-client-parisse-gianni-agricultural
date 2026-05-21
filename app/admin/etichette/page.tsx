@@ -642,61 +642,90 @@ export default function EtichettePage() {
                     color: '#333',
                     overflow: 'hidden',
                     position: 'relative',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: 30,
                   }}
                 >
-                  {/* Logo watermark sfumato */}
+                  {/* Logo watermark al centro */}
                   <div style={{
                     position: 'absolute',
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    opacity: 0.12,
+                    opacity: 0.08,
+                    width: '60%',
                     pointerEvents: 'none',
                   }}>
-                    <Image src="/images/logo.png" alt="" width={200} height={200} style={{ objectFit: 'contain' }} />
+                    <Image src="/images/logo.png" alt="" width={227} height={227} style={{ objectFit: 'contain', width: '100%', height: 'auto' }} />
                   </div>
 
-                  {/* Contenuto sopra il watermark */}
-                  <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: '100%', maxWidth: 280 }}>
-                    {/* Ragione sociale in cima */}
-                    <div style={{ fontSize: 8, fontWeight: 600, color: '#666', letterSpacing: 0.5, marginBottom: 8 }}>
-                      {ragioneSociale.toUpperCase()}
-                    </div>
+                  {/* Contenuto a due colonne */}
+                  <div style={{ 
+                    position: 'relative', 
+                    zIndex: 1, 
+                    width: '100%', 
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '50px 40px',
+                  }}>
+                    <div style={{ display: 'flex', width: '100%', maxWidth: 280, gap: 12 }}>
+                      {/* COLONNA SINISTRA 60% */}
+                      <div style={{ flex: '0 0 60%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        {/* Ragione sociale */}
+                        <div style={{ fontSize: 7, fontWeight: 600, color: '#c9933a', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>
+                          {ragioneSociale}
+                        </div>
 
-                    {/* Nome prodotto grande */}
-                    <div style={{ fontSize: 22, fontWeight: 700, color: '#1a3a2a', marginBottom: 10, lineHeight: 1.1 }}>
-                      {selectedProdotto.nome}
-                    </div>
+                        {/* Nome prodotto */}
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#1a3a2a', marginBottom: 8, lineHeight: 1.2 }}>
+                          {selectedProdotto.nome}
+                        </div>
 
-                    {/* Allergeni se presenti */}
-                    {selectedProdotto.allergeni && (
-                      <div style={{ fontSize: 9, fontWeight: 700, marginBottom: 10, padding: '4px 10px', background: '#fff3cd', borderRadius: 4, color: '#856404', display: 'inline-block' }}>
-                        {selectedProdotto.allergeni}
+                        {/* Allergeni se presenti */}
+                        {selectedProdotto.allergeni && (
+                          <div style={{ 
+                            fontSize: 7, 
+                            fontWeight: 700, 
+                            marginBottom: 8, 
+                            padding: '3px 8px', 
+                            background: '#f97316', 
+                            borderRadius: 3, 
+                            color: '#fff', 
+                            display: 'inline-block',
+                            alignSelf: 'flex-start',
+                          }}>
+                            {selectedProdotto.allergeni}
+                          </div>
+                        )}
+
+                        {/* Codice lotto */}
+                        <div style={{ fontSize: 7, marginBottom: 3 }}>
+                          <strong>L:</strong> {selectedLotto.codice_lotto}
+                        </div>
+
+                        {/* Origine */}
+                        <div style={{ fontSize: 7, marginBottom: 3 }}>
+                          {selectedProdotto.origine || impostazioni?.origine_default || 'Italia – Altopiano del Fucino'}
+                        </div>
+
+                        {/* Conservazione */}
+                        {selectedLotto.condizioni_conservazione && (
+                          <div style={{ fontSize: 7, color: '#666' }}>
+                            {selectedLotto.condizioni_conservazione}
+                          </div>
+                        )}
                       </div>
-                    )}
 
-                    {/* Codice lotto */}
-                    <div style={{ fontSize: 10, marginBottom: 6 }}>
-                      <strong>L:</strong> {selectedLotto.codice_lotto}
-                    </div>
-
-                    {/* Origine */}
-                    <div style={{ fontSize: 9, color: '#555', marginBottom: 16 }}>
-                      {selectedProdotto.origine || impostazioni?.origine_default || 'Italia – Altopiano del Fucino'}
-                    </div>
-
-                    {/* QR code piccolo */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <div style={{ background: '#fff', padding: 4, border: '1px solid #ddd', borderRadius: 4 }}>
-                        <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={50} />
-                      </div>
-                      <div style={{ fontSize: 7, color: '#888', marginTop: 6 }}>
-                        {sitoWeb}
+                      {/* COLONNA DESTRA 40% */}
+                      <div style={{ flex: '0 0 40%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        {/* QR code 80x80px */}
+                        <div style={{ background: '#fff', padding: 4, border: '1px solid #ddd', borderRadius: 4 }}>
+                          <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={80} />
+                        </div>
+                        {/* Sito web */}
+                        <div style={{ fontSize: 7, color: '#666', marginTop: 6, textAlign: 'center' }}>
+                          {sitoWeb}
+                        </div>
                       </div>
                     </div>
                   </div>
