@@ -12,6 +12,45 @@ const fetcher = (url: string) => fetch(url).then(res => res.json())
 const categorie = ['cereali', 'legumi', 'farine', 'ortaggi', 'trasformati', 'pasta']
 const unitaOptions = ['kg', 'g', 'pz', 'l']
 
+// Mappa sigle prodotti per codice lotto
+const sigleProdotti: Record<string, string> = {
+  'Farro': 'FA',
+  'Grano Tenero': 'GT',
+  'Grano Duro': 'GD',
+  'Grano Solina': 'GS',
+  'Grano Senatore Cappelli': 'SC',
+  'Orzo': 'OR',
+  'Mais': 'MA',
+  'Fagioli Borlotti': 'FB',
+  'Fagioli Cannellini': 'FC',
+  'Ceci': 'CE',
+  'Lenticchie': 'LE',
+  'Piselli': 'PI',
+  'Farina di Grano Tenero': 'FGT',
+  'Farina di Grano Duro': 'FGD',
+  'Farina di Ceci': 'FCI',
+  'Farina di Farro': 'FFA',
+  'Patate': 'PAT',
+  'Carote': 'CAR',
+  'Cipolle': 'CIP',
+  'Aglio': 'AGL',
+  'Radicchio': 'RAD',
+  'Finocchi': 'FIN',
+  'Cavoli': 'CAV',
+  'Pomodori': 'POM',
+  'Zucchine': 'ZUC',
+  'Melanzane': 'MEL',
+  'Passata di Pomodoro': 'PP',
+  'Aglio Marinato': 'AM',
+  'Aglio in Polvere': 'AP',
+  'Sottaceti': 'SOT',
+  "Sott'oli": 'SOL',
+  'Pasta Senatore Cappelli': 'PSC',
+}
+
+// Regex validazione codice lotto: XX-YYYY-NNN o XXX-YYYY-NNN
+const codiceLottoRegex = /^[A-Z]{2,3}-\d{4}-\d{3}$/
+
 interface Prodotto {
   id: number
   nome: string
@@ -69,6 +108,7 @@ export default function AdminProdottiPage() {
   const [saving, setSaving] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [expandedProdottoId, setExpandedProdottoId] = useState<number | null>(null)
+  const [codiceLottoError, setCodiceLottoError] = useState('')
   
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -134,6 +174,28 @@ export default function AdminProdottiPage() {
     return getLottiForProdotto(prodottoId).filter(l => l.attivo).length
   }
 
+  const generateCodiceLotto = (prodotto: Prodotto) => {
+    const sigla = sigleProdotti[prodotto.nome] || prodotto.nome.substring(0, 2).toUpperCase()
+    const anno = new Date().getFullYear()
+    const lottiEsistenti = getLottiForProdotto(prodotto.id).length
+    const numero = String(lottiEsistenti + 1).padStart(3, '0')
+    return `${sigla}-${anno}-${numero}`
+  }
+
+  const validateCodiceLotto = (codice: string) => {
+    if (!codice) return ''
+    if (!codiceLottoRegex.test(codice)) {
+      return 'Formato non valido. Usa: XX-YYYY-NNN (es. FA-2026-001)'
+    }
+    return ''
+  }
+
+  const handleCodiceLottoChange = (value: string) => {
+    const upperValue = value.toUpperCase()
+    setLottoFormData({ ...lottoFormData, codice_lotto: upperValue })
+    setCodiceLottoError(validateCodiceLotto(upperValue))
+  }
+
   const loadProdottoIntoForm = (prodotto: Prodotto) => {
     const vn = prodotto.valori_nutrizionali || {}
     setFormData({
@@ -175,9 +237,26 @@ export default function AdminProdottiPage() {
     setSelectedProdotto(prodotto)
     setIsReadOnlyMode(readOnly)
     loadProdottoIntoForm(prodotto)
+    setCodiceLottoError('')
     if (readOnly) {
-      // Modalita + Lotto: apri form nuovo lotto
-      resetLottoForm()
+      // Modalita + Lotto: apri form nuovo lotto con codice pre-compilato
+      const suggestedCode = generateCodiceLotto(prodotto)
+      setLottoFormData({ 
+        prodotto_id: prodotto.id, 
+        codice_lotto: suggestedCode, 
+        campo: '', 
+        comune: '', 
+        data_semina: '', 
+        data_raccolta: '', 
+        kg_totali: '', 
+        kg_disponibili: '', 
+        prezzo: '', 
+        tmc: '', 
+        condizioni_conservazione: '', 
+        certificazioni: '', 
+        note: '', 
+        attivo: true 
+      })
       setShowLottoForm(true)
     } else {
       // Modalita Modifica: form lotto chiuso
@@ -544,10 +623,20 @@ export default function AdminProdottiPage() {
               <h4 style={{ fontSize: 15, fontWeight: 600, color: '#1a3a2a', marginBottom: 16 }}>{editingLotto ? 'Modifica Lotto' : 'Nuovo Lotto'}</h4>
               <form onSubmit={handleLottoSubmit}>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
-                  <div>
-                    <label style={styles.label}>Codice Lotto</label>
-                    <input type="text" value={lottoFormData.codice_lotto} onChange={(e) => setLottoFormData({ ...lottoFormData, codice_lotto: e.target.value })} style={styles.input} required />
-                  </div>
+<div>
+  <label style={styles.label}>Codice Lotto</label>
+  <input 
+    type="text" 
+    value={lottoFormData.codice_lotto} 
+    onChange={(e) => handleCodiceLottoChange(e.target.value)} 
+    style={{ ...styles.input, borderColor: codiceLottoError ? '#dc2626' : '#ddd' }} 
+    required 
+    placeholder="XX-YYYY-NNN"
+  />
+  {codiceLottoError && (
+    <span style={{ fontSize: 11, color: '#dc2626', marginTop: 4, display: 'block' }}>{codiceLottoError}</span>
+  )}
+  </div>
                   <div>
                     <label style={styles.label}>Campo</label>
                     <input type="text" value={lottoFormData.campo} onChange={(e) => setLottoFormData({ ...lottoFormData, campo: e.target.value })} style={styles.input} />
@@ -604,7 +693,20 @@ export default function AdminProdottiPage() {
                   <textarea value={lottoFormData.note} onChange={(e) => setLottoFormData({ ...lottoFormData, note: e.target.value })} style={{ ...styles.input, minHeight: 60 }} />
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <button type="submit" disabled={saving} style={{ padding: '10px 24px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                  <button 
+                    type="submit" 
+                    disabled={saving || (!!codiceLottoError) || !lottoFormData.codice_lotto || !codiceLottoRegex.test(lottoFormData.codice_lotto)} 
+                    style={{ 
+                      padding: '10px 24px', 
+                      background: (codiceLottoError || !lottoFormData.codice_lotto || !codiceLottoRegex.test(lottoFormData.codice_lotto)) ? '#9ca3af' : '#1a3a2a', 
+                      color: '#fff', 
+                      border: 'none', 
+                      borderRadius: 6, 
+                      fontSize: 13, 
+                      fontWeight: 600, 
+                      cursor: (codiceLottoError || !lottoFormData.codice_lotto || !codiceLottoRegex.test(lottoFormData.codice_lotto)) ? 'not-allowed' : 'pointer' 
+                    }}
+                  >
                     {saving ? 'Salvataggio...' : (editingLotto ? 'Aggiorna Lotto' : 'Crea Lotto')}
                   </button>
                   <button type="button" onClick={resetLottoForm} style={{ padding: '10px 24px', background: '#e0e0e0', color: '#666', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
