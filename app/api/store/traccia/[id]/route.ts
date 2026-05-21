@@ -7,6 +7,9 @@ export async function GET(
 ) {
   try {
     const { id: codice_lotto } = await params
+    console.log('[v0] Cercando lotto:', codice_lotto)
+    console.log('[v0] POSTGRES_URL exists:', !!process.env.POSTGRES_URL)
+    console.log('[v0] POSTGRES_URL_NON_POOLING exists:', !!process.env.POSTGRES_URL_NON_POOLING)
     const sql = getDb()
     
     const result = await sql`
