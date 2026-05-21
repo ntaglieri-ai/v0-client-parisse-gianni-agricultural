@@ -740,7 +740,7 @@ export default function AdminProdottiPage() {
                         <div><strong>Campo:</strong> {lotto.campo || '-'}</div>
                         <div><strong>Comune:</strong> {lotto.comune || '-'}</div>
                         <div><strong>Prezzo:</strong> €{Number(lotto.prezzo).toFixed(2)}/{selectedProdotto.unita}</div>
-                        <div><strong>TMC:</strong> {lotto.tmc ? new Date(lotto.tmc).toLocaleDateString('it-IT') : '-'}</div>
+                        <div><strong>TMC:</strong> {lotto.tmc || '-'}</div>
                         <div><strong>Raccolta:</strong> {lotto.data_raccolta ? new Date(lotto.data_raccolta).toLocaleDateString('it-IT') : '-'}</div>
                         <div>
                           <strong>Disponibili:</strong> 
@@ -939,7 +939,7 @@ export default function AdminProdottiPage() {
                                     <div><strong>Raccolta:</strong> {lotto.data_raccolta ? new Date(lotto.data_raccolta).toLocaleDateString('it-IT') : '-'}</div>
                                     <div><strong>Disponibili:</strong> <span style={{ color: Number(lotto.kg_disponibili) < 50 ? '#dc2626' : '#16a34a', fontWeight: 600 }}>{lotto.kg_disponibili}</span>/{lotto.kg_totali} kg</div>
                                     <div><strong>Prezzo:</strong> €{Number(lotto.prezzo).toFixed(2)}/{prodotto.unita}</div>
-                                    <div><strong>TMC:</strong> {lotto.tmc ? new Date(lotto.tmc).toLocaleDateString('it-IT') : '-'}</div>
+                                    <div><strong>TMC:</strong> {lotto.tmc || '-'}</div>
                                   </div>
                                 </div>
                                 
