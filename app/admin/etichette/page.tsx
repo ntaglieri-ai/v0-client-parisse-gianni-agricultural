@@ -195,61 +195,105 @@ export default function EtichettePage() {
           {/* Selezione formato */}
           <div style={{ marginBottom: 20 }}>
             <label style={styles.label}>Formato Etichetta</label>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <button
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              {/* Card Orizzontale */}
+              <div
                 onClick={() => { setFormato('orizzontale'); setShowEtichetta(false) }}
                 style={{
-                  padding: '10px 16px',
-                  background: formato === 'orizzontale' ? '#1a3a2a' : '#f5f5f5',
-                  color: formato === 'orizzontale' ? '#fff' : '#333',
-                  border: formato === 'orizzontale' ? '2px solid #1a3a2a' : '2px solid #e5e7eb',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: 600,
+                  width: 140,
+                  padding: 16,
+                  borderRadius: 12,
+                  border: formato === 'orizzontale' ? '2px solid #c9933a' : '2px solid #e5e7eb',
+                  background: formato === 'orizzontale' ? '#fefbf6' : '#fff',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
+                  textAlign: 'center',
+                  transition: 'all 0.2s',
+                  position: 'relative',
                 }}
               >
-                <span style={{ fontSize: 16 }}>📄</span> Orizzontale (10x6cm)
-              </button>
-              <button
+                {formato === 'orizzontale' && (
+                  <span style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, background: '#22c55e', borderRadius: '50%', color: '#fff', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    ✓
+                  </span>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                  <div style={{
+                    width: 80,
+                    height: 48,
+                    border: formato === 'orizzontale' ? '2px solid #c9933a' : '2px solid #999',
+                    borderRadius: 4,
+                    background: formato === 'orizzontale' ? 'linear-gradient(135deg, #f5f0e8 0%, #fff 100%)' : '#f9f9f9',
+                  }} />
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#1a3a2a', marginBottom: 2 }}>Orizzontale</div>
+                <div style={{ fontSize: 11, color: '#666' }}>10 x 6 cm</div>
+              </div>
+
+              {/* Card Verticale */}
+              <div
                 onClick={() => { setFormato('verticale'); setShowEtichetta(false) }}
                 style={{
-                  padding: '10px 16px',
-                  background: formato === 'verticale' ? '#1a3a2a' : '#f5f5f5',
-                  color: formato === 'verticale' ? '#fff' : '#333',
-                  border: formato === 'verticale' ? '2px solid #1a3a2a' : '2px solid #e5e7eb',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: 600,
+                  width: 140,
+                  padding: 16,
+                  borderRadius: 12,
+                  border: formato === 'verticale' ? '2px solid #c9933a' : '2px solid #e5e7eb',
+                  background: formato === 'verticale' ? '#fefbf6' : '#fff',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
+                  textAlign: 'center',
+                  transition: 'all 0.2s',
+                  position: 'relative',
                 }}
               >
-                <span style={{ fontSize: 16 }}>📋</span> Verticale (6x10cm)
-              </button>
-              <button
+                {formato === 'verticale' && (
+                  <span style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, background: '#22c55e', borderRadius: '50%', color: '#fff', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    ✓
+                  </span>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                  <div style={{
+                    width: 48,
+                    height: 80,
+                    border: formato === 'verticale' ? '2px solid #c9933a' : '2px solid #999',
+                    borderRadius: 4,
+                    background: formato === 'verticale' ? 'linear-gradient(135deg, #f5f0e8 0%, #fff 100%)' : '#f9f9f9',
+                  }} />
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#1a3a2a', marginBottom: 2 }}>Verticale</div>
+                <div style={{ fontSize: 11, color: '#666' }}>6 x 10 cm</div>
+              </div>
+
+              {/* Card Rotonda */}
+              <div
                 onClick={() => { setFormato('rotonda'); setShowEtichetta(false) }}
                 style={{
-                  padding: '10px 16px',
-                  background: formato === 'rotonda' ? '#1a3a2a' : '#f5f5f5',
-                  color: formato === 'rotonda' ? '#fff' : '#333',
-                  border: formato === 'rotonda' ? '2px solid #1a3a2a' : '2px solid #e5e7eb',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: 600,
+                  width: 140,
+                  padding: 16,
+                  borderRadius: 12,
+                  border: formato === 'rotonda' ? '2px solid #c9933a' : '2px solid #e5e7eb',
+                  background: formato === 'rotonda' ? '#fefbf6' : '#fff',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
+                  textAlign: 'center',
+                  transition: 'all 0.2s',
+                  position: 'relative',
                 }}
               >
-                <span style={{ fontSize: 16 }}>⭕</span> Rotonda (10cm)
-              </button>
+                {formato === 'rotonda' && (
+                  <span style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, background: '#22c55e', borderRadius: '50%', color: '#fff', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    ✓
+                  </span>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                  <div style={{
+                    width: 64,
+                    height: 64,
+                    border: formato === 'rotonda' ? '2px solid #c9933a' : '2px solid #999',
+                    borderRadius: '50%',
+                    background: formato === 'rotonda' ? 'linear-gradient(135deg, #f5f0e8 0%, #fff 100%)' : '#f9f9f9',
+                  }} />
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#1a3a2a', marginBottom: 2 }}>Rotonda</div>
+                <div style={{ fontSize: 11, color: '#666' }}>10 cm</div>
+              </div>
             </div>
           </div>
 
