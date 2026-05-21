@@ -1,16 +1,29 @@
 import { getDb } from '@/lib/admin-db'
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const sql = getDb()
+  const { searchParams } = new URL(request.url)
+  const prodotto_id = searchParams.get('prodotto_id')
   
   try {
-    const lotti = await sql`
-      SELECT l.*, p.nome as prodotto_nome, p.categoria as prodotto_categoria
-      FROM lotti l
-      LEFT JOIN prodotti p ON l.prodotto_id = p.id
-      ORDER BY l.created_at DESC
-    `
+    let lotti
+    if (prodotto_id) {
+      lotti = await sql`
+        SELECT l.*, p.nome as prodotto_nome, p.categoria as prodotto_categoria
+        FROM lotti l
+        LEFT JOIN prodotti p ON l.prodotto_id = p.id
+        WHERE l.prodotto_id = ${prodotto_id}
+        ORDER BY l.created_at DESC
+      `
+    } else {
+      lotti = await sql`
+        SELECT l.*, p.nome as prodotto_nome, p.categoria as prodotto_categoria
+        FROM lotti l
+        LEFT JOIN prodotti p ON l.prodotto_id = p.id
+        ORDER BY l.created_at DESC
+      `
+    }
     return NextResponse.json(lotti)
   } catch (error) {
     console.error('Error fetching lotti:', error)
