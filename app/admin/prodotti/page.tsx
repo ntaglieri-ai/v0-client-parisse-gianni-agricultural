@@ -50,6 +50,8 @@ interface Lotto {
   kg_totali: number
   kg_disponibili: number
   prezzo: number
+  tmc: string
+  condizioni_conservazione: string
   certificazioni: string
   note: string
   attivo: boolean
@@ -59,12 +61,11 @@ export default function AdminProdottiPage() {
   const { data: prodotti, error: prodottiError } = useSWR<Prodotto[]>('/api/admin/prodotti', fetcher)
   const { data: lotti } = useSWR<Lotto[]>('/api/admin/lotti', fetcher)
   
-  const [showForm, setShowForm] = useState(false)
-  const [editingProdotto, setEditingProdotto] = useState<Prodotto | null>(null)
-  const [showLottoForm, setShowLottoForm] = useState<number | null>(null)
+  const [selectedProdotto, setSelectedProdotto] = useState<Prodotto | null>(null)
+  const [showNewProdottoForm, setShowNewProdottoForm] = useState(false)
+  const [showLottoForm, setShowLottoForm] = useState(false)
   const [editingLotto, setEditingLotto] = useState<Lotto | null>(null)
   const [saving, setSaving] = useState(false)
-  const [expandedProdotto, setExpandedProdotto] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   
   useEffect(() => {
@@ -108,24 +109,26 @@ export default function AdminProdottiPage() {
     kg_totali: '',
     kg_disponibili: '',
     prezzo: '',
+    tmc: '',
+    condizioni_conservazione: '',
     certificazioni: '',
     note: '',
     attivo: true,
   })
 
-  const resetForm = () => {
-    setFormData({ nome: '', categoria: 'cereali', descrizione: '', unita: 'kg', prezzo_base: '', immagine: '', attivo: true, ingredienti: '', allergeni: '', categoria_etichetta: 'ortaggio_fresco', origine: 'Italia – Altopiano del Fucino', peso_netto: '', energia_kj: '', energia_kcal: '', grassi: '', grassi_saturi: '', carboidrati: '', zuccheri: '', fibre: '', proteine: '', sale: '' })
-    setEditingProdotto(null)
-    setShowForm(false)
+  const getLottiForProdotto = (prodottoId: number) => lotti?.filter(l => l.prodotto_id === prodottoId) || []
+  
+  const getTotaleDisponibile = (prodottoId: number) => {
+    const lottiProdotto = getLottiForProdotto(prodottoId).filter(l => l.attivo)
+    return lottiProdotto.reduce((sum, l) => sum + (Number(l.kg_disponibili) || 0), 0)
   }
 
-  const resetLottoForm = () => {
-    setLottoFormData({ prodotto_id: 0, codice_lotto: '', campo: '', comune: '', data_semina: '', data_raccolta: '', kg_totali: '', kg_disponibili: '', prezzo: '', certificazioni: '', note: '', attivo: true })
-    setEditingLotto(null)
-    setShowLottoForm(null)
+  const getTotaleTotale = (prodottoId: number) => {
+    const lottiProdotto = getLottiForProdotto(prodottoId).filter(l => l.attivo)
+    return lottiProdotto.reduce((sum, l) => sum + (Number(l.kg_totali) || 0), 0)
   }
 
-  const handleEdit = (prodotto: Prodotto) => {
+  const loadProdottoIntoForm = (prodotto: Prodotto) => {
     const vn = prodotto.valori_nutrizionali || {}
     setFormData({
       nome: prodotto.nome,
@@ -150,8 +153,29 @@ export default function AdminProdottiPage() {
       proteine: vn.proteine?.toString() || '',
       sale: vn.sale?.toString() || '',
     })
-    setEditingProdotto(prodotto)
-    setShowForm(true)
+  }
+
+  const resetForm = () => {
+    setFormData({ nome: '', categoria: 'cereali', descrizione: '', unita: 'kg', prezzo_base: '', immagine: '', attivo: true, ingredienti: '', allergeni: '', categoria_etichetta: 'ortaggio_fresco', origine: 'Italia – Altopiano del Fucino', peso_netto: '', energia_kj: '', energia_kcal: '', grassi: '', grassi_saturi: '', carboidrati: '', zuccheri: '', fibre: '', proteine: '', sale: '' })
+  }
+
+  const resetLottoForm = () => {
+    setLottoFormData({ prodotto_id: 0, codice_lotto: '', campo: '', comune: '', data_semina: '', data_raccolta: '', kg_totali: '', kg_disponibili: '', prezzo: '', tmc: '', condizioni_conservazione: '', certificazioni: '', note: '', attivo: true })
+    setEditingLotto(null)
+    setShowLottoForm(false)
+  }
+
+  const handleSelectProdotto = (prodotto: Prodotto) => {
+    setSelectedProdotto(prodotto)
+    loadProdottoIntoForm(prodotto)
+    setShowLottoForm(false)
+    setEditingLotto(null)
+  }
+
+  const handleBackToList = () => {
+    setSelectedProdotto(null)
+    resetForm()
+    resetLottoForm()
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -169,9 +193,9 @@ export default function AdminProdottiPage() {
         proteine: parseFloat(formData.proteine) || null,
         sale: parseFloat(formData.sale) || null,
       }
-      const url = editingProdotto ? `/api/admin/prodotti/${editingProdotto.id}` : '/api/admin/prodotti'
-      await fetch(url, {
-        method: editingProdotto ? 'PUT' : 'POST',
+      const url = selectedProdotto ? `/api/admin/prodotti/${selectedProdotto.id}` : '/api/admin/prodotti'
+      const res = await fetch(url, {
+        method: selectedProdotto ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           ...formData, 
@@ -179,25 +203,18 @@ export default function AdminProdottiPage() {
           valori_nutrizionali,
         }),
       })
+      const updated = await res.json()
       mutate('/api/admin/prodotti')
-      resetForm()
+      if (selectedProdotto) {
+        setSelectedProdotto({ ...selectedProdotto, ...updated })
+      } else {
+        setShowNewProdottoForm(false)
+        resetForm()
+      }
     } catch (error) {
       console.error('Error saving prodotto:', error)
     }
     setSaving(false)
-  }
-
-  const handleToggleAttivo = async (prodotto: Prodotto) => {
-    try {
-      await fetch(`/api/admin/prodotti/${prodotto.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...prodotto, attivo: !prodotto.attivo }),
-      })
-      mutate('/api/admin/prodotti')
-    } catch (error) {
-      console.error('Error toggling prodotto:', error)
-    }
   }
 
   const handleEditLotto = (lotto: Lotto) => {
@@ -211,12 +228,14 @@ export default function AdminProdottiPage() {
       kg_totali: lotto.kg_totali?.toString() || '',
       kg_disponibili: lotto.kg_disponibili?.toString() || '',
       prezzo: lotto.prezzo?.toString() || '',
+      tmc: lotto.tmc || '',
+      condizioni_conservazione: lotto.condizioni_conservazione || '',
       certificazioni: lotto.certificazioni || '',
       note: lotto.note || '',
       attivo: lotto.attivo,
     })
     setEditingLotto(lotto)
-    setShowLottoForm(lotto.prodotto_id)
+    setShowLottoForm(true)
   }
 
   const handleLottoSubmit = async (e: React.FormEvent) => {
@@ -229,6 +248,7 @@ export default function AdminProdottiPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...lottoFormData,
+          prodotto_id: selectedProdotto?.id,
           kg_totali: parseFloat(lottoFormData.kg_totali) || 0,
           kg_disponibili: parseFloat(lottoFormData.kg_disponibili) || 0,
           prezzo: parseFloat(lottoFormData.prezzo) || 0,
@@ -242,19 +262,6 @@ export default function AdminProdottiPage() {
     setSaving(false)
   }
 
-  const handleToggleLottoAttivo = async (lotto: Lotto) => {
-    try {
-      await fetch(`/api/admin/lotti/${lotto.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...lotto, attivo: !lotto.attivo }),
-      })
-      mutate('/api/admin/lotti')
-    } catch (error) {
-      console.error('Error toggling lotto:', error)
-    }
-  }
-
   const handleDeleteLotto = async (lotto: Lotto) => {
     if (!confirm(`Eliminare il lotto "${lotto.codice_lotto}"?`)) return
     try {
@@ -264,14 +271,6 @@ export default function AdminProdottiPage() {
       console.error('Error deleting lotto:', error)
     }
   }
-
-  const openNewLottoForm = (prodottoId: number) => {
-    setLottoFormData({ ...lottoFormData, prodotto_id: prodottoId })
-    setShowLottoForm(prodottoId)
-    setExpandedProdotto(prodottoId)
-  }
-
-  const getLottiForProdotto = (prodottoId: number) => lotti?.filter(l => l.prodotto_id === prodottoId) || []
 
   const handlePrintQR = (lotto: Lotto, prodottoNome: string) => {
     const url = `https://gianniparisse.it/store/traccia/${lotto.codice_lotto}`
@@ -287,81 +286,28 @@ export default function AdminProdottiPage() {
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           @page { size: auto; margin: 10mm; }
-          body { 
-            font-family: Arial, sans-serif; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh;
-            background: #fff;
-          }
-          .container {
-            text-align: center;
-            padding: 20px;
-          }
-          .qr-wrapper {
-            display: inline-block;
-            padding: 16px;
-            border: 3px solid #000;
-            border-radius: 12px;
-            margin-bottom: 16px;
-          }
-          #qrcode {
-            display: inline-block;
-          }
-          #qrcode canvas, #qrcode img {
-            display: block !important;
-          }
-          .product-name {
-            font-size: 24px;
-            font-weight: bold;
-            color: #000;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-          }
-          .lotto-code {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 4px;
-          }
-          .url {
-            font-size: 11px;
-            color: #666;
-            word-break: break-all;
-            max-width: 300px;
-            margin: 0 auto;
-          }
-          .brand {
-            margin-top: 16px;
-            font-size: 14px;
-            color: #444;
-            font-weight: 600;
-          }
-          @media print {
-            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          }
+          body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #fff; }
+          .container { text-align: center; padding: 20px; }
+          .qr-wrapper { display: inline-block; padding: 16px; border: 3px solid #000; border-radius: 12px; margin-bottom: 16px; }
+          #qrcode { display: inline-block; }
+          #qrcode canvas, #qrcode img { display: block !important; }
+          .product-name { font-size: 24px; font-weight: bold; color: #000; margin-bottom: 8px; text-transform: uppercase; }
+          .lotto-code { font-size: 20px; font-weight: 600; color: #333; margin-bottom: 4px; }
+          .url { font-size: 11px; color: #666; word-break: break-all; max-width: 300px; margin: 0 auto; }
+          .brand { margin-top: 16px; font-size: 14px; color: #444; font-weight: 600; }
+          @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
         </style>
       </head>
       <body>
         <div class="container">
-          <div class="qr-wrapper">
-            <div id="qrcode"></div>
-          </div>
+          <div class="qr-wrapper"><div id="qrcode"></div></div>
           <div class="product-name">${prodottoNome}</div>
           <div class="lotto-code">Lotto: ${lotto.codice_lotto}</div>
           <div class="url">${url}</div>
           <div class="brand">Gianni Parisse - Azienda Agricola</div>
         </div>
         <script>
-          new QRCode(document.getElementById("qrcode"), {
-            text: "${url}",
-            width: 200,
-            height: 200,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-          });
+          new QRCode(document.getElementById("qrcode"), { text: "${url}", width: 200, height: 200, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
           setTimeout(function() { window.print(); }, 500);
         </script>
       </body>
@@ -379,38 +325,7 @@ export default function AdminProdottiPage() {
     return acc
   }, {} as Record<string, Prodotto[]>)
 
-  // Stili responsive
   const styles = {
-    header: {
-      display: 'flex',
-      flexDirection: isMobile ? 'column' as const : 'row' as const,
-      justifyContent: 'space-between',
-      alignItems: isMobile ? 'stretch' : 'center',
-      gap: isMobile ? 12 : 0,
-      marginBottom: isMobile ? 20 : 32,
-    },
-    title: {
-      color: '#1a3a2a',
-      fontSize: isMobile ? 22 : 32,
-      fontWeight: 700,
-    },
-    addBtn: {
-      padding: isMobile ? '10px 16px' : '12px 24px',
-      background: '#c9933a',
-      color: '#fff',
-      border: 'none',
-      borderRadius: 8,
-      fontSize: isMobile ? 13 : 14,
-      fontWeight: 600,
-      cursor: 'pointer',
-      width: isMobile ? '100%' : 'auto',
-    },
-    formGrid: {
-      display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-      gap: isMobile ? 12 : 16,
-      marginBottom: isMobile ? 12 : 16,
-    },
     input: {
       width: '100%',
       padding: isMobile ? '8px 10px' : '10px 12px',
@@ -426,36 +341,43 @@ export default function AdminProdottiPage() {
       color: '#1a3a2a',
       marginBottom: isMobile ? 4 : 6,
     },
-    catTitle: {
-      color: '#1a3a2a',
-      fontSize: isMobile ? 15 : 18,
-      fontWeight: 600,
-      marginBottom: isMobile ? 10 : 16,
-      textTransform: 'capitalize' as const,
-      borderBottom: '2px solid #c9933a',
-      paddingBottom: 8,
-    },
-    card: {
-      background: '#fff',
-      borderRadius: 10,
-      padding: isMobile ? 12 : 16,
-      marginBottom: isMobile ? 10 : 12,
-      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-    },
   }
 
-  return (
-    <div>
-      <div style={styles.header}>
-        <h1 className={playfair.className} style={styles.title}>Prodotti</h1>
-        <button onClick={() => setShowForm(true)} style={styles.addBtn}>+ Nuovo Prodotto</button>
-      </div>
+  // DETAIL VIEW - Schermo intero quando un prodotto e selezionato
+  if (selectedProdotto) {
+    const lottiProdotto = getLottiForProdotto(selectedProdotto.id)
+    
+    return (
+      <div>
+        {/* Header con bottone torna */}
+        <button
+          onClick={handleBackToList}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'transparent',
+            border: 'none',
+            color: '#1a3a2a',
+            fontSize: isMobile ? 14 : 16,
+            fontWeight: 600,
+            cursor: 'pointer',
+            marginBottom: isMobile ? 16 : 24,
+            padding: 0,
+          }}
+        >
+          ← Torna ai Prodotti
+        </button>
 
-      {showForm && (
-        <div style={{ background: '#fff', borderRadius: 10, padding: isMobile ? 16 : 24, marginBottom: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-          <h3 style={{ color: '#1a3a2a', fontSize: isMobile ? 15 : 18, fontWeight: 600, marginBottom: isMobile ? 14 : 20 }}>{editingProdotto ? 'Modifica' : 'Nuovo Prodotto'}</h3>
+        {/* Form Modifica Prodotto */}
+        <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 24, marginBottom: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+          <h2 className={playfair.className} style={{ color: '#1a3a2a', fontSize: isMobile ? 20 : 26, fontWeight: 700, marginBottom: isMobile ? 16 : 24 }}>
+            {selectedProdotto.nome}
+          </h2>
+          
           <form onSubmit={handleSubmit}>
-            <div style={styles.formGrid}>
+            {/* Campi base */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 12 : 16, marginBottom: 16 }}>
               <div>
                 <label style={styles.label}>Nome</label>
                 <input type="text" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} style={styles.input} required />
@@ -473,27 +395,21 @@ export default function AdminProdottiPage() {
                 </select>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: isMobile ? 12 : 16, marginBottom: isMobile ? 12 : 16 }}>
-              <div>
-                <label style={styles.label}>Prezzo Base</label>
-                <input type="number" step="0.01" value={formData.prezzo_base} onChange={(e) => setFormData({ ...formData, prezzo_base: e.target.value })} style={styles.input} />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'end', paddingBottom: 4 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: isMobile ? 12 : 14 }}>
-                  <input type="checkbox" checked={formData.attivo} onChange={(e) => setFormData({ ...formData, attivo: e.target.checked })} />
-                  Attivo
-                </label>
-              </div>
-            </div>
-            <div style={{ marginBottom: isMobile ? 12 : 16 }}>
-              <label style={styles.label}>Descrizione</label>
-              <textarea value={formData.descrizione} onChange={(e) => setFormData({ ...formData, descrizione: e.target.value })} style={{ ...styles.input, minHeight: 60 }} />
+            
+            <div style={{ marginBottom: 16 }}>
+              <label style={styles.label}>Immagine (URL)</label>
+              <input type="text" value={formData.immagine} onChange={(e) => setFormData({ ...formData, immagine: e.target.value })} style={styles.input} placeholder="https://..." />
             </div>
             
-            {/* Nuovi campi etichetta */}
-            <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: isMobile ? 12 : 16, marginTop: isMobile ? 12 : 16, marginBottom: isMobile ? 12 : 16 }}>
-              <h4 style={{ fontSize: isMobile ? 13 : 15, fontWeight: 600, color: '#1a3a2a', marginBottom: isMobile ? 10 : 14 }}>Informazioni Etichetta</h4>
-              <div style={styles.formGrid}>
+            <div style={{ marginBottom: 16 }}>
+              <label style={styles.label}>Descrizione</label>
+              <textarea value={formData.descrizione} onChange={(e) => setFormData({ ...formData, descrizione: e.target.value })} style={{ ...styles.input, minHeight: 80 }} />
+            </div>
+            
+            {/* Informazioni Etichetta */}
+            <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: 20, marginTop: 20, marginBottom: 16 }}>
+              <h4 style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600, color: '#1a3a2a', marginBottom: 16 }}>Informazioni Etichetta</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16, marginBottom: 16 }}>
                 <div>
                   <label style={styles.label}>Categoria Etichetta</label>
                   <select value={formData.categoria_etichetta} onChange={(e) => setFormData({ ...formData, categoria_etichetta: e.target.value })} style={styles.input}>
@@ -503,27 +419,27 @@ export default function AdminProdottiPage() {
                 </div>
                 <div>
                   <label style={styles.label}>Origine</label>
-                  <input type="text" value={formData.origine} onChange={(e) => setFormData({ ...formData, origine: e.target.value })} style={styles.input} placeholder="Italia – Altopiano del Fucino" />
+                  <input type="text" value={formData.origine} onChange={(e) => setFormData({ ...formData, origine: e.target.value })} style={styles.input} />
                 </div>
                 <div>
                   <label style={styles.label}>Peso Netto</label>
                   <input type="text" value={formData.peso_netto} onChange={(e) => setFormData({ ...formData, peso_netto: e.target.value })} style={styles.input} placeholder="es. 1 kg / 500g" />
                 </div>
               </div>
-              <div style={{ marginBottom: isMobile ? 12 : 16 }}>
+              <div style={{ marginBottom: 16 }}>
                 <label style={styles.label}>Ingredienti</label>
-                <textarea value={formData.ingredienti} onChange={(e) => setFormData({ ...formData, ingredienti: e.target.value })} style={{ ...styles.input, minHeight: 60 }} placeholder="Elenco ingredienti..." />
+                <textarea value={formData.ingredienti} onChange={(e) => setFormData({ ...formData, ingredienti: e.target.value })} style={{ ...styles.input, minHeight: 60 }} />
               </div>
-              <div style={{ marginBottom: isMobile ? 12 : 16 }}>
+              <div style={{ marginBottom: 16 }}>
                 <label style={styles.label}>Allergeni</label>
                 <input type="text" value={formData.allergeni} onChange={(e) => setFormData({ ...formData, allergeni: e.target.value })} style={styles.input} placeholder="es. Contiene GLUTINE" />
               </div>
             </div>
             
             {/* Valori Nutrizionali */}
-            <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: isMobile ? 12 : 16, marginBottom: isMobile ? 12 : 16 }}>
-              <h4 style={{ fontSize: isMobile ? 13 : 15, fontWeight: 600, color: '#1a3a2a', marginBottom: isMobile ? 10 : 14 }}>Valori Nutrizionali (per 100g)</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 8 : 12 }}>
+            <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: 20, marginBottom: 20 }}>
+              <h4 style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600, color: '#1a3a2a', marginBottom: 16 }}>Valori Nutrizionali (per 100g)</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)', gap: 12 }}>
                 <div>
                   <label style={styles.label}>Energia (kJ)</label>
                   <input type="number" step="0.1" value={formData.energia_kj} onChange={(e) => setFormData({ ...formData, energia_kj: e.target.value })} style={styles.input} />
@@ -563,220 +479,269 @@ export default function AdminProdottiPage() {
               </div>
             </div>
             
+            <button type="submit" disabled={saving} style={{ padding: '12px 32px', background: '#c9933a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              {saving ? 'Salvataggio...' : 'Salva Modifiche'}
+            </button>
+          </form>
+        </div>
+
+        {/* Sezione Lotti */}
+        <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 24, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h3 className={playfair.className} style={{ color: '#1a3a2a', fontSize: isMobile ? 18 : 22, fontWeight: 700, margin: 0 }}>Lotti</h3>
+            <button 
+              onClick={() => { resetLottoForm(); setShowLottoForm(true) }} 
+              style={{ padding: '10px 20px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            >
+              + Nuovo Lotto
+            </button>
+          </div>
+
+          {/* Form Nuovo/Modifica Lotto */}
+          {showLottoForm && (
+            <div style={{ background: '#f8f8f8', borderRadius: 10, padding: isMobile ? 14 : 20, marginBottom: 20 }}>
+              <h4 style={{ fontSize: 15, fontWeight: 600, color: '#1a3a2a', marginBottom: 16 }}>{editingLotto ? 'Modifica Lotto' : 'Nuovo Lotto'}</h4>
+              <form onSubmit={handleLottoSubmit}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
+                  <div>
+                    <label style={styles.label}>Codice Lotto</label>
+                    <input type="text" value={lottoFormData.codice_lotto} onChange={(e) => setLottoFormData({ ...lottoFormData, codice_lotto: e.target.value })} style={styles.input} required />
+                  </div>
+                  <div>
+                    <label style={styles.label}>Campo</label>
+                    <input type="text" value={lottoFormData.campo} onChange={(e) => setLottoFormData({ ...lottoFormData, campo: e.target.value })} style={styles.input} />
+                  </div>
+                  <div>
+                    <label style={styles.label}>Comune</label>
+                    <input type="text" value={lottoFormData.comune} onChange={(e) => setLottoFormData({ ...lottoFormData, comune: e.target.value })} style={styles.input} />
+                  </div>
+                  <div>
+                    <label style={styles.label}>Prezzo (€/{selectedProdotto.unita})</label>
+                    <input type="number" step="0.01" value={lottoFormData.prezzo} onChange={(e) => setLottoFormData({ ...lottoFormData, prezzo: e.target.value })} style={styles.input} />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
+                  <div>
+                    <label style={styles.label}>Data Semina</label>
+                    <input type="date" value={lottoFormData.data_semina} onChange={(e) => setLottoFormData({ ...lottoFormData, data_semina: e.target.value })} style={styles.input} />
+                  </div>
+                  <div>
+                    <label style={styles.label}>Data Raccolta</label>
+                    <input type="date" value={lottoFormData.data_raccolta} onChange={(e) => setLottoFormData({ ...lottoFormData, data_raccolta: e.target.value })} style={styles.input} />
+                  </div>
+                  <div>
+                    <label style={styles.label}>TMC</label>
+                    <input type="date" value={lottoFormData.tmc} onChange={(e) => setLottoFormData({ ...lottoFormData, tmc: e.target.value })} style={styles.input} />
+                  </div>
+                  <div>
+                    <label style={styles.label}>Condizioni Conservazione</label>
+                    <input type="text" value={lottoFormData.condizioni_conservazione} onChange={(e) => setLottoFormData({ ...lottoFormData, condizioni_conservazione: e.target.value })} style={styles.input} placeholder="Conservare in luogo fresco..." />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
+                  <div>
+                    <label style={styles.label}>Kg Totali</label>
+                    <input type="number" step="0.1" value={lottoFormData.kg_totali} onChange={(e) => setLottoFormData({ ...lottoFormData, kg_totali: e.target.value })} style={styles.input} />
+                  </div>
+                  <div>
+                    <label style={styles.label}>Kg Disponibili</label>
+                    <input type="number" step="0.1" value={lottoFormData.kg_disponibili} onChange={(e) => setLottoFormData({ ...lottoFormData, kg_disponibili: e.target.value })} style={styles.input} />
+                  </div>
+                  <div>
+                    <label style={styles.label}>Certificazioni</label>
+                    <input type="text" value={lottoFormData.certificazioni} onChange={(e) => setLottoFormData({ ...lottoFormData, certificazioni: e.target.value })} style={styles.input} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'end', paddingBottom: 8 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13 }}>
+                      <input type="checkbox" checked={lottoFormData.attivo} onChange={(e) => setLottoFormData({ ...lottoFormData, attivo: e.target.checked })} />
+                      Attivo
+                    </label>
+                  </div>
+                </div>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={styles.label}>Note</label>
+                  <textarea value={lottoFormData.note} onChange={(e) => setLottoFormData({ ...lottoFormData, note: e.target.value })} style={{ ...styles.input, minHeight: 60 }} />
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button type="submit" disabled={saving} style={{ padding: '10px 24px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    {saving ? 'Salvataggio...' : (editingLotto ? 'Aggiorna Lotto' : 'Crea Lotto')}
+                  </button>
+                  <button type="button" onClick={resetLottoForm} style={{ padding: '10px 24px', background: '#e0e0e0', color: '#666', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    Annulla
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Lista Lotti */}
+          {lottiProdotto.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#666', padding: 20 }}>Nessun lotto presente</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {lottiProdotto.map(lotto => (
+                <div key={lotto.id} style={{ 
+                  background: lotto.attivo ? '#f9fafb' : '#f3f4f6', 
+                  borderRadius: 10, 
+                  padding: isMobile ? 14 : 18,
+                  border: lotto.attivo ? '1px solid #e5e7eb' : '1px solid #d1d5db',
+                  opacity: lotto.attivo ? 1 : 0.7,
+                }}>
+                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', gap: isMobile ? 12 : 0 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                        <span style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: '#1a3a2a' }}>{lotto.codice_lotto}</span>
+                        {!lotto.attivo && <span style={{ background: '#9ca3af', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>INATTIVO</span>}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 8 : 16, fontSize: 13, color: '#666' }}>
+                        <div><strong>Campo:</strong> {lotto.campo || '-'}</div>
+                        <div><strong>Comune:</strong> {lotto.comune || '-'}</div>
+                        <div><strong>Prezzo:</strong> €{Number(lotto.prezzo).toFixed(2)}/{selectedProdotto.unita}</div>
+                        <div><strong>TMC:</strong> {lotto.tmc ? new Date(lotto.tmc).toLocaleDateString('it-IT') : '-'}</div>
+                        <div><strong>Raccolta:</strong> {lotto.data_raccolta ? new Date(lotto.data_raccolta).toLocaleDateString('it-IT') : '-'}</div>
+                        <div>
+                          <strong>Disponibili:</strong> 
+                          <span style={{ color: Number(lotto.kg_disponibili) < 50 ? '#dc2626' : '#1a3a2a', fontWeight: 600 }}> {lotto.kg_disponibili}</span>/{lotto.kg_totali} kg
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: 8, alignItems: isMobile ? 'stretch' : 'flex-end' }}>
+                      <button onClick={() => handlePrintQR(lotto, selectedProdotto.nome)} style={{ padding: '8px 14px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Stampa QR</button>
+                      <button onClick={() => handleEditLotto(lotto)} style={{ padding: '8px 14px', background: '#c9933a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Modifica</button>
+                      <button onClick={() => handleDeleteLotto(lotto)} style={{ padding: '8px 14px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Elimina</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // LIST VIEW - Lista prodotti per categoria
+  return (
+    <div>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: isMobile ? 20 : 32 }}>
+        <h1 className={playfair.className} style={{ color: '#1a3a2a', fontSize: isMobile ? 22 : 32, fontWeight: 700 }}>Prodotti</h1>
+        <button onClick={() => { resetForm(); setShowNewProdottoForm(true) }} style={{ padding: isMobile ? '10px 16px' : '12px 24px', background: '#c9933a', color: '#fff', border: 'none', borderRadius: 8, fontSize: isMobile ? 13 : 14, fontWeight: 600, cursor: 'pointer' }}>
+          + Nuovo Prodotto
+        </button>
+      </div>
+
+      {/* Form nuovo prodotto */}
+      {showNewProdottoForm && (
+        <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 24, marginBottom: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+          <h3 style={{ color: '#1a3a2a', fontSize: isMobile ? 16 : 18, fontWeight: 600, marginBottom: 20 }}>Nuovo Prodotto</h3>
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16, marginBottom: 16 }}>
+              <div>
+                <label style={styles.label}>Nome</label>
+                <input type="text" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} style={styles.input} required />
+              </div>
+              <div>
+                <label style={styles.label}>Categoria</label>
+                <select value={formData.categoria} onChange={(e) => setFormData({ ...formData, categoria: e.target.value })} style={styles.input}>
+                  {categorie.map(cat => <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={styles.label}>Unita</label>
+                <select value={formData.unita} onChange={(e) => setFormData({ ...formData, unita: e.target.value })} style={styles.input}>
+                  {unitaOptions.map(u => <option key={u} value={u}>{u}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={styles.label}>Descrizione</label>
+              <textarea value={formData.descrizione} onChange={(e) => setFormData({ ...formData, descrizione: e.target.value })} style={{ ...styles.input, minHeight: 60 }} />
+            </div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button type="submit" disabled={saving} style={{ padding: isMobile ? '8px 14px' : '10px 20px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 6, fontSize: isMobile ? 12 : 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? 'Salvo...' : 'Salva'}</button>
-              <button type="button" onClick={resetForm} style={{ padding: isMobile ? '8px 14px' : '10px 20px', background: '#f0f0f0', color: '#666', border: 'none', borderRadius: 6, fontSize: isMobile ? 12 : 14, cursor: 'pointer' }}>Annulla</button>
+              <button type="submit" disabled={saving} style={{ padding: '10px 24px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                {saving ? 'Salvataggio...' : 'Crea Prodotto'}
+              </button>
+              <button type="button" onClick={() => { setShowNewProdottoForm(false); resetForm() }} style={{ padding: '10px 24px', background: '#e0e0e0', color: '#666', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                Annulla
+              </button>
             </div>
           </form>
         </div>
       )}
 
-      {categorie.map(categoria => {
-        const prodottiCat = prodottiByCategoria[categoria]
-        if (!prodottiCat || prodottiCat.length === 0) return null
+      {/* Lista per categoria */}
+      {categorie.map(cat => {
+        const prodottiCat = prodottiByCategoria[cat]
+        if (prodottiCat.length === 0) return null
         
         return (
-          <div key={categoria} style={{ marginBottom: isMobile ? 20 : 32 }}>
-            <h2 style={styles.catTitle}>{categoria}</h2>
+          <div key={cat} style={{ marginBottom: isMobile ? 24 : 32 }}>
+            <h2 style={{ color: '#1a3a2a', fontSize: isMobile ? 16 : 20, fontWeight: 600, marginBottom: 12, textTransform: 'capitalize', borderBottom: '2px solid #c9933a', paddingBottom: 8 }}>
+              {cat}
+            </h2>
             
-            {isMobile ? (
-              // Mobile: Card view
-              <div>
-                {prodottiCat.map(prodotto => {
-                  const lottiProdotto = getLottiForProdotto(prodotto.id)
-                  const isExpanded = expandedProdotto === prodotto.id
-                  
-                  return (
-                    <div key={prodotto.id} style={styles.card}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: '#1a3a2a' }}>{prodotto.nome}</div>
-                          <div style={{ fontSize: 12, color: '#666' }}>{prodotto.prezzo_base ? `€${Number(prodotto.prezzo_base).toFixed(2)}/${prodotto.unita}` : '-'}</div>
+            <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+              {prodottiCat.map((prodotto, idx) => {
+                const totaleDisponibile = getTotaleDisponibile(prodotto.id)
+                const totaleTotale = getTotaleTotale(prodotto.id)
+                const percentuale = totaleTotale > 0 ? (totaleDisponibile / totaleTotale) * 100 : 0
+                const isLow = totaleDisponibile < 50 && totaleDisponibile > 0
+                const isEmpty = totaleDisponibile === 0
+                
+                return (
+                  <div 
+                    key={prodotto.id} 
+                    style={{ 
+                      padding: isMobile ? '14px 16px' : '16px 20px', 
+                      borderBottom: idx < prodottiCat.length - 1 ? '1px solid #f0f0f0' : 'none',
+                      background: isLow ? '#fef2f2' : (isEmpty ? '#f9fafb' : '#fff'),
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 16 }}>
+                      {/* Info prodotto */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                          <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 600, color: '#1a3a2a' }}>{prodotto.nome}</span>
+                          {!prodotto.attivo && <span style={{ background: '#9ca3af', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>INATTIVO</span>}
+                          {isLow && <span style={{ background: '#dc2626', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>SCORTE BASSE</span>}
                         </div>
-                        <span style={{ padding: '3px 8px', borderRadius: 12, fontSize: 10, fontWeight: 600, background: prodotto.attivo ? '#d1fae5' : '#fee2e2', color: prodotto.attivo ? '#065f46' : '#dc2626' }}>{prodotto.attivo ? 'Attivo' : 'Off'}</span>
-                      </div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                        <button onClick={() => openNewLottoForm(prodotto.id)} style={{ background: '#c9933a', border: 'none', color: '#fff', padding: '5px 10px', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>+ Lotto</button>
-                        <button onClick={() => handleEdit(prodotto)} style={{ background: 'transparent', border: '1px solid #c9933a', color: '#c9933a', padding: '5px 10px', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>Modifica</button>
-                        <button onClick={() => handleToggleAttivo(prodotto)} style={{ background: 'transparent', border: '1px solid #999', color: '#666', padding: '5px 10px', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>{prodotto.attivo ? 'Disattiva' : 'Attiva'}</button>
-                        <button onClick={() => setExpandedProdotto(isExpanded ? null : prodotto.id)} style={{ background: '#f0f0f0', border: 'none', padding: '5px 10px', borderRadius: 4, fontSize: 11, cursor: 'pointer', color: '#1a3a2a' }}>{lottiProdotto.length} lotti {isExpanded ? '▲' : '▼'}</button>
-                      </div>
-                      
-                      {isExpanded && (
-                        <div style={{ background: '#f9f9f9', borderRadius: 6, padding: 10, marginTop: 8 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                            <span style={{ fontSize: 12, fontWeight: 600, color: '#1a3a2a' }}>Lotti</span>
-                            <button onClick={() => { setLottoFormData({ ...lottoFormData, prodotto_id: prodotto.id }); setShowLottoForm(prodotto.id) }} style={{ padding: '4px 8px', background: '#c9933a', color: '#fff', border: 'none', borderRadius: 4, fontSize: 10, cursor: 'pointer' }}>+ Nuovo</button>
+                        
+                        {/* Progress bar e kg */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ flex: 1, maxWidth: 200, background: '#e5e7eb', borderRadius: 4, height: 8, overflow: 'hidden' }}>
+                            <div style={{
+                              width: `${Math.min(percentuale, 100)}%`,
+                              height: '100%',
+                              background: isEmpty ? '#9ca3af' : (isLow ? '#dc2626' : (percentuale < 30 ? '#f59e0b' : '#22c55e')),
+                              borderRadius: 4,
+                            }} />
                           </div>
-                          
-                          {showLottoForm === prodotto.id && (
-                            <div style={{ background: '#fff', padding: 10, borderRadius: 6, marginBottom: 10, border: '1px solid #e0e0e0' }}>
-                              <form onSubmit={handleLottoSubmit}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                                  <div><label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#1a3a2a', marginBottom: 2 }}>Codice</label><input type="text" value={lottoFormData.codice_lotto} onChange={(e) => setLottoFormData({ ...lottoFormData, codice_lotto: e.target.value })} style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 12, boxSizing: 'border-box' }} required /></div>
-                                  <div><label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#1a3a2a', marginBottom: 2 }}>Prezzo</label><input type="number" step="0.01" value={lottoFormData.prezzo} onChange={(e) => setLottoFormData({ ...lottoFormData, prezzo: e.target.value })} style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 12, boxSizing: 'border-box' }} /></div>
-                                  <div><label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#1a3a2a', marginBottom: 2 }}>Kg Totali</label><input type="number" value={lottoFormData.kg_totali} onChange={(e) => setLottoFormData({ ...lottoFormData, kg_totali: e.target.value })} style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 12, boxSizing: 'border-box' }} /></div>
-                                  <div><label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#1a3a2a', marginBottom: 2 }}>Kg Disp.</label><input type="number" value={lottoFormData.kg_disponibili} onChange={(e) => setLottoFormData({ ...lottoFormData, kg_disponibili: e.target.value })} style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 12, boxSizing: 'border-box' }} /></div>
-                                  <div><label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#1a3a2a', marginBottom: 2 }}>Campo</label><input type="text" value={lottoFormData.campo} onChange={(e) => setLottoFormData({ ...lottoFormData, campo: e.target.value })} style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 12, boxSizing: 'border-box' }} /></div>
-                                  <div><label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#1a3a2a', marginBottom: 2 }}>Comune</label><input type="text" value={lottoFormData.comune} onChange={(e) => setLottoFormData({ ...lottoFormData, comune: e.target.value })} style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 12, boxSizing: 'border-box' }} /></div>
-                                </div>
-                                <div style={{ display: 'flex', gap: 6 }}>
-                                  <button type="submit" disabled={saving} style={{ padding: '6px 10px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>{saving ? '...' : 'Salva'}</button>
-                                  <button type="button" onClick={resetLottoForm} style={{ padding: '6px 10px', background: '#e0e0e0', color: '#666', border: 'none', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>Annulla</button>
-                                </div>
-                              </form>
-                            </div>
-                          )}
-                          
-                          {lottiProdotto.length === 0 ? (
-                            <p style={{ fontSize: 11, color: '#999' }}>Nessun lotto</p>
-                          ) : (
-lottiProdotto.map(lotto => (
-                                              <div key={lotto.id} style={{ background: '#fff', padding: 8, borderRadius: 4, marginBottom: 6, border: '1px solid #eee' }}>
-                                                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                                                  <div style={{ flexShrink: 0, borderRadius: 4, overflow: 'hidden', border: '1px solid #e0e0e0' }}>
-                                                    <QRCode key={`qr-mobile-${lotto.id}`} value={`https://gianniparisse.it/store/traccia/${lotto.codice_lotto}`} size={48} />
-                                                  </div>
-                                                  <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                                                      <span style={{ fontSize: 12, fontWeight: 600, color: '#1a3a2a' }}>{lotto.codice_lotto}</span>
-                                                      <span style={{ padding: '2px 6px', borderRadius: 8, fontSize: 9, background: lotto.attivo ? '#d1fae5' : '#fee2e2', color: lotto.attivo ? '#065f46' : '#dc2626' }}>{lotto.attivo ? 'On' : 'Off'}</span>
-                                                    </div>
-                                                    <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>€{Number(lotto.prezzo).toFixed(2)} | {lotto.kg_disponibili}/{lotto.kg_totali}kg</div>
-                                                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                                                      <button onClick={() => handlePrintQR(lotto, prodotto.nome)} style={{ background: '#1a3a2a', border: 'none', color: '#fff', fontSize: 10, cursor: 'pointer', padding: '3px 6px', borderRadius: 3 }}>Stampa QR</button>
-                                                      <button onClick={() => handleEditLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#c9933a', fontSize: 10, cursor: 'pointer', padding: 0 }}>Modifica</button>
-                                                      <button onClick={() => handleToggleLottoAttivo(lotto)} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 10, cursor: 'pointer', padding: 0 }}>{lotto.attivo ? 'Disattiva' : 'Attiva'}</button>
-                                                      <button onClick={() => handleDeleteLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: 10, cursor: 'pointer', padding: 0, fontWeight: 600 }}>Elimina</button>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            ))
-                          )}
+                          <span style={{ fontSize: 13, color: isEmpty ? '#9ca3af' : (isLow ? '#dc2626' : '#666'), fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            {totaleDisponibile.toFixed(0)} / {totaleTotale.toFixed(0)} kg
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              // Desktop: Table view
-              <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                  <thead>
-                    <tr style={{ background: '#f8f8f8' }}>
-                      <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#666', width: '30%' }}>Nome</th>
-                      <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#666', width: '12%' }}>Prezzo</th>
-                      <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#666', width: '10%' }}>Unita</th>
-                      <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#666', width: '12%' }}>Stato</th>
-                      <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#666', width: '12%' }}>Lotti</th>
-                      <th style={{ textAlign: 'right', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#666', width: '24%' }}>Azioni</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {prodottiCat.map(prodotto => {
-                      const lottiProdotto = getLottiForProdotto(prodotto.id)
-                      const isExpanded = expandedProdotto === prodotto.id
+                      </div>
                       
-                      return (
-                        <>
-                          <tr key={prodotto.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                            <td style={{ padding: '14px 16px', fontSize: 14, color: '#1a3a2a', fontWeight: 500 }}>{prodotto.nome}</td>
-                            <td style={{ padding: '14px 16px', fontSize: 14, color: '#666' }}>{prodotto.prezzo_base ? `€${Number(prodotto.prezzo_base).toFixed(2)}` : '-'}</td>
-                            <td style={{ padding: '14px 16px', fontSize: 14, color: '#666' }}>{prodotto.unita}</td>
-                            <td style={{ padding: '14px 16px', textAlign: 'center' }}>
-                              <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: prodotto.attivo ? '#d1fae5' : '#fee2e2', color: prodotto.attivo ? '#065f46' : '#dc2626' }}>{prodotto.attivo ? 'Attivo' : 'Disattivo'}</span>
-                            </td>
-                            <td style={{ padding: '14px 16px', textAlign: 'center' }}>
-                              <button onClick={() => setExpandedProdotto(isExpanded ? null : prodotto.id)} style={{ background: '#f0f0f0', border: 'none', padding: '4px 12px', borderRadius: 4, fontSize: 13, cursor: 'pointer', color: '#1a3a2a' }}>{lottiProdotto.length} lotti {isExpanded ? '▲' : '▼'}</button>
-                            </td>
-                            <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                              <button onClick={() => openNewLottoForm(prodotto.id)} style={{ background: '#c9933a', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', marginRight: 8 }}>+ Lotto</button>
-                              <button onClick={() => handleEdit(prodotto)} style={{ background: 'transparent', border: '1px solid #c9933a', color: '#c9933a', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', marginRight: 8 }}>Modifica</button>
-                              <button onClick={() => handleToggleAttivo(prodotto)} style={{ background: 'transparent', border: '1px solid #999', color: '#666', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>{prodotto.attivo ? 'Disattiva' : 'Attiva'}</button>
-                            </td>
-                          </tr>
-                          {isExpanded && (
-                            <tr key={`${prodotto.id}-lotti`}>
-                              <td colSpan={6} style={{ padding: 0, background: '#f9f9f9' }}>
-                                <div style={{ padding: '16px 24px' }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                                    <h4 style={{ color: '#1a3a2a', fontSize: 14, fontWeight: 600, margin: 0 }}>Lotti di {prodotto.nome}</h4>
-                                    <button onClick={() => { setLottoFormData({ ...lottoFormData, prodotto_id: prodotto.id }); setShowLottoForm(prodotto.id) }} style={{ padding: '6px 12px', background: '#c9933a', color: '#fff', border: 'none', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>+ Nuovo Lotto</button>
-                                  </div>
-                                  {showLottoForm === prodotto.id && (
-                                    <div style={{ background: '#fff', padding: 16, borderRadius: 8, marginBottom: 16, border: '1px solid #e0e0e0' }}>
-                                      <form onSubmit={handleLottoSubmit}>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
-                                          <div><label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1a3a2a', marginBottom: 4 }}>Codice Lotto</label><input type="text" value={lottoFormData.codice_lotto} onChange={(e) => setLottoFormData({ ...lottoFormData, codice_lotto: e.target.value })} style={{ width: '100%', padding: '8px 10px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13, boxSizing: 'border-box' }} required /></div>
-                                          <div><label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1a3a2a', marginBottom: 4 }}>Campo</label><input type="text" value={lottoFormData.campo} onChange={(e) => setLottoFormData({ ...lottoFormData, campo: e.target.value })} style={{ width: '100%', padding: '8px 10px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13, boxSizing: 'border-box' }} /></div>
-                                          <div><label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1a3a2a', marginBottom: 4 }}>Comune</label><input type="text" value={lottoFormData.comune} onChange={(e) => setLottoFormData({ ...lottoFormData, comune: e.target.value })} style={{ width: '100%', padding: '8px 10px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13, boxSizing: 'border-box' }} /></div>
-                                          <div><label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1a3a2a', marginBottom: 4 }}>Prezzo</label><input type="number" step="0.01" value={lottoFormData.prezzo} onChange={(e) => setLottoFormData({ ...lottoFormData, prezzo: e.target.value })} style={{ width: '100%', padding: '8px 10px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13, boxSizing: 'border-box' }} /></div>
-                                        </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
-                                          <div><label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1a3a2a', marginBottom: 4 }}>Data Semina</label><input type="date" value={lottoFormData.data_semina} onChange={(e) => setLottoFormData({ ...lottoFormData, data_semina: e.target.value })} style={{ width: '100%', padding: '8px 10px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13, boxSizing: 'border-box' }} /></div>
-                                          <div><label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1a3a2a', marginBottom: 4 }}>Data Raccolta</label><input type="date" value={lottoFormData.data_raccolta} onChange={(e) => setLottoFormData({ ...lottoFormData, data_raccolta: e.target.value })} style={{ width: '100%', padding: '8px 10px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13, boxSizing: 'border-box' }} /></div>
-                                          <div><label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1a3a2a', marginBottom: 4 }}>Kg Totali</label><input type="number" value={lottoFormData.kg_totali} onChange={(e) => setLottoFormData({ ...lottoFormData, kg_totali: e.target.value })} style={{ width: '100%', padding: '8px 10px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13, boxSizing: 'border-box' }} /></div>
-                                          <div><label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1a3a2a', marginBottom: 4 }}>Kg Disponibili</label><input type="number" value={lottoFormData.kg_disponibili} onChange={(e) => setLottoFormData({ ...lottoFormData, kg_disponibili: e.target.value })} style={{ width: '100%', padding: '8px 10px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13, boxSizing: 'border-box' }} /></div>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: 8 }}>
-                                          <button type="submit" disabled={saving} style={{ padding: '8px 14px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>{saving ? '...' : 'Salva'}</button>
-                                          <button type="button" onClick={resetLottoForm} style={{ padding: '8px 14px', background: '#e0e0e0', color: '#666', border: 'none', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Annulla</button>
-                                        </div>
-                                      </form>
-                                    </div>
-                                  )}
-                                  {lottiProdotto.length === 0 ? (
-                                    <p style={{ color: '#999', fontSize: 13 }}>Nessun lotto</p>
-                                  ) : (
-<table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                                      <thead>
-                                                        <tr style={{ borderBottom: '1px solid #e0e0e0' }}>
-                                                          <th style={{ textAlign: 'center', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666', width: 80 }}>QR</th>
-                                                          <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Codice</th>
-                                                          <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Campo</th>
-                                                          <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Prezzo</th>
-                                                          <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Disp.</th>
-                                                          <th style={{ textAlign: 'center', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Stato</th>
-                                                          <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, fontWeight: 600, color: '#666' }}>Azioni</th>
-                                                        </tr>
-                                                      </thead>
-                                                      <tbody>
-                                                        {lottiProdotto.map(lotto => (
-                                                          <tr key={lotto.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                                            <td style={{ padding: '10px 12px', textAlign: 'center' }}>
-                                                              <div style={{ display: 'inline-block', borderRadius: 4, overflow: 'hidden', border: '1px solid #e0e0e0' }}>
-                                                                <QRCode key={`qr-desktop-${lotto.id}`} value={`https://gianniparisse.it/store/traccia/${lotto.codice_lotto}`} size={56} />
-                                                              </div>
-                                                            </td>
-                                                            <td style={{ padding: '10px 12px', fontSize: 13, color: '#1a3a2a', fontWeight: 500 }}>{lotto.codice_lotto}</td>
-                                                            <td style={{ padding: '10px 12px', fontSize: 13, color: '#666' }}>{lotto.campo || '-'}</td>
-                                                            <td style={{ padding: '10px 12px', fontSize: 13, color: '#333', textAlign: 'right' }}>€{Number(lotto.prezzo).toFixed(2)}</td>
-                                                            <td style={{ padding: '10px 12px', fontSize: 13, color: '#333', textAlign: 'right' }}>{lotto.kg_disponibili}/{lotto.kg_totali}kg</td>
-                                                            <td style={{ padding: '10px 12px', textAlign: 'center' }}><span style={{ padding: '2px 8px', borderRadius: 10, fontSize: 11, background: lotto.attivo ? '#d1fae5' : '#fee2e2', color: lotto.attivo ? '#065f46' : '#dc2626' }}>{lotto.attivo ? 'On' : 'Off'}</span></td>
-                                                            <td style={{ padding: '10px 12px', textAlign: 'right' }}>
-                                                              <button onClick={() => handlePrintQR(lotto, prodotto.nome)} style={{ background: '#1a3a2a', border: 'none', color: '#fff', fontSize: 12, cursor: 'pointer', marginRight: 8, padding: '4px 10px', borderRadius: 4 }}>Stampa QR</button>
-                                                              <button onClick={() => handleEditLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#c9933a', fontSize: 12, cursor: 'pointer', marginRight: 8 }}>Modifica</button>
-                                                              <button onClick={() => handleToggleLottoAttivo(lotto)} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 12, cursor: 'pointer', marginRight: 8 }}>{lotto.attivo ? 'Disattiva' : 'Attiva'}</button>
-                                                              <button onClick={() => handleDeleteLotto(lotto)} style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>Elimina</button>
-                                                            </td>
-                                                          </tr>
-                                                        ))}
-                                                      </tbody>
-                                                    </table>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                      {/* Bottoni */}
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button 
+                          onClick={() => { setSelectedProdotto(prodotto); loadProdottoIntoForm(prodotto); setShowLottoForm(true); resetLottoForm(); setShowLottoForm(true) }}
+                          style={{ padding: '8px 14px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                        >
+                          + Lotto
+                        </button>
+                        <button 
+                          onClick={() => handleSelectProdotto(prodotto)}
+                          style={{ padding: '8px 14px', background: '#c9933a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                        >
+                          Modifica
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )
       })}

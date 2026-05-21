@@ -13,7 +13,7 @@ export async function PUT(
     const { 
       prodotto_id, codice_lotto, campo, comune, 
       data_semina, data_raccolta, kg_totali, kg_disponibili, 
-      prezzo, certificazioni, note, attivo 
+      prezzo, tmc, condizioni_conservazione, certificazioni, note, attivo 
     } = body
     
     const result = await sql`
@@ -28,6 +28,8 @@ export async function PUT(
         kg_totali = ${kg_totali || 0},
         kg_disponibili = ${kg_disponibili || 0},
         prezzo = ${prezzo || null},
+        tmc = ${tmc || null},
+        condizioni_conservazione = ${condizioni_conservazione || null},
         certificazioni = ${certificazioni || null},
         note = ${note || null},
         attivo = ${attivo}

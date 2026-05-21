@@ -24,7 +24,6 @@ const navItems = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: '📊' },
   { name: 'Prodotti', href: '/admin/prodotti', icon: '📦' },
   { name: 'Ordini', href: '/admin/ordini', icon: '🛒' },
-  { name: 'Magazzino', href: '/admin/magazzino', icon: '🏭' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
