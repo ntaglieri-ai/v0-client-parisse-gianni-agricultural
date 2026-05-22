@@ -61,6 +61,7 @@ interface Impostazioni {
   paese?: string
   partita_iva?: string
   email?: string
+  telefono?: string
   sito_web?: string
   logo_url?: string
   origine_default?: string
@@ -68,11 +69,45 @@ interface Impostazioni {
 
 type FormatoEtichetta = 'orizzontale' | 'verticale' | 'rotonda'
 
+interface Elementi {
+  logo: boolean
+  valoriNutrizionali: boolean
+  qrCode: boolean
+  allergeni: boolean
+  ingredienti: boolean
+  lotto: boolean
+  origine: boolean
+  conservazione: boolean
+  pesoNetto: boolean
+  piva: boolean
+  email: boolean
+  telefono: boolean
+}
+
+const CM_TO_PX = 37.8
+
 export default function EtichettePage() {
   const [selectedProdottoId, setSelectedProdottoId] = useState<number | null>(null)
   const [selectedLottoId, setSelectedLottoId] = useState<number | null>(null)
   const [formato, setFormato] = useState<FormatoEtichetta>('orizzontale')
-  const [isMobile, setIsMobile] = useState(false)
+  const [larghezza, setLarghezza] = useState(10)
+  const [altezza, setAltezza] = useState(6)
+  const [diametro, setDiametro] = useState(10)
+  const [elementi, setElementi] = useState<Elementi>({
+    logo: true,
+    valoriNutrizionali: true,
+    qrCode: true,
+    allergeni: true,
+    ingredienti: true,
+    lotto: true,
+    origine: true,
+    conservazione: true,
+    pesoNetto: true,
+    piva: true,
+    email: true,
+    telefono: true,
+  })
+  const [generatingPdf, setGeneratingPdf] = useState(false)
   const etichettaRef = useRef<HTMLDivElement>(null)
 
   const { data: prodotti } = useSWR<Prodotto[]>('/api/admin/prodotti', fetcher)
@@ -82,25 +117,22 @@ export default function EtichettePage() {
   )
   const { data: impostazioni } = useSWR<Impostazioni>('/api/admin/impostazioni', fetcher)
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
   const selectedProdotto = prodotti?.find(p => p.id === selectedProdottoId)
   const selectedLotto = lotti?.find(l => l.id === selectedLottoId)
   const lottiAttivi = lotti?.filter(l => l.attivo) || []
 
-  const handleStampa = () => {
-    window.print()
-  }
+  // Calcola dimensioni in px
+  const widthPx = formato === 'rotonda' ? diametro * CM_TO_PX : larghezza * CM_TO_PX
+  const heightPx = formato === 'rotonda' ? diametro * CM_TO_PX : altezza * CM_TO_PX
+
+  // Scala per fit nello schermo (max 500px)
+  const maxSize = 480
+  const scale = Math.min(1, maxSize / Math.max(widthPx, heightPx))
 
   const categoria = selectedProdotto?.categoria_etichetta || 'ortaggio_fresco'
   const vn = selectedProdotto?.valori_nutrizionali || {}
 
-  // Dati azienda completi
+  // Dati azienda
   const ragioneSociale = impostazioni?.ragione_sociale || 'Azienda Agricola Parisse Gianni'
   const indirizzoCompleto = [
     impostazioni?.indirizzo,
@@ -108,840 +140,617 @@ export default function EtichettePage() {
     impostazioni?.citta,
     impostazioni?.provincia ? `(${impostazioni.provincia})` : null,
   ].filter(Boolean).join(' ') || 'Pescina (AQ)'
-  const piva = impostazioni?.partita_iva ? `P.IVA: ${impostazioni.partita_iva}` : ''
+  const piva = impostazioni?.partita_iva || ''
+  const email = impostazioni?.email || ''
+  const telefono = impostazioni?.telefono || ''
   const sitoWeb = impostazioni?.sito_web || 'www.gianniparisse.it'
 
-  // Dimensioni per @media print
-  const printSize = formato === 'orizzontale' ? '10cm 6cm' : formato === 'verticale' ? '6cm 10cm' : '10cm 10cm'
-
-  // Check se possiamo mostrare l'anteprima
   const canShowPreview = selectedProdotto && selectedLotto
 
-  // Componente miniatura etichetta per le card
-  const MiniEtichetta = ({ type, scale = 0.15 }: { type: FormatoEtichetta, scale?: number }) => {
-    const baseWidth = type === 'orizzontale' ? 378 : type === 'verticale' ? 227 : 378
-    const baseHeight = type === 'orizzontale' ? 227 : type === 'verticale' ? 378 : 378
-    const isRound = type === 'rotonda'
+  const handleStampa = () => window.print()
 
-    if (!selectedProdotto) {
-      return (
-        <div style={{
-          width: baseWidth * scale,
-          height: baseHeight * scale,
-          borderRadius: isRound ? '50%' : 4,
-          border: '2px dashed #ccc',
-          background: '#f9fafb',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#999',
-          fontSize: 8,
-          textAlign: 'center',
-          padding: 4,
-        }}>
-          Seleziona<br/>prodotto
-        </div>
-      )
+  const handleGeneraPdf = async () => {
+    if (!selectedProdotto || !selectedLotto) return
+    setGeneratingPdf(true)
+    try {
+      const params = new URLSearchParams({
+        prodotto_id: String(selectedProdotto.id),
+        lotto_id: String(selectedLotto.id),
+        formato,
+        larghezza: String(larghezza),
+        altezza: String(altezza),
+        diametro: String(diametro),
+        elementi: JSON.stringify(elementi),
+      })
+      const res = await fetch(`/api/admin/etichette/pdf?${params}`)
+      if (!res.ok) throw new Error('Errore generazione PDF')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `etichetta-${selectedLotto.codice_lotto}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+      alert('Errore nella generazione del PDF')
+    } finally {
+      setGeneratingPdf(false)
     }
-
-    return (
-      <div style={{
-        width: baseWidth * scale,
-        height: baseHeight * scale,
-        borderRadius: isRound ? '50%' : 4,
-        border: isRound ? '2px solid #c9933a' : '1px solid #ddd',
-        background: '#fff',
-        overflow: 'hidden',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: isRound ? 8 : 4,
-      }}>
-        {/* Mini logo */}
-        <div style={{ marginBottom: 2 }}>
-          <Image src="/images/logo.png" alt="" width={isRound ? 20 : 24} height={isRound ? 20 : 10} style={{ objectFit: 'contain' }} />
-        </div>
-        {/* Mini nome */}
-        <div style={{ fontSize: 6, fontWeight: 700, color: '#1a3a2a', textAlign: 'center', lineHeight: 1.1 }}>
-          {selectedProdotto.nome.length > 12 ? selectedProdotto.nome.substring(0, 12) + '...' : selectedProdotto.nome}
-        </div>
-        {selectedLotto && (
-          <div style={{ fontSize: 4, color: '#666', marginTop: 1 }}>
-            L: {selectedLotto.codice_lotto}
-          </div>
-        )}
-      </div>
-    )
   }
+
+  const toggleElemento = (key: keyof Elementi) => {
+    setElementi(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  // Print styles
+  const printSize = formato === 'orizzontale' 
+    ? `${larghezza}cm ${altezza}cm` 
+    : formato === 'verticale' 
+    ? `${larghezza}cm ${altezza}cm` 
+    : `${diametro}cm ${diametro}cm`
 
   return (
     <>
-      {/* Print styles */}
       <style jsx global>{`
         @media print {
           body * { visibility: hidden; }
           #etichetta-print, #etichetta-print * { visibility: visible; }
-          #etichetta-print { 
-            position: absolute; 
-            left: 0; 
-            top: 0; 
-          }
-          @page { 
-            size: ${printSize}; 
-            margin: 0; 
-          }
+          #etichetta-print { position: absolute; left: 0; top: 0; transform: none !important; }
+          @page { size: ${printSize}; margin: 0; }
         }
       `}</style>
 
       <div style={{ 
-        minHeight: '100vh', 
-        background: '#f5f0e8',
+        display: 'flex', 
+        height: 'calc(100vh - 48px)',
         margin: '-24px',
-        padding: isMobile ? 16 : 32,
+        background: '#f5f0e8',
       }}>
-        {/* Header */}
-        <div style={{ marginBottom: 32, textAlign: 'center' }}>
-          <h1 className={playfair.className} style={{ 
-            color: '#1a3a2a', 
-            fontSize: isMobile ? 28 : 42, 
-            fontWeight: 700, 
-            marginBottom: 8,
-            letterSpacing: -0.5,
-          }}>
-            Genera Etichette
-          </h1>
-          <p style={{ 
-            color: '#666', 
-            fontSize: 15, 
-            maxWidth: 500, 
-            margin: '0 auto',
-            lineHeight: 1.5,
-          }}>
-            Crea etichette professionali per i tuoi prodotti agricoli. Seleziona prodotto, lotto e formato per visualizzare l&apos;anteprima.
-          </p>
-        </div>
-
-        {/* Main Content - Due colonne */}
+        {/* COLONNA SINISTRA - Pannello di controllo */}
         <div style={{ 
-          display: 'flex', 
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: 24,
-          maxWidth: 1400,
-          margin: '0 auto',
+          width: 320, 
+          flexShrink: 0,
+          background: '#fff', 
+          boxShadow: '4px 0 24px rgba(0,0,0,0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflowY: 'auto',
         }}>
-          {/* COLONNA SINISTRA - Configurazione */}
-          <div style={{ flex: 1 }}>
-            {/* Sezione Prodotto e Lotto */}
-            <div style={{ 
-              background: '#fff', 
-              borderRadius: 16, 
-              padding: 24, 
-              marginBottom: 24, 
-              boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+          {/* Header */}
+          <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #f0f0f0' }}>
+            <h1 className={playfair.className} style={{ 
+              color: '#1a3a2a', 
+              fontSize: 22, 
+              fontWeight: 700, 
+              margin: 0,
             }}>
-              <div style={{ 
-                fontSize: 10, 
-                fontWeight: 700, 
-                color: '#c9933a', 
-                letterSpacing: 2, 
-                textTransform: 'uppercase', 
-                marginBottom: 16,
-              }}>
-                Prodotto e Lotto
-              </div>
-              <div style={{ borderTop: '1px solid #c9933a', marginBottom: 20, opacity: 0.3 }} />
+              Studio Etichette
+            </h1>
+            <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+              Crea etichette professionali
+            </p>
+          </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 8, letterSpacing: 1, textTransform: 'uppercase' }}>
-                    Seleziona Prodotto
-                  </label>
-                  <select
-                    value={selectedProdottoId || ''}
-                    onChange={(e) => {
-                      setSelectedProdottoId(e.target.value ? Number(e.target.value) : null)
-                      setSelectedLottoId(null)
-                    }}
-                    style={{ 
-                      width: '100%', 
-                      padding: '14px 16px', 
-                      borderRadius: 10, 
-                      border: '2px solid #e5e7eb', 
-                      background: '#fff', 
-                      fontSize: 15, 
-                      color: '#1a3a2a',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      transition: 'border-color 0.2s',
-                    }}
-                  >
-                    <option value="">-- Seleziona un prodotto --</option>
-                    {prodotti?.filter(p => p.attivo).map(p => (
-                      <option key={p.id} value={p.id}>{p.nome} ({p.categoria})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 8, letterSpacing: 1, textTransform: 'uppercase' }}>
-                    Seleziona Lotto
-                  </label>
-                  <select
-                    value={selectedLottoId || ''}
-                    onChange={(e) => {
-                      setSelectedLottoId(e.target.value ? Number(e.target.value) : null)
-                    }}
-                    style={{ 
-                      width: '100%', 
-                      padding: '14px 16px', 
-                      borderRadius: 10, 
-                      border: '2px solid #e5e7eb', 
-                      background: selectedProdottoId ? '#fff' : '#f5f5f5', 
-                      fontSize: 15, 
-                      color: '#1a3a2a',
-                      fontWeight: 500,
-                      cursor: selectedProdottoId ? 'pointer' : 'not-allowed',
-                      opacity: selectedProdottoId ? 1 : 0.6,
-                      transition: 'border-color 0.2s',
-                    }}
-                    disabled={!selectedProdottoId}
-                  >
-                    <option value="">-- Seleziona un lotto --</option>
-                    {lottiAttivi.map(l => (
-                      <option key={l.id} value={l.id}>{l.codice_lotto}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+          {/* SEZIONE 1 - Prodotto e Lotto */}
+          <div style={{ padding: 20, borderBottom: '1px solid #c9933a30' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#c9933a', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 14 }}>
+              Prodotto e Lotto
+            </div>
+            
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 6 }}>Prodotto</label>
+              <select
+                value={selectedProdottoId || ''}
+                onChange={(e) => {
+                  setSelectedProdottoId(e.target.value ? Number(e.target.value) : null)
+                  setSelectedLottoId(null)
+                }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13, color: '#333' }}
+              >
+                <option value="">-- Seleziona --</option>
+                {prodotti?.filter(p => p.attivo).map(p => (
+                  <option key={p.id} value={p.id}>{p.nome}</option>
+                ))}
+              </select>
             </div>
 
-            {/* Sezione Formato */}
-            <div style={{ 
-              background: '#fff', 
-              borderRadius: 16, 
-              padding: 24, 
-              boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-            }}>
-              <div style={{ 
-                fontSize: 10, 
-                fontWeight: 700, 
-                color: '#c9933a', 
-                letterSpacing: 2, 
-                textTransform: 'uppercase', 
-                marginBottom: 16,
-              }}>
-                Formato Etichetta
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 6 }}>Lotto</label>
+              <select
+                value={selectedLottoId || ''}
+                onChange={(e) => setSelectedLottoId(e.target.value ? Number(e.target.value) : null)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13, color: '#333', opacity: selectedProdottoId ? 1 : 0.5 }}
+                disabled={!selectedProdottoId}
+              >
+                <option value="">-- Seleziona --</option>
+                {lottiAttivi.map(l => (
+                  <option key={l.id} value={l.id}>{l.codice_lotto}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* SEZIONE 2 - Formato */}
+          <div style={{ padding: 20, borderBottom: '1px solid #c9933a30' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#c9933a', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 14 }}>
+              Formato
+            </div>
+            
+            <div style={{ display: 'flex', gap: 8 }}>
+              {/* Card Orizzontale */}
+              <div
+                onClick={() => setFormato('orizzontale')}
+                style={{
+                  flex: 1,
+                  padding: '12px 8px',
+                  borderRadius: 10,
+                  border: formato === 'orizzontale' ? '2px solid #c9933a' : '1px solid #e5e7eb',
+                  background: formato === 'orizzontale' ? '#fffbf5' : '#fff',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {formato === 'orizzontale' && (
+                  <span style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, background: '#22c55e', borderRadius: '50%', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</span>
+                )}
+                <div style={{ width: 50, height: 30, border: '2px solid #999', borderRadius: 3, margin: '0 auto 8px', background: formato === 'orizzontale' ? '#f5f0e8' : '#f9f9f9' }} />
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#1a3a2a' }}>Orizzontale</div>
               </div>
-              <div style={{ borderTop: '1px solid #c9933a', marginBottom: 20, opacity: 0.3 }} />
 
-              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                {/* Card Orizzontale */}
-                <div
-                  onClick={() => setFormato('orizzontale')}
-                  style={{
-                    flex: 1,
-                    minWidth: 130,
-                    padding: 20,
-                    borderRadius: 14,
-                    border: formato === 'orizzontale' ? '3px solid #c9933a' : '2px solid #e5e7eb',
-                    background: formato === 'orizzontale' ? '#fffbf5' : '#fff',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    transition: 'all 0.25s ease',
-                    position: 'relative',
-                    boxShadow: formato === 'orizzontale' ? '0 8px 24px rgba(201,147,58,0.2)' : '0 2px 8px rgba(0,0,0,0.04)',
-                  }}
-                  onMouseEnter={e => { if (formato !== 'orizzontale') e.currentTarget.style.borderColor = '#c9933a50' }}
-                  onMouseLeave={e => { if (formato !== 'orizzontale') e.currentTarget.style.borderColor = '#e5e7eb' }}
-                >
-                  {formato === 'orizzontale' && (
-                    <span style={{ 
-                      position: 'absolute', 
-                      top: -8, 
-                      right: -8, 
-                      width: 24, 
-                      height: 24, 
-                      background: '#22c55e', 
-                      borderRadius: '50%', 
-                      color: '#fff', 
-                      fontSize: 14, 
-                      fontWeight: 700, 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(34,197,94,0.4)',
-                    }}>
-                      ✓
-                    </span>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-                    <MiniEtichetta type="orizzontale" scale={0.18} />
-                  </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#1a3a2a', marginBottom: 4 }}>Orizzontale</div>
-                  <div style={{ fontSize: 12, color: '#888' }}>10 x 6 cm</div>
-                </div>
+              {/* Card Verticale */}
+              <div
+                onClick={() => setFormato('verticale')}
+                style={{
+                  flex: 1,
+                  padding: '12px 8px',
+                  borderRadius: 10,
+                  border: formato === 'verticale' ? '2px solid #c9933a' : '1px solid #e5e7eb',
+                  background: formato === 'verticale' ? '#fffbf5' : '#fff',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {formato === 'verticale' && (
+                  <span style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, background: '#22c55e', borderRadius: '50%', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</span>
+                )}
+                <div style={{ width: 30, height: 50, border: '2px solid #999', borderRadius: 3, margin: '0 auto 8px', background: formato === 'verticale' ? '#f5f0e8' : '#f9f9f9' }} />
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#1a3a2a' }}>Verticale</div>
+              </div>
 
-                {/* Card Verticale */}
-                <div
-                  onClick={() => setFormato('verticale')}
-                  style={{
-                    flex: 1,
-                    minWidth: 130,
-                    padding: 20,
-                    borderRadius: 14,
-                    border: formato === 'verticale' ? '3px solid #c9933a' : '2px solid #e5e7eb',
-                    background: formato === 'verticale' ? '#fffbf5' : '#fff',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    transition: 'all 0.25s ease',
-                    position: 'relative',
-                    boxShadow: formato === 'verticale' ? '0 8px 24px rgba(201,147,58,0.2)' : '0 2px 8px rgba(0,0,0,0.04)',
-                  }}
-                  onMouseEnter={e => { if (formato !== 'verticale') e.currentTarget.style.borderColor = '#c9933a50' }}
-                  onMouseLeave={e => { if (formato !== 'verticale') e.currentTarget.style.borderColor = '#e5e7eb' }}
-                >
-                  {formato === 'verticale' && (
-                    <span style={{ 
-                      position: 'absolute', 
-                      top: -8, 
-                      right: -8, 
-                      width: 24, 
-                      height: 24, 
-                      background: '#22c55e', 
-                      borderRadius: '50%', 
-                      color: '#fff', 
-                      fontSize: 14, 
-                      fontWeight: 700, 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(34,197,94,0.4)',
-                    }}>
-                      ✓
-                    </span>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-                    <MiniEtichetta type="verticale" scale={0.16} />
-                  </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#1a3a2a', marginBottom: 4 }}>Verticale</div>
-                  <div style={{ fontSize: 12, color: '#888' }}>6 x 10 cm</div>
-                </div>
-
-                {/* Card Rotonda */}
-                <div
-                  onClick={() => setFormato('rotonda')}
-                  style={{
-                    flex: 1,
-                    minWidth: 130,
-                    padding: 20,
-                    borderRadius: 14,
-                    border: formato === 'rotonda' ? '3px solid #c9933a' : '2px solid #e5e7eb',
-                    background: formato === 'rotonda' ? '#fffbf5' : '#fff',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    transition: 'all 0.25s ease',
-                    position: 'relative',
-                    boxShadow: formato === 'rotonda' ? '0 8px 24px rgba(201,147,58,0.2)' : '0 2px 8px rgba(0,0,0,0.04)',
-                  }}
-                  onMouseEnter={e => { if (formato !== 'rotonda') e.currentTarget.style.borderColor = '#c9933a50' }}
-                  onMouseLeave={e => { if (formato !== 'rotonda') e.currentTarget.style.borderColor = '#e5e7eb' }}
-                >
-                  {formato === 'rotonda' && (
-                    <span style={{ 
-                      position: 'absolute', 
-                      top: -8, 
-                      right: -8, 
-                      width: 24, 
-                      height: 24, 
-                      background: '#22c55e', 
-                      borderRadius: '50%', 
-                      color: '#fff', 
-                      fontSize: 14, 
-                      fontWeight: 700, 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(34,197,94,0.4)',
-                    }}>
-                      ✓
-                    </span>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-                    <MiniEtichetta type="rotonda" scale={0.15} />
-                  </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#1a3a2a', marginBottom: 4 }}>Rotonda</div>
-                  <div style={{ fontSize: 12, color: '#888' }}>10 cm</div>
-                </div>
+              {/* Card Rotonda */}
+              <div
+                onClick={() => setFormato('rotonda')}
+                style={{
+                  flex: 1,
+                  padding: '12px 8px',
+                  borderRadius: 10,
+                  border: formato === 'rotonda' ? '2px solid #c9933a' : '1px solid #e5e7eb',
+                  background: formato === 'rotonda' ? '#fffbf5' : '#fff',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {formato === 'rotonda' && (
+                  <span style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, background: '#22c55e', borderRadius: '50%', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</span>
+                )}
+                <div style={{ width: 40, height: 40, border: '2px solid #999', borderRadius: '50%', margin: '0 auto 8px', background: formato === 'rotonda' ? '#f5f0e8' : '#f9f9f9' }} />
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#1a3a2a' }}>Rotonda</div>
               </div>
             </div>
           </div>
 
-          {/* COLONNA DESTRA - Anteprima Live */}
-          <div style={{ flex: 1 }}>
-            <div style={{ 
-              background: '#fff', 
-              borderRadius: 16, 
-              padding: 24, 
-              boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-              minHeight: 500,
-              display: 'flex',
-              flexDirection: 'column',
-            }}>
-              <div style={{ 
-                fontSize: 10, 
-                fontWeight: 700, 
-                color: '#c9933a', 
-                letterSpacing: 2, 
-                textTransform: 'uppercase', 
-                marginBottom: 16,
-              }}>
-                Anteprima
-              </div>
-              <div style={{ borderTop: '1px solid #c9933a', marginBottom: 24, opacity: 0.3 }} />
-
-              {!canShowPreview ? (
-                <div style={{ 
-                  flex: 1, 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  color: '#999',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ 
-                    width: 80, 
-                    height: 80, 
-                    borderRadius: '50%', 
-                    background: '#f5f0e8', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    marginBottom: 16,
-                    fontSize: 32,
-                  }}>
-                    🏷️
-                  </div>
-                  <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#666' }}>
-                    Nessuna anteprima
-                  </div>
-                  <div style={{ fontSize: 13, maxWidth: 280 }}>
-                    Seleziona un prodotto e un lotto per visualizzare l&apos;anteprima dell&apos;etichetta
-                  </div>
+          {/* SEZIONE 3 - Dimensioni */}
+          <div style={{ padding: 20, borderBottom: '1px solid #c9933a30' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#c9933a', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 14 }}>
+              Dimensioni
+            </div>
+            
+            {formato !== 'rotonda' ? (
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 6 }}>Larghezza (cm)</label>
+                  <input
+                    type="number"
+                    value={larghezza}
+                    onChange={(e) => setLarghezza(Number(e.target.value) || 10)}
+                    min={3}
+                    max={20}
+                    step={0.5}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}
+                  />
                 </div>
-              ) : (
-                <>
-                  {/* Container anteprima con sfondo e ombra */}
-                  <div style={{ 
-                    flex: 1, 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    background: 'linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%)',
-                    borderRadius: 12,
-                    padding: 24,
-                    marginBottom: 20,
-                  }}>
-                    <div style={{ 
-                      boxShadow: '0 8px 40px rgba(0,0,0,0.15)', 
-                      borderRadius: formato === 'rotonda' ? '50%' : 8,
-                    }}>
-                      {/* FORMATO ORIZZONTALE */}
-                      {formato === 'orizzontale' && (
-                        <div
-                          id="etichetta-print"
-                          ref={etichettaRef}
-                          style={{
-                            width: 378,
-                            height: 227,
-                            border: '1px solid #ddd',
-                            borderRadius: 4,
-                            background: '#fff',
-                            fontFamily: 'system-ui, -apple-system, sans-serif',
-                            fontSize: 7,
-                            color: '#333',
-                            overflow: 'hidden',
-                            display: 'flex',
-                            flexDirection: 'column',
-                          }}
-                        >
-                          {/* Header compatto */}
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '4px 10px', borderBottom: '1px solid #c9933a', background: '#fefdfb' }}>
-                            <Image src="/images/logo.png" alt="Logo" width={50} height={20} style={{ objectFit: 'contain', display: 'block' }} />
-                            <div style={{ textAlign: 'center' }}>
-                              <div style={{ fontSize: 7, fontWeight: 700, color: '#1a3a2a', letterSpacing: 0.3 }}>
-                                {ragioneSociale.toUpperCase()}
-                              </div>
-                              <div style={{ fontSize: 5, color: '#666' }}>
-                                {indirizzoCompleto} {piva && `– ${piva}`}
-                              </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 6 }}>Altezza (cm)</label>
+                  <input
+                    type="number"
+                    value={altezza}
+                    onChange={(e) => setAltezza(Number(e.target.value) || 6)}
+                    min={3}
+                    max={20}
+                    step={0.5}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 6 }}>Diametro (cm)</label>
+                <input
+                  type="number"
+                  value={diametro}
+                  onChange={(e) => setDiametro(Number(e.target.value) || 10)}
+                  min={3}
+                  max={20}
+                  step={0.5}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* SEZIONE 4 - Elementi */}
+          <div style={{ padding: 20, borderBottom: '1px solid #c9933a30', flex: 1 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#c9933a', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 14 }}>
+              Elementi
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' }}>
+              {[
+                { key: 'logo', label: 'Logo' },
+                { key: 'valoriNutrizionali', label: 'Valori nutrizionali' },
+                { key: 'qrCode', label: 'QR Code' },
+                { key: 'allergeni', label: 'Allergeni' },
+                { key: 'ingredienti', label: 'Ingredienti' },
+                { key: 'lotto', label: 'Lotto' },
+                { key: 'origine', label: 'Origine' },
+                { key: 'conservazione', label: 'Conservazione' },
+                { key: 'pesoNetto', label: 'Peso netto' },
+                { key: 'piva', label: 'P.IVA' },
+                { key: 'email', label: 'Email' },
+                { key: 'telefono', label: 'Telefono' },
+              ].map(({ key, label }) => (
+                <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12, color: '#444' }}>
+                  <input
+                    type="checkbox"
+                    checked={elementi[key as keyof Elementi]}
+                    onChange={() => toggleElemento(key as keyof Elementi)}
+                    style={{ width: 16, height: 16, accentColor: '#c9933a' }}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* BOTTONI */}
+          <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button
+              onClick={handleGeneraPdf}
+              disabled={!canShowPreview || generatingPdf}
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: canShowPreview ? '#c9933a' : '#ccc',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: canShowPreview ? 'pointer' : 'not-allowed',
+              }}
+            >
+              {generatingPdf ? 'Generazione...' : 'Genera PDF'}
+            </button>
+            <button
+              onClick={handleStampa}
+              disabled={!canShowPreview}
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: canShowPreview ? '#1a3a2a' : '#ccc',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: canShowPreview ? 'pointer' : 'not-allowed',
+              }}
+            >
+              Stampa
+            </button>
+          </div>
+        </div>
+
+        {/* COLONNA DESTRA - Anteprima Live */}
+        <div style={{ 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column',
+          padding: 32,
+          overflowY: 'auto',
+        }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#c9933a', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 24 }}>
+            Anteprima Live
+          </div>
+
+          <div style={{ 
+            flex: 1, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+          }}>
+            {!canShowPreview ? (
+              <div style={{ textAlign: 'center', color: '#999' }}>
+                <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', fontSize: 32 }}>
+                  🏷️
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: '#666', marginBottom: 8 }}>Nessuna anteprima</div>
+                <div style={{ fontSize: 13 }}>Seleziona prodotto e lotto</div>
+              </div>
+            ) : (
+              <div style={{ 
+                background: '#fff', 
+                borderRadius: formato === 'rotonda' ? '50%' : 8,
+                boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
+                transform: `scale(${scale})`,
+                transformOrigin: 'center center',
+              }}>
+                {/* ANTEPRIMA ETICHETTA */}
+                {formato === 'orizzontale' && (
+                  <div
+                    id="etichetta-print"
+                    ref={etichettaRef}
+                    style={{
+                      width: widthPx,
+                      height: heightPx,
+                      border: '1px solid #ddd',
+                      borderRadius: 4,
+                      background: '#fff',
+                      fontFamily: 'system-ui, -apple-system, sans-serif',
+                      fontSize: 7,
+                      color: '#333',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    {/* Header */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '4px 10px', borderBottom: '1px solid #c9933a', background: '#fefdfb' }}>
+                      {elementi.logo && <Image src="/images/logo.png" alt="Logo" width={50} height={20} style={{ objectFit: 'contain' }} />}
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 7, fontWeight: 700, color: '#1a3a2a', letterSpacing: 0.3 }}>{ragioneSociale.toUpperCase()}</div>
+                        <div style={{ fontSize: 5, color: '#666' }}>
+                          {indirizzoCompleto}
+                          {elementi.piva && piva && ` – P.IVA: ${piva}`}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contenuto */}
+                    <div style={{ flex: 1, padding: '4px 8px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                      <div style={{ marginBottom: 2 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: '#1a3a2a', lineHeight: 1.1 }}>{selectedProdotto.nome}</div>
+                        {selectedProdotto.descrizione && (
+                          <div style={{ fontSize: 5.5, color: '#666', lineHeight: 1.2, marginTop: 1 }}>{selectedProdotto.descrizione}</div>
+                        )}
+                      </div>
+
+                      {(categoria === 'completo' || categoria === 'trasformato') && (
+                        <>
+                          {elementi.ingredienti && selectedProdotto.ingredienti && (
+                            <div style={{ fontSize: 5.5, marginBottom: 2, lineHeight: 1.2 }}>
+                              <strong>Ingredienti:</strong> {selectedProdotto.ingredienti}
                             </div>
-                          </div>
-
-                          {/* Contenuto */}
-                          <div style={{ flex: 1, padding: '4px 8px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                            {/* Nome prodotto e descrizione */}
-                            <div style={{ marginBottom: 2 }}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: '#1a3a2a', lineHeight: 1.1 }}>
-                                {selectedProdotto.nome}
-                              </div>
-                              {selectedProdotto.descrizione && (
-                                <div style={{ fontSize: 5.5, color: '#666', lineHeight: 1.2, marginTop: 1 }}>
-                                  {selectedProdotto.descrizione}
-                                </div>
-                              )}
+                          )}
+                          {elementi.allergeni && selectedProdotto.allergeni && (
+                            <div style={{ fontSize: 6, fontWeight: 700, marginBottom: 2, color: '#c00' }}>
+                              ALLERGENI: {selectedProdotto.allergeni}
                             </div>
+                          )}
 
-                            {(categoria === 'completo' || categoria === 'trasformato') && (
-                              <>
-                                {selectedProdotto.ingredienti && (
-                                  <div style={{ fontSize: 5.5, marginBottom: 2, lineHeight: 1.2 }}>
-                                    <strong>Ingredienti:</strong> {selectedProdotto.ingredienti}
-                                  </div>
-                                )}
-                                {selectedProdotto.allergeni && (
-                                  <div style={{ fontSize: 6, fontWeight: 700, marginBottom: 2, color: '#c00' }}>
-                                    ALLERGENI: {selectedProdotto.allergeni}
-                                  </div>
-                                )}
-
-                                <div style={{ display: 'flex', gap: 6, flex: 1, minHeight: 0 }}>
-                                  {/* Tabella valori nutrizionali */}
-                                  <div style={{ flex: '1 1 55%', border: '1px solid #ddd', borderRadius: 2, fontSize: 5.5, overflow: 'hidden' }}>
-                                    <div style={{ background: '#f5f0e8', padding: '2px 4px', fontWeight: 700, fontSize: 5.5 }}>
-                                      Valori Nutrizionali / 100g
-                                    </div>
-                                    <div style={{ padding: '1px 4px' }}>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px' }}>
-                                        <span>Energia</span>
-                                        <span>{vn.energia_kj ?? '-'} kJ / {vn.energia_kcal ?? '-'} kcal</span>
-                                      </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}>
-                                        <span>Grassi</span>
-                                        <span>{vn.grassi ?? '-'} g</span>
-                                      </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px', paddingLeft: 6 }}>
-                                        <span>- di cui saturi</span>
-                                        <span>{vn.grassi_saturi ?? '-'} g</span>
-                                      </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}>
-                                        <span>Carboidrati</span>
-                                        <span>{vn.carboidrati ?? '-'} g</span>
-                                      </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px', paddingLeft: 6 }}>
-                                        <span>- di cui zuccheri</span>
-                                        <span>{vn.zuccheri ?? '-'} g</span>
-                                      </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}>
-                                        <span>Fibre</span>
-                                        <span>{vn.fibre ?? '-'} g</span>
-                                      </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px' }}>
-                                        <span>Proteine</span>
-                                        <span>{vn.proteine ?? '-'} g</span>
-                                      </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}>
-                                        <span>Sale</span>
-                                        <span>{vn.sale ?? '-'} g</span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Colonna destra - info + QR */}
-                                  <div style={{ flex: '1 1 45%', fontSize: 5.5, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                                    <div style={{ lineHeight: 1.4 }}>
-                                      <div><strong>Peso netto:</strong> {selectedProdotto.peso_netto || '-'}</div>
-                                      <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>
-                                      <div><strong>TMC:</strong> {selectedLotto.tmc || 'vedi conf.'}</div>
-                                      <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia – Altopiano del Fucino'}</div>
-                                      {selectedLotto.condizioni_conservazione && (
-                                        <div style={{ fontSize: 5, color: '#666', marginTop: 2, lineHeight: 1.2 }}>
-                                          {selectedLotto.condizioni_conservazione}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
-                                      <div style={{ background: '#fff', padding: 2, border: '1px solid #ddd', borderRadius: 2 }}>
-                                        <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={36} />
-                                      </div>
-                                      <div style={{ fontSize: 5, color: '#666', lineHeight: 1.2 }}>
-                                        {sitoWeb}
-                                      </div>
-                                    </div>
-                                  </div>
+                          <div style={{ display: 'flex', gap: 6, flex: 1, minHeight: 0 }}>
+                            {/* Tabella valori nutrizionali */}
+                            {elementi.valoriNutrizionali && (
+                              <div style={{ flex: '1 1 55%', border: '1px solid #ddd', borderRadius: 2, fontSize: 5.5, overflow: 'hidden' }}>
+                                <div style={{ background: '#f5f0e8', padding: '2px 4px', fontWeight: 700, fontSize: 5.5 }}>Valori Nutrizionali / 100g</div>
+                                <div style={{ padding: '1px 4px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px' }}><span>Energia</span><span>{vn.energia_kj ?? '-'} kJ / {vn.energia_kcal ?? '-'} kcal</span></div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}><span>Grassi</span><span>{vn.grassi ?? '-'} g</span></div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px', paddingLeft: 6 }}><span>- di cui saturi</span><span>{vn.grassi_saturi ?? '-'} g</span></div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}><span>Carboidrati</span><span>{vn.carboidrati ?? '-'} g</span></div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px', paddingLeft: 6 }}><span>- di cui zuccheri</span><span>{vn.zuccheri ?? '-'} g</span></div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}><span>Fibre</span><span>{vn.fibre ?? '-'} g</span></div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px' }}><span>Proteine</span><span>{vn.proteine ?? '-'} g</span></div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}><span>Sale</span><span>{vn.sale ?? '-'} g</span></div>
                                 </div>
-                              </>
+                              </div>
                             )}
 
-                            {categoria === 'ortaggio_fresco' && (
-                              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                                <div style={{ fontSize: 7 }}>
-                                  <div style={{ marginBottom: 3 }}><strong>Peso netto:</strong> {selectedProdotto.peso_netto || 'variabile'}</div>
-                                  <div style={{ marginBottom: 3 }}><strong>L:</strong> {selectedLotto.codice_lotto}</div>
-                                  <div style={{ marginBottom: 3 }}><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia – Altopiano del Fucino'}</div>
-                                  <div style={{ marginBottom: 3 }}><strong>Produttore:</strong> {ragioneSociale} – {indirizzoCompleto}</div>
-                                  {selectedLotto.condizioni_conservazione && (
-                                    <div style={{ fontSize: 6, color: '#666' }}>
-                                      {selectedLotto.condizioni_conservazione}
-                                    </div>
-                                  )}
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                            {/* Colonna destra */}
+                            <div style={{ flex: '1 1 45%', fontSize: 5.5, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                              <div style={{ lineHeight: 1.4 }}>
+                                {elementi.pesoNetto && <div><strong>Peso netto:</strong> {selectedProdotto.peso_netto || '-'}</div>}
+                                {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
+                                <div><strong>TMC:</strong> {selectedLotto.tmc || 'vedi conf.'}</div>
+                                {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
+                                {elementi.conservazione && selectedLotto.condizioni_conservazione && (
+                                  <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{selectedLotto.condizioni_conservazione}</div>
+                                )}
+                              </div>
+                              {elementi.qrCode && (
+                                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
                                   <div style={{ background: '#fff', padding: 2, border: '1px solid #ddd', borderRadius: 2 }}>
-                                    <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={40} />
+                                    <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={36} />
                                   </div>
-                                  <div style={{ fontSize: 6, color: '#666' }}>
-                                    {sitoWeb}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* FORMATO VERTICALE */}
-                      {formato === 'verticale' && (
-                        <div
-                          id="etichetta-print"
-                          ref={etichettaRef}
-                          style={{
-                            width: 227,
-                            height: 378,
-                            border: '1px solid #ddd',
-                            borderRadius: 4,
-                            background: '#fff',
-                            fontFamily: 'system-ui, -apple-system, sans-serif',
-                            fontSize: 7,
-                            color: '#333',
-                            overflow: 'hidden',
-                            display: 'flex',
-                            flexDirection: 'column',
-                          }}
-                        >
-                          <div style={{ textAlign: 'center', padding: '8px 10px 6px', borderBottom: '2px solid #c9933a' }}>
-                            <Image src="/images/logo.png" alt="Logo" width={70} height={28} style={{ objectFit: 'contain', marginBottom: 4 }} />
-                            <div style={{ fontSize: 7, fontWeight: 700, color: '#1a3a2a', letterSpacing: 0.3 }}>
-                              {ragioneSociale.toUpperCase()}
-                            </div>
-                            <div style={{ fontSize: 6, color: '#666', lineHeight: 1.3 }}>
-                              {indirizzoCompleto}
-                            </div>
-                            {piva && <div style={{ fontSize: 5, color: '#888' }}>{piva}</div>}
-                          </div>
-
-                          <div style={{ padding: '8px 10px', textAlign: 'center', borderBottom: '1px solid #eee' }}>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: '#1a3a2a' }}>
-                              {selectedProdotto.nome}
-                            </div>
-                            {selectedProdotto.descrizione && (
-                              <div style={{ fontSize: 6, color: '#666', marginTop: 2, lineHeight: 1.3 }}>
-                                {selectedProdotto.descrizione}
-                              </div>
-                            )}
-                          </div>
-
-                          <div style={{ flex: 1, padding: '6px 10px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                            {(categoria === 'completo' || categoria === 'trasformato') && (
-                              <>
-                                {selectedProdotto.ingredienti && (
-                                  <div style={{ fontSize: 6, marginBottom: 4, lineHeight: 1.3 }}>
-                                    <strong>Ingredienti:</strong> {selectedProdotto.ingredienti}
-                                  </div>
-                                )}
-                                {selectedProdotto.allergeni && (
-                                  <div style={{ fontSize: 7, fontWeight: 700, marginBottom: 6, padding: '3px 6px', background: '#fff3cd', borderRadius: 3, color: '#856404' }}>
-                                    ALLERGENI: {selectedProdotto.allergeni}
-                                  </div>
-                                )}
-
-                                <div style={{ border: '1px solid #ddd', borderRadius: 3, fontSize: 6, marginBottom: 6, overflow: 'hidden' }}>
-                                  <div style={{ background: '#f5f0e8', padding: '3px 6px', fontWeight: 700, fontSize: 7, textAlign: 'center' }}>
-                                    Valori Nutrizionali / 100g
-                                  </div>
-                                  <div style={{ padding: '2px 6px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '2px 4px' }}>
-                                      <span>Energia</span>
-                                      <span>{vn.energia_kj ?? '-'} kJ / {vn.energia_kcal ?? '-'} kcal</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px' }}>
-                                      <span>Grassi</span>
-                                      <span>{vn.grassi ?? '-'} g</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '2px 4px', paddingLeft: 10 }}>
-                                      <span>- di cui saturi</span>
-                                      <span>{vn.grassi_saturi ?? '-'} g</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px' }}>
-                                      <span>Carboidrati</span>
-                                      <span>{vn.carboidrati ?? '-'} g</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '2px 4px', paddingLeft: 10 }}>
-                                      <span>- di cui zuccheri</span>
-                                      <span>{vn.zuccheri ?? '-'} g</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px' }}>
-                                      <span>Fibre</span>
-                                      <span>{vn.fibre ?? '-'} g</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '2px 4px' }}>
-                                      <span>Proteine</span>
-                                      <span>{vn.proteine ?? '-'} g</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px' }}>
-                                      <span>Sale</span>
-                                      <span>{vn.sale ?? '-'} g</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </>
-                            )}
-
-                            <div style={{ fontSize: 7, lineHeight: 1.5 }}>
-                              <div><strong>Peso netto:</strong> {selectedProdotto.peso_netto || 'variabile'}</div>
-                              <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>
-                              <div><strong>TMC:</strong> {selectedLotto.tmc || 'vedi confezione'}</div>
-                              <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>
-                              {selectedLotto.condizioni_conservazione && (
-                                <div style={{ fontSize: 6, color: '#666', marginTop: 2 }}>
-                                  {selectedLotto.condizioni_conservazione}
+                                  <div style={{ fontSize: 5, color: '#666' }}>{sitoWeb}</div>
                                 </div>
                               )}
                             </div>
                           </div>
-
-                          <div style={{ textAlign: 'center', padding: '6px 10px 8px', borderTop: '1px solid #eee' }}>
-                            <div style={{ background: '#fff', padding: 3, border: '1px solid #ddd', borderRadius: 3, display: 'inline-block' }}>
-                              <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={50} />
-                            </div>
-                            <div style={{ fontSize: 6, color: '#666', marginTop: 4 }}>
-                              {sitoWeb}
-                            </div>
-                          </div>
-                        </div>
+                        </>
                       )}
 
-                      {/* FORMATO ROTONDA */}
-                      {formato === 'rotonda' && (
-                        <div
-                          id="etichetta-print"
-                          ref={etichettaRef}
-                          style={{
-                            width: 378,
-                            height: 378,
-                            borderRadius: '50%',
-                            border: '3px solid #c9933a',
-                            background: '#fff',
-                            fontFamily: 'system-ui, -apple-system, sans-serif',
-                            fontSize: 8,
-                            color: '#333',
-                            overflow: 'hidden',
-                            position: 'relative',
-                          }}
-                        >
-                          <div style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            opacity: 0.08,
-                            width: '60%',
-                            pointerEvents: 'none',
-                          }}>
-                            <Image src="/images/logo.png" alt="" width={227} height={227} style={{ objectFit: 'contain', width: '100%', height: 'auto' }} />
+                      {categoria === 'ortaggio_fresco' && (
+                        <div style={{ display: 'flex', gap: 8, flex: 1 }}>
+                          <div style={{ flex: 1, fontSize: 6, lineHeight: 1.5 }}>
+                            {elementi.pesoNetto && <div><strong>Peso netto:</strong> {selectedProdotto.peso_netto || '-'}</div>}
+                            {elementi.lotto && <div><strong>Lotto:</strong> {selectedLotto.codice_lotto}</div>}
+                            {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
+                            {elementi.conservazione && selectedLotto.condizioni_conservazione && (
+                              <div style={{ fontSize: 5, color: '#666', marginTop: 4 }}>{selectedLotto.condizioni_conservazione}</div>
+                            )}
                           </div>
-
-                          <div style={{ 
-                            position: 'relative', 
-                            zIndex: 1, 
-                            width: '100%', 
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: '50px 40px',
-                          }}>
-                            <div style={{ display: 'flex', width: '100%', maxWidth: 280, gap: 12 }}>
-                              <div style={{ flex: '0 0 60%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                <div style={{ fontSize: 7, fontWeight: 600, color: '#c9933a', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>
-                                  {ragioneSociale}
-                                </div>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: '#1a3a2a', marginBottom: 8, lineHeight: 1.2 }}>
-                                  {selectedProdotto.nome}
-                                </div>
-                                {selectedProdotto.allergeni && (
-                                  <div style={{ 
-                                    fontSize: 7, 
-                                    fontWeight: 700, 
-                                    marginBottom: 8, 
-                                    padding: '3px 8px', 
-                                    background: '#f97316', 
-                                    borderRadius: 3, 
-                                    color: '#fff', 
-                                    display: 'inline-block',
-                                    alignSelf: 'flex-start',
-                                  }}>
-                                    {selectedProdotto.allergeni}
-                                  </div>
-                                )}
-                                <div style={{ fontSize: 7, marginBottom: 3 }}>
-                                  <strong>L:</strong> {selectedLotto.codice_lotto}
-                                </div>
-                                <div style={{ fontSize: 7, marginBottom: 3 }}>
-                                  {selectedProdotto.origine || impostazioni?.origine_default || 'Italia – Altopiano del Fucino'}
-                                </div>
-                                {selectedLotto.condizioni_conservazione && (
-                                  <div style={{ fontSize: 7, color: '#666' }}>
-                                    {selectedLotto.condizioni_conservazione}
-                                  </div>
-                                )}
+                          {elementi.qrCode && (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                              <div style={{ background: '#fff', padding: 2, border: '1px solid #ddd', borderRadius: 2 }}>
+                                <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={40} />
                               </div>
-                              <div style={{ flex: '0 0 40%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                <div style={{ background: '#fff', padding: 4, border: '1px solid #ddd', borderRadius: 4 }}>
-                                  <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={80} />
-                                </div>
-                                <div style={{ fontSize: 7, color: '#666', marginTop: 6, textAlign: 'center' }}>
-                                  {sitoWeb}
-                                </div>
-                              </div>
+                              <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{sitoWeb}</div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       )}
                     </div>
                   </div>
+                )}
 
-                  {/* Bottone Stampa */}
-                  <button
-                    onClick={handleStampa}
+                {formato === 'verticale' && (
+                  <div
+                    id="etichetta-print"
+                    ref={etichettaRef}
                     style={{
-                      width: '100%',
-                      padding: '16px 24px',
-                      background: 'linear-gradient(135deg, #c9933a 0%, #a87930 100%)',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: 10,
-                      fontSize: 15,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 16px rgba(201,147,58,0.3)',
-                      transition: 'all 0.2s ease',
-                      letterSpacing: 0.5,
+                      width: widthPx,
+                      height: heightPx,
+                      border: '1px solid #ddd',
+                      borderRadius: 4,
+                      background: '#fff',
+                      fontFamily: 'system-ui, -apple-system, sans-serif',
+                      fontSize: 7,
+                      color: '#333',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      padding: 8,
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(201,147,58,0.4)' }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(201,147,58,0.3)' }}
                   >
-                    Stampa Etichetta
-                  </button>
+                    {/* Header */}
+                    <div style={{ textAlign: 'center', borderBottom: '1px solid #c9933a', paddingBottom: 6, marginBottom: 6 }}>
+                      {elementi.logo && <Image src="/images/logo.png" alt="Logo" width={60} height={24} style={{ objectFit: 'contain', marginBottom: 4 }} />}
+                      <div style={{ fontSize: 7, fontWeight: 700, color: '#1a3a2a' }}>{ragioneSociale.toUpperCase()}</div>
+                      <div style={{ fontSize: 5, color: '#666' }}>{indirizzoCompleto}</div>
+                    </div>
 
-                  <p style={{ fontSize: 12, color: '#888', marginTop: 12, textAlign: 'center' }}>
-                    Dimensioni: {formato === 'orizzontale' ? '10cm x 6cm' : formato === 'verticale' ? '6cm x 10cm' : 'diametro 10cm'}
-                  </p>
-                </>
-              )}
-            </div>
+                    {/* Nome prodotto */}
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1a3a2a', textAlign: 'center', marginBottom: 6 }}>{selectedProdotto.nome}</div>
+
+                    {/* Contenuto */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', fontSize: 6, overflow: 'hidden' }}>
+                      {elementi.ingredienti && selectedProdotto.ingredienti && (
+                        <div style={{ marginBottom: 4, lineHeight: 1.3 }}><strong>Ingredienti:</strong> {selectedProdotto.ingredienti}</div>
+                      )}
+                      {elementi.allergeni && selectedProdotto.allergeni && (
+                        <div style={{ fontSize: 7, fontWeight: 700, color: '#c00', marginBottom: 4 }}>ALLERGENI: {selectedProdotto.allergeni}</div>
+                      )}
+
+                      {elementi.valoriNutrizionali && (categoria === 'completo' || categoria === 'trasformato') && (
+                        <div style={{ border: '1px solid #ddd', borderRadius: 2, marginBottom: 6, overflow: 'hidden' }}>
+                          <div style={{ background: '#f5f0e8', padding: '2px 4px', fontWeight: 700, fontSize: 6 }}>Valori Nutrizionali / 100g</div>
+                          <div style={{ padding: '2px 4px', fontSize: 5.5 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Energia</span><span>{vn.energia_kj ?? '-'} kJ / {vn.energia_kcal ?? '-'} kcal</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Grassi</span><span>{vn.grassi ?? '-'} g</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Carboidrati</span><span>{vn.carboidrati ?? '-'} g</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Proteine</span><span>{vn.proteine ?? '-'} g</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Sale</span><span>{vn.sale ?? '-'} g</span></div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div style={{ lineHeight: 1.5 }}>
+                        {elementi.pesoNetto && <div><strong>Peso:</strong> {selectedProdotto.peso_netto || '-'}</div>}
+                        {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
+                        <div><strong>TMC:</strong> {selectedLotto.tmc || 'vedi conf.'}</div>
+                        {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
+                      </div>
+                    </div>
+
+                    {/* Footer con QR */}
+                    {elementi.qrCode && (
+                      <div style={{ display: 'flex', justifyContent: 'center', borderTop: '1px solid #eee', paddingTop: 6 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={50} />
+                          <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{sitoWeb}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {formato === 'rotonda' && (
+                  <div
+                    id="etichetta-print"
+                    ref={etichettaRef}
+                    style={{
+                      width: widthPx,
+                      height: heightPx,
+                      borderRadius: '50%',
+                      border: '3px solid #c9933a',
+                      background: '#fff',
+                      fontFamily: 'system-ui, -apple-system, sans-serif',
+                      fontSize: 7,
+                      color: '#333',
+                      overflow: 'hidden',
+                      position: 'relative',
+                    }}
+                  >
+                    {/* Logo watermark */}
+                    {elementi.logo && (
+                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', opacity: 0.1, width: '60%', pointerEvents: 'none' }}>
+                        <Image src="/images/logo.png" alt="" width={200} height={200} style={{ objectFit: 'contain', width: '100%', height: 'auto' }} />
+                      </div>
+                    )}
+
+                    {/* Contenuto due colonne */}
+                    <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '50px 40px' }}>
+                      <div style={{ display: 'flex', width: '100%', maxWidth: 280, gap: 12 }}>
+                        {/* Colonna sinistra 60% */}
+                        <div style={{ flex: '0 0 60%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                          <div style={{ fontSize: 7, fontWeight: 600, color: '#c9933a', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>
+                            {ragioneSociale}
+                          </div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#1a3a2a', marginBottom: 8, lineHeight: 1.2 }}>
+                            {selectedProdotto.nome}
+                          </div>
+                          {elementi.allergeni && selectedProdotto.allergeni && (
+                            <div style={{ fontSize: 7, fontWeight: 700, marginBottom: 8, padding: '3px 8px', background: '#f97316', borderRadius: 3, color: '#fff', display: 'inline-block', alignSelf: 'flex-start' }}>
+                              {selectedProdotto.allergeni}
+                            </div>
+                          )}
+                          {elementi.lotto && <div style={{ fontSize: 7, marginBottom: 3 }}><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
+                          {elementi.origine && <div style={{ fontSize: 7, marginBottom: 3 }}>{selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
+                          {elementi.conservazione && selectedLotto.condizioni_conservazione && (
+                            <div style={{ fontSize: 7, color: '#666' }}>{selectedLotto.condizioni_conservazione}</div>
+                          )}
+                        </div>
+
+                        {/* Colonna destra 40% */}
+                        {elementi.qrCode && (
+                          <div style={{ flex: '0 0 40%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ background: '#fff', padding: 4, border: '1px solid #ddd', borderRadius: 4 }}>
+                              <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={80} />
+                            </div>
+                            <div style={{ fontSize: 7, color: '#666', marginTop: 6, textAlign: 'center' }}>{sitoWeb}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
