@@ -112,7 +112,6 @@ export default function EtichettePage() {
   const [tmcValue, setTmcValue] = useState('')
   const [tmcError, setTmcError] = useState('')
   const [pesoNettoValue, setPesoNettoValue] = useState('')
-  const [generatingPdf, setGeneratingPdf] = useState(false)
   const etichettaRef = useRef<HTMLDivElement>(null)
 
   const { data: prodotti } = useSWR<Prodotto[]>('/api/admin/prodotti', fetcher)
@@ -212,55 +211,30 @@ export default function EtichettePage() {
 
   const handleStampa = () => window.print()
 
-  const handleGeneraPdf = async () => {
-    if (!selectedProdotto || !selectedLotto) return
-    setGeneratingPdf(true)
-    try {
-      const params = new URLSearchParams({
-        prodotto_id: String(selectedProdotto.id),
-        lotto_id: String(selectedLotto.id),
-        formato,
-        larghezza: String(larghezza),
-        altezza: String(altezza),
-        diametro: String(diametro),
-        elementi: JSON.stringify(elementi),
-      })
-      const res = await fetch(`/api/admin/etichette/pdf?${params}`)
-      if (!res.ok) throw new Error('Errore generazione PDF')
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `etichetta-${selectedLotto.codice_lotto}.pdf`
-      a.click()
-      URL.revokeObjectURL(url)
-    } catch (err) {
-      console.error(err)
-      alert('Errore nella generazione del PDF')
-    } finally {
-      setGeneratingPdf(false)
-    }
-  }
-
   const toggleElemento = (key: keyof Elementi) => {
     setElementi(prev => ({ ...prev, [key]: !prev[key] }))
   }
-
-  // Print styles
-  const printSize = formato === 'orizzontale' 
-    ? `${larghezza}cm ${altezza}cm` 
-    : formato === 'verticale' 
-    ? `${larghezza}cm ${altezza}cm` 
-    : `${diametro}cm ${diametro}cm`
 
   return (
     <>
       <style jsx global>{`
         @media print {
           body * { visibility: hidden; }
-          #etichetta-print, #etichetta-print * { visibility: visible; }
-          #etichetta-print { position: absolute; left: 0; top: 0; transform: none !important; }
-          @page { size: ${printSize}; margin: 0; }
+          #etichetta-preview, #etichetta-preview * { visibility: visible; }
+          #etichetta-preview {
+            position: fixed;
+            top: 0;
+            left: 0;
+            margin: 0;
+            padding: 0;
+            transform: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+          }
+          @page {
+            margin: 0;
+            size: auto;
+          }
         }
         @media (max-width: 768px) {
           .etichette-container {
@@ -580,8 +554,8 @@ export default function EtichettePage() {
           {/* BOTTONI */}
           <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button
-              onClick={handleGeneraPdf}
-              disabled={!canShowPreview || generatingPdf || !canGeneratePdf}
+              onClick={handleStampa}
+              disabled={!canShowPreview || !canGeneratePdf}
               style={{
                 width: '100%',
                 padding: '14px',
@@ -594,24 +568,7 @@ export default function EtichettePage() {
                 cursor: (canShowPreview && canGeneratePdf) ? 'pointer' : 'not-allowed',
               }}
             >
-              {generatingPdf ? 'Generazione...' : 'Genera PDF'}
-            </button>
-            <button
-              onClick={handleStampa}
-              disabled={!canShowPreview}
-              style={{
-                width: '100%',
-                padding: '14px',
-                background: canShowPreview ? '#1a3a2a' : '#ccc',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 10,
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: canShowPreview ? 'pointer' : 'not-allowed',
-              }}
-            >
-              Stampa
+              Stampa / Salva PDF
             </button>
           </div>
         </div>
@@ -643,7 +600,7 @@ export default function EtichettePage() {
                 <div style={{ fontSize: 13 }}>Seleziona prodotto e lotto</div>
               </div>
             ) : (
-              <div className="etichette-preview-inner" style={{ 
+              <div id="etichetta-preview" className="etichette-preview-inner" style={{ 
                 background: '#fff', 
                 borderRadius: formato === 'rotonda' ? '50%' : 8,
                 boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
@@ -653,7 +610,6 @@ export default function EtichettePage() {
                 {/* ANTEPRIMA ETICHETTA */}
                 {formato === 'orizzontale' && (
                   <div
-                    id="etichetta-print"
                     ref={etichettaRef}
                     style={{
                       width: widthPx,
@@ -771,7 +727,6 @@ export default function EtichettePage() {
 
                 {formato === 'verticale' && (
                   <div
-                    id="etichetta-print"
                     ref={etichettaRef}
                     style={{
                       width: widthPx,
@@ -859,7 +814,6 @@ export default function EtichettePage() {
 
                 {formato === 'rotonda' && (
                   <div
-                    id="etichetta-print"
                     ref={etichettaRef}
                     style={{
                       width: widthPx,
