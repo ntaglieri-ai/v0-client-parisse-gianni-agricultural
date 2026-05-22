@@ -567,23 +567,25 @@ export default function EtichettePage() {
                             flexDirection: 'column',
                           }}
                         >
-                          <div style={{ textAlign: 'center', padding: '6px 8px 4px', borderBottom: '1px solid #c9933a' }}>
-                            <Image src="/images/logo.png" alt="Logo" width={80} height={32} style={{ objectFit: 'contain', marginBottom: 2 }} />
-                            <div style={{ fontSize: 8, fontWeight: 700, color: '#1a3a2a', letterSpacing: 0.3 }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 12px 6px', borderBottom: '1px solid #c9933a' }}>
+                            <div style={{ marginBottom: 4 }}>
+                              <Image src="/images/logo.png" alt="Logo" width={90} height={36} style={{ objectFit: 'contain', display: 'block' }} />
+                            </div>
+                            <div style={{ fontSize: 9, fontWeight: 700, color: '#1a3a2a', letterSpacing: 0.5, textAlign: 'center' }}>
                               {ragioneSociale.toUpperCase()}
                             </div>
-                            <div style={{ fontSize: 6, color: '#666' }}>
+                            <div style={{ fontSize: 6, color: '#666', textAlign: 'center' }}>
                               {indirizzoCompleto} {piva && `– ${piva}`}
                             </div>
                           </div>
 
-                          <div style={{ flex: 1, padding: '4px 8px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                            <div style={{ marginBottom: 3 }}>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: '#1a3a2a' }}>
+                          <div style={{ flex: 1, padding: '6px 12px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                            <div style={{ marginBottom: 4 }}>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: '#1a3a2a' }}>
                                 {selectedProdotto.nome}
                               </div>
                               {selectedProdotto.descrizione && (
-                                <div style={{ fontSize: 6, color: '#666', lineHeight: 1.2 }}>
+                                <div style={{ fontSize: 7, color: '#666', lineHeight: 1.3, marginTop: 2 }}>
                                   {selectedProdotto.descrizione}
                                 </div>
                               )}
@@ -592,74 +594,76 @@ export default function EtichettePage() {
                             {(categoria === 'completo' || categoria === 'trasformato') && (
                               <>
                                 {selectedProdotto.ingredienti && (
-                                  <div style={{ fontSize: 6, marginBottom: 2, lineHeight: 1.2 }}>
+                                  <div style={{ fontSize: 7, marginBottom: 3, lineHeight: 1.3 }}>
                                     <strong>Ingredienti:</strong> {selectedProdotto.ingredienti}
                                   </div>
                                 )}
                                 {selectedProdotto.allergeni && (
-                                  <div style={{ fontSize: 7, fontWeight: 700, marginBottom: 3, color: '#c00' }}>
+                                  <div style={{ fontSize: 8, fontWeight: 700, marginBottom: 4, color: '#c00' }}>
                                     ALLERGENI: {selectedProdotto.allergeni}
                                   </div>
                                 )}
 
-                                <div style={{ display: 'flex', gap: 6, flex: 1, minHeight: 0 }}>
-                                  <div style={{ flex: 1, border: '1px solid #ddd', borderRadius: 2, fontSize: 6, overflow: 'hidden' }}>
-                                    <div style={{ background: '#f5f0e8', padding: '2px 4px', fontWeight: 700, fontSize: 6 }}>
+                                <div style={{ display: 'flex', gap: 10, flex: 1, minHeight: 0 }}>
+                                  {/* Tabella valori nutrizionali - piu larga */}
+                                  <div style={{ flex: '1 1 58%', border: '1px solid #ddd', borderRadius: 3, fontSize: 7, overflow: 'hidden' }}>
+                                    <div style={{ background: '#f5f0e8', padding: '3px 6px', fontWeight: 700, fontSize: 7 }}>
                                       Valori Nutrizionali / 100g
                                     </div>
-                                    <div style={{ padding: '1px 4px' }}>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px' }}>
+                                    <div style={{ padding: '2px 6px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '2px 4px' }}>
                                         <span>Energia</span>
                                         <span>{vn.energia_kj ?? '-'} kJ / {vn.energia_kcal ?? '-'} kcal</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px' }}>
                                         <span>Grassi</span>
                                         <span>{vn.grassi ?? '-'} g</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px', paddingLeft: 8 }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '2px 4px', paddingLeft: 10 }}>
                                         <span>- di cui saturi</span>
                                         <span>{vn.grassi_saturi ?? '-'} g</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px' }}>
                                         <span>Carboidrati</span>
                                         <span>{vn.carboidrati ?? '-'} g</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px', paddingLeft: 8 }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '2px 4px', paddingLeft: 10 }}>
                                         <span>- di cui zuccheri</span>
                                         <span>{vn.zuccheri ?? '-'} g</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px' }}>
                                         <span>Fibre</span>
                                         <span>{vn.fibre ?? '-'} g</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '2px 4px' }}>
                                         <span>Proteine</span>
                                         <span>{vn.proteine ?? '-'} g</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px' }}>
                                         <span>Sale</span>
                                         <span>{vn.sale ?? '-'} g</span>
                                       </div>
                                     </div>
                                   </div>
 
-                                  <div style={{ width: 95, fontSize: 6, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                                    <div>
+                                  {/* Colonna destra - info + QR */}
+                                  <div style={{ flex: '1 1 42%', fontSize: 7, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                    <div style={{ lineHeight: 1.5 }}>
                                       <div><strong>Peso netto:</strong> {selectedProdotto.peso_netto || '-'}</div>
                                       <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>
                                       <div><strong>TMC:</strong> {selectedLotto.tmc || 'vedi conf.'}</div>
-                                      <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>
+                                      <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia – Altopiano del Fucino'}</div>
                                       {selectedLotto.condizioni_conservazione && (
-                                        <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>
+                                        <div style={{ fontSize: 6, color: '#666', marginTop: 3, lineHeight: 1.3 }}>
                                           {selectedLotto.condizioni_conservazione}
                                         </div>
                                       )}
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
-                                      <div style={{ background: '#fff', padding: 2, border: '1px solid #ddd', borderRadius: 2 }}>
-                                        <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={36} />
+                                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, marginTop: 4 }}>
+                                      <div style={{ background: '#fff', padding: 3, border: '1px solid #ddd', borderRadius: 3 }}>
+                                        <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={42} />
                                       </div>
-                                      <div style={{ fontSize: 5, color: '#666', lineHeight: 1.2 }}>
+                                      <div style={{ fontSize: 6, color: '#666', lineHeight: 1.3 }}>
                                         {sitoWeb}
                                       </div>
                                     </div>
