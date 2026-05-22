@@ -82,6 +82,7 @@ interface Elementi {
   piva: boolean
   email: boolean
   telefono: boolean
+  tmc: boolean
 }
 
 const CM_TO_PX = 37.8
@@ -106,7 +107,10 @@ export default function EtichettePage() {
     piva: true,
     email: true,
     telefono: true,
+    tmc: true,
   })
+  const [tmcMese, setTmcMese] = useState('')
+  const [tmcAnno, setTmcAnno] = useState('')
   const [generatingPdf, setGeneratingPdf] = useState(false)
   const etichettaRef = useRef<HTMLDivElement>(null)
 
@@ -424,6 +428,40 @@ export default function EtichettePage() {
                   {label}
                 </label>
               ))}
+            </div>
+
+            {/* Campo TMC separato con input MM/YYYY */}
+            <div style={{ marginTop: 16, padding: 12, background: '#f9f9f9', borderRadius: 8 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12, color: '#444', marginBottom: 10 }}>
+                <input
+                  type="checkbox"
+                  checked={elementi.tmc}
+                  onChange={() => toggleElemento('tmc')}
+                  style={{ width: 16, height: 16, accentColor: '#c9933a' }}
+                />
+                Da consumarsi preferibilmente entro
+              </label>
+              {elementi.tmc && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 24 }}>
+                  <input
+                    type="text"
+                    value={tmcMese}
+                    onChange={(e) => setTmcMese(e.target.value.replace(/\D/g, '').slice(0, 2))}
+                    placeholder="MM"
+                    maxLength={2}
+                    style={{ width: 50, padding: '6px 8px', borderRadius: 6, border: '1px solid #ddd', fontSize: 13, textAlign: 'center' }}
+                  />
+                  <span style={{ color: '#666', fontSize: 14 }}>/</span>
+                  <input
+                    type="text"
+                    value={tmcAnno}
+                    onChange={(e) => setTmcAnno(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="YYYY"
+                    maxLength={4}
+                    style={{ width: 70, padding: '6px 8px', borderRadius: 6, border: '1px solid #ddd', fontSize: 13, textAlign: 'center' }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 

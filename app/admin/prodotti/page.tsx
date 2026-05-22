@@ -660,8 +660,8 @@ export default function AdminProdottiPage() {
                     <input type="date" value={lottoFormData.data_raccolta} onChange={(e) => setLottoFormData({ ...lottoFormData, data_raccolta: e.target.value })} style={styles.input} />
                   </div>
 <div>
-  <label style={styles.label}>Termine Minimo di Conservazione (TMC)</label>
-  <input type="text" value={lottoFormData.tmc} onChange={(e) => setLottoFormData({ ...lottoFormData, tmc: e.target.value })} style={styles.input} placeholder="es. vedi confezione / 12/2027" />
+  <label style={styles.label}>Scadenza magazzino</label>
+  <input type="text" value={lottoFormData.tmc} onChange={(e) => setLottoFormData({ ...lottoFormData, tmc: e.target.value })} style={styles.input} placeholder="es. 12/2027 o vedi confezione" />
   </div>
                   <div>
                     <label style={styles.label}>Condizioni Conservazione</label>

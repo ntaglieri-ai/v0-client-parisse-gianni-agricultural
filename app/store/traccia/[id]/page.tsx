@@ -194,7 +194,7 @@ export default function TracciaPage() {
               ['Data Semina', formatDate(data.data_semina)],
               ['Data Raccolta', formatDate(data.data_raccolta)],
               ['Quantità prodotta', `${data.kg_totali} kg`],
-              ['Da consumarsi entro', data.tmc],
+              ['Conservazione fino a', data.tmc],
             ].map(([label, value]) => (
               <div key={label} className="bg-[#f5f0e8] rounded-xl p-4">
                 <p className="text-xs uppercase text-[#c9933a] font-semibold tracking-wider">{label}</p>
