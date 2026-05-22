@@ -765,58 +765,75 @@ export default function EtichettePage() {
                       overflow: 'hidden',
                       display: 'flex',
                       flexDirection: 'column',
-                      padding: 8,
                     }}
                   >
-                    {/* Header */}
-                    <div style={{ textAlign: 'center', borderBottom: '1px solid #c9933a', paddingBottom: 6, marginBottom: 6 }}>
-                      {elementi.logo && <Image src="/images/logo.png" alt="Logo" width={60} height={24} style={{ objectFit: 'contain', marginBottom: 4 }} />}
-                      <div style={{ fontSize: 7, fontWeight: 700, color: '#1a3a2a' }}>{ragioneSociale.toUpperCase()}</div>
-                      <div style={{ fontSize: 5, color: '#666' }}>{indirizzoCompleto}</div>
+                    {/* Header compatto premium */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '4px 8px', borderBottom: '1px solid #c9933a', background: '#fefdfb' }}>
+                      {elementi.logo && <Image src="/images/logo.png" alt="Logo" width={40} height={16} style={{ objectFit: 'contain', display: 'block' }} />}
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 6, fontWeight: 700, color: '#1a3a2a', letterSpacing: 0.3 }}>{ragioneSociale.toUpperCase()}</div>
+                        <div style={{ fontSize: 4.5, color: '#666' }}>{indirizzoCompleto}</div>
+                      </div>
                     </div>
 
                     {/* Nome prodotto */}
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1a3a2a', textAlign: 'center', marginBottom: 6 }}>{selectedProdotto.nome}</div>
+                    <div style={{ padding: '6px 8px 4px', borderBottom: '1px solid #c9933a20' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#1a3a2a', textAlign: 'center', lineHeight: 1.1 }}>{selectedProdotto.nome}</div>
+                      {selectedProdotto.descrizione && (
+                        <div style={{ fontSize: 5, color: '#666', textAlign: 'center', marginTop: 2, lineHeight: 1.2 }}>{selectedProdotto.descrizione}</div>
+                      )}
+                    </div>
 
-                    {/* Contenuto */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', fontSize: 6, overflow: 'hidden' }}>
+                    {/* Contenuto principale */}
+                    <div style={{ flex: 1, padding: '4px 8px', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontSize: 5.5 }}>
+                      {/* Ingredienti e allergeni */}
                       {elementi.ingredienti && selectedProdotto.ingredienti && (
-                        <div style={{ marginBottom: 4, lineHeight: 1.3 }}><strong>Ingredienti:</strong> {selectedProdotto.ingredienti}</div>
+                        <div style={{ marginBottom: 3, lineHeight: 1.3 }}><strong>Ingredienti:</strong> {selectedProdotto.ingredienti}</div>
                       )}
                       {elementi.allergeni && selectedProdotto.allergeni && (
-                        <div style={{ fontSize: 7, fontWeight: 700, color: '#c00', marginBottom: 4 }}>ALLERGENI: {selectedProdotto.allergeni}</div>
+                        <div style={{ fontSize: 6, fontWeight: 700, color: '#c00', marginBottom: 4 }}>ALLERGENI: {selectedProdotto.allergeni}</div>
                       )}
 
+                      {/* Tabella valori nutrizionali completa */}
                       {elementi.valoriNutrizionali && (categoria === 'completo' || categoria === 'trasformato') && (
-                        <div style={{ border: '1px solid #ddd', borderRadius: 2, marginBottom: 6, overflow: 'hidden' }}>
-                          <div style={{ background: '#f5f0e8', padding: '2px 4px', fontWeight: 700, fontSize: 6 }}>Valori Nutrizionali / 100g</div>
-                          <div style={{ padding: '2px 4px', fontSize: 5.5 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Energia</span><span>{vn.energia_kj ?? '-'} kJ / {vn.energia_kcal ?? '-'} kcal</span></div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Grassi</span><span>{vn.grassi ?? '-'} g</span></div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Carboidrati</span><span>{vn.carboidrati ?? '-'} g</span></div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Proteine</span><span>{vn.proteine ?? '-'} g</span></div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Sale</span><span>{vn.sale ?? '-'} g</span></div>
+                        <div style={{ border: '1px solid #ddd', borderRadius: 2, marginBottom: 4, overflow: 'hidden' }}>
+                          <div style={{ background: '#f5f0e8', padding: '2px 4px', fontWeight: 700, fontSize: 5.5 }}>Valori Nutrizionali / 100g</div>
+                          <div style={{ padding: '1px 4px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px' }}><span>Energia</span><span>{vn.energia_kj ?? '-'} kJ / {vn.energia_kcal ?? '-'} kcal</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}><span>Grassi</span><span>{vn.grassi ?? '-'} g</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px', paddingLeft: 6 }}><span>- di cui saturi</span><span>{vn.grassi_saturi ?? '-'} g</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}><span>Carboidrati</span><span>{vn.carboidrati ?? '-'} g</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px', paddingLeft: 6 }}><span>- di cui zuccheri</span><span>{vn.zuccheri ?? '-'} g</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}><span>Fibre</span><span>{vn.fibre ?? '-'} g</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px' }}><span>Proteine</span><span>{vn.proteine ?? '-'} g</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}><span>Sale</span><span>{vn.sale ?? '-'} g</span></div>
                           </div>
                         </div>
                       )}
 
-                      <div style={{ lineHeight: 1.5 }}>
-                        <div><strong>Peso netto:</strong> {pesoNettoValue || '_____'}</div>
-                        {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
-                        <div><strong>Da consumarsi preferibilmente entro:</strong> {tmcValue || '_____'}</div>
-                        {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
+                      {/* Info prodotto in due colonne */}
+                      <div style={{ display: 'flex', gap: 6, flex: 1 }}>
+                        <div style={{ flex: 1, lineHeight: 1.4 }}>
+                          <div><strong>Peso netto:</strong> {pesoNettoValue || '_____'}</div>
+                          {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
+                          <div style={{ fontSize: 5 }}><strong>Da consumarsi pref. entro:</strong> {tmcValue || '_____'}</div>
+                          {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
+                          {elementi.conservazione && selectedLotto.condizioni_conservazione && (
+                            <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{selectedLotto.condizioni_conservazione}</div>
+                          )}
+                        </div>
+                        
+                        {/* QR code nella colonna destra */}
+                        {elementi.qrCode && (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end' }}>
+                            <div style={{ background: '#fff', padding: 2, border: '1px solid #ddd', borderRadius: 2 }}>
+                              <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={38} />
+                            </div>
+                            <div style={{ fontSize: 4.5, color: '#666', marginTop: 2 }}>{sitoWeb}</div>
+                          </div>
+                        )}
                       </div>
                     </div>
-
-                    {/* Footer con QR */}
-                    {elementi.qrCode && (
-                      <div style={{ display: 'flex', justifyContent: 'center', borderTop: '1px solid #eee', paddingTop: 6 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={50} />
-                          <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{sitoWeb}</div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
 
