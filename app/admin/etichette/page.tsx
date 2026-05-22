@@ -125,9 +125,10 @@ export default function EtichettePage() {
   const widthPx = formato === 'rotonda' ? diametro * CM_TO_PX : larghezza * CM_TO_PX
   const heightPx = formato === 'rotonda' ? diametro * CM_TO_PX : altezza * CM_TO_PX
 
-  // Scala per fit nello schermo (max 500px)
-  const maxSize = 480
-  const scale = Math.min(1, maxSize / Math.max(widthPx, heightPx))
+  // Scala per fit nello schermo con zoom maggiore per visualizzazione
+  const maxSize = 550
+  const baseScale = maxSize / Math.max(widthPx, heightPx)
+  const scale = Math.max(1.3, Math.min(1.6, baseScale)) // zoom tra 1.3x e 1.6x
 
   const categoria = selectedProdotto?.categoria_etichetta || 'ortaggio_fresco'
   const vn = selectedProdotto?.valori_nutrizionali || {}
