@@ -693,7 +693,7 @@ export default function EtichettePage() {
                             <div style={{ flex: '1 1 45%', fontSize: 5.5, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                               <div style={{ lineHeight: 1.4 }}>
                                 <div><strong>Peso netto:</strong> {pesoNettoValue || '_____'}</div>
-                                {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
+                                {elementi.lotto && <div><strong>Lotto:</strong> {selectedLotto.codice_lotto}</div>}
                                 <div><strong>Da consumarsi preferibilmente entro:</strong> {tmcValue || '_____'}</div>
                                 {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
                                 {elementi.conservazione && selectedLotto.condizioni_conservazione && (
@@ -802,7 +802,7 @@ export default function EtichettePage() {
                       <div style={{ display: 'flex', gap: 6, flex: 1 }}>
                         <div style={{ flex: 1, lineHeight: 1.4 }}>
                           <div><strong>Peso netto:</strong> {pesoNettoValue || '_____'}</div>
-                          {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
+                          {elementi.lotto && <div><strong>Lotto:</strong> {selectedLotto.codice_lotto}</div>}
                           <div style={{ fontSize: 5 }}><strong>Da consumarsi pref. entro:</strong> {tmcValue || '_____'}</div>
                           {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
                           {elementi.conservazione && selectedLotto.condizioni_conservazione && (
