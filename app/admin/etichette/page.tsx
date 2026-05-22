@@ -262,16 +262,36 @@ export default function EtichettePage() {
           #etichetta-print { position: absolute; left: 0; top: 0; transform: none !important; }
           @page { size: ${printSize}; margin: 0; }
         }
+        @media (max-width: 768px) {
+          .etichette-container {
+            flex-direction: column !important;
+            height: auto !important;
+            min-height: calc(100vh - 48px);
+          }
+          .etichette-panel {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          .etichette-preview {
+            min-height: 400px;
+            padding: 16px !important;
+          }
+          .etichette-preview-inner {
+            transform: scale(0.85) !important;
+          }
+        }
       `}</style>
 
-      <div style={{ 
+      <div className="etichette-container" style={{ 
         display: 'flex', 
         height: 'calc(100vh - 48px)',
         margin: '-24px',
         background: '#f5f0e8',
       }}>
         {/* COLONNA SINISTRA - Pannello di controllo */}
-        <div style={{ 
+        <div className="etichette-panel" style={{ 
           width: 320, 
           flexShrink: 0,
           background: '#fff', 
@@ -597,7 +617,7 @@ export default function EtichettePage() {
         </div>
 
         {/* COLONNA DESTRA - Anteprima Live */}
-        <div style={{ 
+        <div className="etichette-preview" style={{ 
           flex: 1, 
           display: 'flex', 
           flexDirection: 'column',
@@ -623,7 +643,7 @@ export default function EtichettePage() {
                 <div style={{ fontSize: 13 }}>Seleziona prodotto e lotto</div>
               </div>
             ) : (
-              <div style={{ 
+              <div className="etichette-preview-inner" style={{ 
                 background: '#fff', 
                 borderRadius: formato === 'rotonda' ? '50%' : 8,
                 boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
