@@ -227,9 +227,12 @@ export default function EtichettePage() {
   const widthPx = larghezza * CM_TO_PX
   const heightPx = altezza * CM_TO_PX
 
-  // Calcola dimensione QR proporzionata (circa 15-20% della dimensione minore)
+  // Calcola dimensione QR proporzionata per orizzontale (circa 15-18% della dimensione minore)
   const minDimension = Math.min(widthPx, heightPx)
-  const qrSize = Math.max(28, Math.min(60, Math.floor(minDimension * 0.22)))
+  const qrSizeOrizzontale = Math.max(32, Math.min(55, Math.floor(minDimension * 0.20)))
+  
+  // Calcola dimensione QR per verticale (piu grande, circa 25-35% della larghezza)
+  const qrSizeVerticale = Math.max(50, Math.min(90, Math.floor(widthPx * 0.30)))
 
   // Scala per fit nello schermo con zoom maggiore per visualizzazione
   const maxSize = 550
@@ -701,11 +704,11 @@ export default function EtichettePage() {
                                 )}
                               </div>
                               {elementi.qrCode && (
-                                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
-                                  <div style={{ background: '#fff', padding: 2, border: '1px solid #ddd', borderRadius: 2 }}>
-                                    <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={qrSize} />
+                                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, marginRight: 4, marginBottom: 4 }}>
+                                  <div style={{ background: '#fff', padding: 3, border: '1px solid #ddd', borderRadius: 3 }}>
+                                    <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={qrSizeOrizzontale} />
                                   </div>
-                                  <div style={{ fontSize: 5, color: '#666' }}>{sitoWeb}</div>
+                                  <div style={{ fontSize: 5, color: '#666', marginBottom: 2 }}>{sitoWeb}</div>
                                 </div>
                               )}
                             </div>
@@ -724,11 +727,11 @@ export default function EtichettePage() {
                             )}
                           </div>
                           {elementi.qrCode && (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                              <div style={{ background: '#fff', padding: 2, border: '1px solid #ddd', borderRadius: 2 }}>
-                                <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={qrSize} />
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: 4, marginBottom: 4 }}>
+                              <div style={{ background: '#fff', padding: 3, border: '1px solid #ddd', borderRadius: 3 }}>
+                                <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={qrSizeOrizzontale} />
                               </div>
-                              <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{sitoWeb}</div>
+                              <div style={{ fontSize: 5, color: '#666', marginTop: 3 }}>{sitoWeb}</div>
                             </div>
                           )}
                         </div>
@@ -798,28 +801,26 @@ export default function EtichettePage() {
                         </div>
                       )}
 
-                      {/* Info prodotto in due colonne */}
-                      <div style={{ display: 'flex', gap: 6, flex: 1 }}>
-                        <div style={{ flex: 1, lineHeight: 1.4 }}>
-                          <div><strong>Peso netto:</strong> {pesoNettoValue || '_____'}</div>
-                          {elementi.lotto && <div><strong>Lotto:</strong> {selectedLotto.codice_lotto}</div>}
-                          <div style={{ fontSize: 5 }}><strong>Da consumarsi pref. entro:</strong> {tmcValue || '_____'}</div>
-                          {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
-                          {elementi.conservazione && selectedLotto.condizioni_conservazione && (
-                            <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{selectedLotto.condizioni_conservazione}</div>
-                          )}
-                        </div>
-                        
-                        {/* QR code nella colonna destra */}
-                        {elementi.qrCode && (
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <div style={{ background: '#fff', padding: 2, border: '1px solid #ddd', borderRadius: 2 }}>
-                              <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={qrSize} />
-                            </div>
-                            <div style={{ fontSize: 4.5, color: '#666', marginTop: 2 }}>{sitoWeb}</div>
-                          </div>
+                      {/* Info prodotto */}
+                      <div style={{ lineHeight: 1.4, marginBottom: 4 }}>
+                        <div><strong>Peso netto:</strong> {pesoNettoValue || '_____'}</div>
+                        {elementi.lotto && <div><strong>Lotto:</strong> {selectedLotto.codice_lotto}</div>}
+                        <div style={{ fontSize: 5 }}><strong>Da consumarsi pref. entro:</strong> {tmcValue || '_____'}</div>
+                        {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
+                        {elementi.conservazione && selectedLotto.condizioni_conservazione && (
+                          <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{selectedLotto.condizioni_conservazione}</div>
                         )}
                       </div>
+                      
+                      {/* QR code centrato nello spazio rimanente */}
+                      {elementi.qrCode && (
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingBottom: 8 }}>
+                          <div style={{ background: '#fff', padding: 4, border: '1px solid #ddd', borderRadius: 4 }}>
+                            <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={qrSizeVerticale} />
+                          </div>
+                          <div style={{ fontSize: 6, color: '#666', marginTop: 4 }}>{sitoWeb}</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
