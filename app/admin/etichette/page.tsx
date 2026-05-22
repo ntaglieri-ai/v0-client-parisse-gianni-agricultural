@@ -704,9 +704,9 @@ export default function EtichettePage() {
                             {/* Colonna destra */}
                             <div style={{ flex: '1 1 45%', fontSize: 5.5, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                               <div style={{ lineHeight: 1.4 }}>
-{elementi.pesoNetto && pesoNettoValue && <div><strong>Peso netto:</strong> {pesoNettoValue}</div>}
+                                <div><strong>Peso netto:</strong> {pesoNettoValue || '_____'}</div>
                                 {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
-                                {elementi.tmc && tmcValue && <div><strong>Da consumarsi preferibilmente entro:</strong> {tmcValue}</div>}
+                                <div><strong>Da consumarsi preferibilmente entro:</strong> {tmcValue || '_____'}</div>
                                 {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
                                 {elementi.conservazione && selectedLotto.condizioni_conservazione && (
                                   <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{selectedLotto.condizioni_conservazione}</div>
@@ -801,9 +801,9 @@ export default function EtichettePage() {
                       )}
 
                       <div style={{ lineHeight: 1.5 }}>
-                        {elementi.pesoNetto && pesoNettoValue && <div><strong>Peso:</strong> {pesoNettoValue}</div>}
+                        <div><strong>Peso netto:</strong> {pesoNettoValue || '_____'}</div>
                         {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
-                        {elementi.tmc && tmcValue && <div><strong>Da consumarsi preferibilmente entro:</strong> {tmcValue}</div>}
+                        <div><strong>Da consumarsi preferibilmente entro:</strong> {tmcValue || '_____'}</div>
                         {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
                       </div>
                     </div>
@@ -861,7 +861,7 @@ export default function EtichettePage() {
                             </div>
                           )}
                           {elementi.lotto && <div style={{ fontSize: 7, marginBottom: 3 }}><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
-                          {elementi.tmc && tmcValue && <div style={{ fontSize: 7, marginBottom: 3 }}><strong>Entro:</strong> {tmcValue}</div>}
+                          <div style={{ fontSize: 7, marginBottom: 3 }}><strong>Entro:</strong> {tmcValue || '_____'}</div>
                           {elementi.origine && <div style={{ fontSize: 7, marginBottom: 3 }}>{selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
                           {elementi.conservazione && selectedLotto.condizioni_conservazione && (
                             <div style={{ fontSize: 7, color: '#666' }}>{selectedLotto.condizioni_conservazione}</div>
