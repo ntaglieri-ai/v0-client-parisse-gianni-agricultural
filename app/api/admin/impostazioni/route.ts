@@ -6,7 +6,11 @@ export async function GET() {
   
   try {
     const result = await sql`
-      SELECT * FROM impostazioni_azienda LIMIT 1
+      SELECT 
+        id, ragione_sociale, indirizzo, cap, citta, provincia, paese,
+        piva as partita_iva, email, telefono, sito as sito_web, 
+        origine_default, logo_url
+      FROM impostazioni_azienda LIMIT 1
     `
     return NextResponse.json(result[0] || null)
   } catch (error) {
@@ -39,15 +43,17 @@ export async function PUT(request: Request) {
           citta = ${citta || null},
           provincia = ${provincia || null},
           paese = ${paese || null},
-          partita_iva = ${partita_iva || null},
+          piva = ${partita_iva || null},
           email = ${email || null},
           telefono = ${telefono || null},
-          sito_web = ${sito_web || null},
+          sito = ${sito_web || null},
           origine_default = ${origine_default || null},
-          logo_url = ${logo_url || null},
-          updated_at = NOW()
+          logo_url = ${logo_url || null}
         WHERE id = ${existing[0].id}
-        RETURNING *
+        RETURNING 
+          id, ragione_sociale, indirizzo, cap, citta, provincia, paese,
+          piva as partita_iva, email, telefono, sito as sito_web, 
+          origine_default, logo_url
       `
       return NextResponse.json(result[0])
     } else {
@@ -55,7 +61,7 @@ export async function PUT(request: Request) {
       const result = await sql`
         INSERT INTO impostazioni_azienda (
           ragione_sociale, indirizzo, cap, citta, provincia, paese,
-          partita_iva, email, telefono, sito_web, origine_default, logo_url
+          piva, email, telefono, sito, origine_default, logo_url
         )
         VALUES (
           ${ragione_sociale || null}, ${indirizzo || null}, ${cap || null},
@@ -63,7 +69,10 @@ export async function PUT(request: Request) {
           ${partita_iva || null}, ${email || null}, ${telefono || null},
           ${sito_web || null}, ${origine_default || null}, ${logo_url || null}
         )
-        RETURNING *
+        RETURNING 
+          id, ragione_sociale, indirizzo, cap, citta, provincia, paese,
+          piva as partita_iva, email, telefono, sito as sito_web, 
+          origine_default, logo_url
       `
       return NextResponse.json(result[0])
     }
