@@ -111,6 +111,7 @@ export default function EtichettePage() {
   })
   const [tmcValue, setTmcValue] = useState('')
   const [tmcError, setTmcError] = useState('')
+  const [pesoNettoValue, setPesoNettoValue] = useState('')
   const [generatingPdf, setGeneratingPdf] = useState(false)
   const etichettaRef = useRef<HTMLDivElement>(null)
 
@@ -141,6 +142,15 @@ export default function EtichettePage() {
     }
   }, [selectedLotto])
 
+  // Pre-compila peso netto dal prodotto
+  useEffect(() => {
+    if (selectedProdotto?.peso_netto) {
+      setPesoNettoValue(selectedProdotto.peso_netto)
+    } else {
+      setPesoNettoValue('')
+    }
+  }, [selectedProdotto])
+
   // Validazione TMC formato MM/YYYY
   const validateTmc = (value: string): string => {
     if (!value) return 'Campo obbligatorio'
@@ -166,6 +176,12 @@ export default function EtichettePage() {
 
   // TMC valido per abilitare PDF
   const isTmcValid = !elementi.tmc || (tmcValue && !validateTmc(tmcValue))
+  
+  // Peso netto valido per abilitare PDF
+  const isPesoNettoValid = !elementi.pesoNetto || (pesoNettoValue && pesoNettoValue.trim() !== '')
+  
+  // Entrambi i campi devono essere validi
+  const canGeneratePdf = isTmcValid && isPesoNettoValid
 
   // Calcola dimensioni in px
   const widthPx = formato === 'rotonda' ? diametro * CM_TO_PX : larghezza * CM_TO_PX
@@ -455,7 +471,6 @@ export default function EtichettePage() {
                 { key: 'lotto', label: 'Lotto' },
                 { key: 'origine', label: 'Origine' },
                 { key: 'conservazione', label: 'Conservazione' },
-                { key: 'pesoNetto', label: 'Peso netto' },
                 { key: 'piva', label: 'P.IVA' },
                 { key: 'email', label: 'Email' },
                 { key: 'telefono', label: 'Telefono' },
@@ -470,6 +485,39 @@ export default function EtichettePage() {
                   {label}
                 </label>
               ))}
+            </div>
+
+            {/* Campo Peso netto separato con input */}
+            <div style={{ marginTop: 16, padding: 12, background: '#f9f9f9', borderRadius: 8 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12, color: '#444', marginBottom: elementi.pesoNetto ? 10 : 0 }}>
+                <input
+                  type="checkbox"
+                  checked={elementi.pesoNetto}
+                  onChange={() => toggleElemento('pesoNetto')}
+                  style={{ width: 16, height: 16, accentColor: '#c9933a' }}
+                />
+                Peso netto
+              </label>
+              {elementi.pesoNetto && (
+                <div style={{ marginLeft: 24 }}>
+                  <input
+                    type="text"
+                    value={pesoNettoValue}
+                    onChange={(e) => setPesoNettoValue(e.target.value)}
+                    placeholder="es. 500g, 1kg"
+                    style={{ 
+                      width: '100%', 
+                      padding: '8px 12px', 
+                      borderRadius: 6, 
+                      border: (elementi.pesoNetto && !pesoNettoValue.trim()) ? '1px solid #dc2626' : '1px solid #ddd', 
+                      fontSize: 13,
+                    }}
+                  />
+                  {elementi.pesoNetto && !pesoNettoValue.trim() && (
+                    <div style={{ fontSize: 11, color: '#dc2626', marginTop: 4 }}>Campo obbligatorio</div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Campo TMC separato con input MM/YYYY */}
@@ -513,17 +561,17 @@ export default function EtichettePage() {
           <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button
               onClick={handleGeneraPdf}
-              disabled={!canShowPreview || generatingPdf || !isTmcValid}
+              disabled={!canShowPreview || generatingPdf || !canGeneratePdf}
               style={{
                 width: '100%',
                 padding: '14px',
-                background: (canShowPreview && isTmcValid) ? '#c9933a' : '#ccc',
+                background: (canShowPreview && canGeneratePdf) ? '#c9933a' : '#ccc',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 10,
                 fontSize: 14,
                 fontWeight: 700,
-                cursor: (canShowPreview && isTmcValid) ? 'pointer' : 'not-allowed',
+                cursor: (canShowPreview && canGeneratePdf) ? 'pointer' : 'not-allowed',
               }}
             >
               {generatingPdf ? 'Generazione...' : 'Genera PDF'}
@@ -656,7 +704,7 @@ export default function EtichettePage() {
                             {/* Colonna destra */}
                             <div style={{ flex: '1 1 45%', fontSize: 5.5, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                               <div style={{ lineHeight: 1.4 }}>
-                                {elementi.pesoNetto && <div><strong>Peso netto:</strong> {selectedProdotto.peso_netto || '-'}</div>}
+{elementi.pesoNetto && pesoNettoValue && <div><strong>Peso netto:</strong> {pesoNettoValue}</div>}
                                 {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
                                 {elementi.tmc && tmcValue && <div><strong>Da consumarsi preferibilmente entro:</strong> {tmcValue}</div>}
                                 {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
@@ -753,7 +801,7 @@ export default function EtichettePage() {
                       )}
 
                       <div style={{ lineHeight: 1.5 }}>
-                        {elementi.pesoNetto && <div><strong>Peso:</strong> {selectedProdotto.peso_netto || '-'}</div>}
+                        {elementi.pesoNetto && pesoNettoValue && <div><strong>Peso:</strong> {pesoNettoValue}</div>}
                         {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
                         {elementi.tmc && tmcValue && <div><strong>Da consumarsi preferibilmente entro:</strong> {tmcValue}</div>}
                         {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
