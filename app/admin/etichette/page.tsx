@@ -560,32 +560,35 @@ export default function EtichettePage() {
                             borderRadius: 4,
                             background: '#fff',
                             fontFamily: 'system-ui, -apple-system, sans-serif',
-                            fontSize: 8,
+                            fontSize: 7,
                             color: '#333',
                             overflow: 'hidden',
                             display: 'flex',
                             flexDirection: 'column',
                           }}
                         >
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 12px 6px', borderBottom: '1px solid #c9933a' }}>
-                            <div style={{ marginBottom: 4 }}>
-                              <Image src="/images/logo.png" alt="Logo" width={90} height={36} style={{ objectFit: 'contain', display: 'block' }} />
-                            </div>
-                            <div style={{ fontSize: 9, fontWeight: 700, color: '#1a3a2a', letterSpacing: 0.5, textAlign: 'center' }}>
-                              {ragioneSociale.toUpperCase()}
-                            </div>
-                            <div style={{ fontSize: 6, color: '#666', textAlign: 'center' }}>
-                              {indirizzoCompleto} {piva && `– ${piva}`}
+                          {/* Header compatto */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '4px 10px', borderBottom: '1px solid #c9933a', background: '#fefdfb' }}>
+                            <Image src="/images/logo.png" alt="Logo" width={50} height={20} style={{ objectFit: 'contain', display: 'block' }} />
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ fontSize: 7, fontWeight: 700, color: '#1a3a2a', letterSpacing: 0.3 }}>
+                                {ragioneSociale.toUpperCase()}
+                              </div>
+                              <div style={{ fontSize: 5, color: '#666' }}>
+                                {indirizzoCompleto} {piva && `– ${piva}`}
+                              </div>
                             </div>
                           </div>
 
-                          <div style={{ flex: 1, padding: '6px 12px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                            <div style={{ marginBottom: 4 }}>
-                              <div style={{ fontSize: 12, fontWeight: 700, color: '#1a3a2a' }}>
+                          {/* Contenuto */}
+                          <div style={{ flex: 1, padding: '4px 8px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                            {/* Nome prodotto e descrizione */}
+                            <div style={{ marginBottom: 2 }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: '#1a3a2a', lineHeight: 1.1 }}>
                                 {selectedProdotto.nome}
                               </div>
                               {selectedProdotto.descrizione && (
-                                <div style={{ fontSize: 7, color: '#666', lineHeight: 1.3, marginTop: 2 }}>
+                                <div style={{ fontSize: 5.5, color: '#666', lineHeight: 1.2, marginTop: 1 }}>
                                   {selectedProdotto.descrizione}
                                 </div>
                               )}
@@ -594,52 +597,52 @@ export default function EtichettePage() {
                             {(categoria === 'completo' || categoria === 'trasformato') && (
                               <>
                                 {selectedProdotto.ingredienti && (
-                                  <div style={{ fontSize: 7, marginBottom: 3, lineHeight: 1.3 }}>
+                                  <div style={{ fontSize: 5.5, marginBottom: 2, lineHeight: 1.2 }}>
                                     <strong>Ingredienti:</strong> {selectedProdotto.ingredienti}
                                   </div>
                                 )}
                                 {selectedProdotto.allergeni && (
-                                  <div style={{ fontSize: 8, fontWeight: 700, marginBottom: 4, color: '#c00' }}>
+                                  <div style={{ fontSize: 6, fontWeight: 700, marginBottom: 2, color: '#c00' }}>
                                     ALLERGENI: {selectedProdotto.allergeni}
                                   </div>
                                 )}
 
-                                <div style={{ display: 'flex', gap: 10, flex: 1, minHeight: 0 }}>
-                                  {/* Tabella valori nutrizionali - piu larga */}
-                                  <div style={{ flex: '1 1 58%', border: '1px solid #ddd', borderRadius: 3, fontSize: 7, overflow: 'hidden' }}>
-                                    <div style={{ background: '#f5f0e8', padding: '3px 6px', fontWeight: 700, fontSize: 7 }}>
+                                <div style={{ display: 'flex', gap: 6, flex: 1, minHeight: 0 }}>
+                                  {/* Tabella valori nutrizionali */}
+                                  <div style={{ flex: '1 1 55%', border: '1px solid #ddd', borderRadius: 2, fontSize: 5.5, overflow: 'hidden' }}>
+                                    <div style={{ background: '#f5f0e8', padding: '2px 4px', fontWeight: 700, fontSize: 5.5 }}>
                                       Valori Nutrizionali / 100g
                                     </div>
-                                    <div style={{ padding: '2px 6px' }}>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '2px 4px' }}>
+                                    <div style={{ padding: '1px 4px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px' }}>
                                         <span>Energia</span>
                                         <span>{vn.energia_kj ?? '-'} kJ / {vn.energia_kcal ?? '-'} kcal</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}>
                                         <span>Grassi</span>
                                         <span>{vn.grassi ?? '-'} g</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '2px 4px', paddingLeft: 10 }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px', paddingLeft: 6 }}>
                                         <span>- di cui saturi</span>
                                         <span>{vn.grassi_saturi ?? '-'} g</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}>
                                         <span>Carboidrati</span>
                                         <span>{vn.carboidrati ?? '-'} g</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '2px 4px', paddingLeft: 10 }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px', paddingLeft: 6 }}>
                                         <span>- di cui zuccheri</span>
                                         <span>{vn.zuccheri ?? '-'} g</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}>
                                         <span>Fibre</span>
                                         <span>{vn.fibre ?? '-'} g</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '2px 4px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f9f9f9', padding: '1px 2px' }}>
                                         <span>Proteine</span>
                                         <span>{vn.proteine ?? '-'} g</span>
                                       </div>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 2px' }}>
                                         <span>Sale</span>
                                         <span>{vn.sale ?? '-'} g</span>
                                       </div>
@@ -647,23 +650,23 @@ export default function EtichettePage() {
                                   </div>
 
                                   {/* Colonna destra - info + QR */}
-                                  <div style={{ flex: '1 1 42%', fontSize: 7, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                                    <div style={{ lineHeight: 1.5 }}>
+                                  <div style={{ flex: '1 1 45%', fontSize: 5.5, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                    <div style={{ lineHeight: 1.4 }}>
                                       <div><strong>Peso netto:</strong> {selectedProdotto.peso_netto || '-'}</div>
                                       <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>
                                       <div><strong>TMC:</strong> {selectedLotto.tmc || 'vedi conf.'}</div>
                                       <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia – Altopiano del Fucino'}</div>
                                       {selectedLotto.condizioni_conservazione && (
-                                        <div style={{ fontSize: 6, color: '#666', marginTop: 3, lineHeight: 1.3 }}>
+                                        <div style={{ fontSize: 5, color: '#666', marginTop: 2, lineHeight: 1.2 }}>
                                           {selectedLotto.condizioni_conservazione}
                                         </div>
                                       )}
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, marginTop: 4 }}>
-                                      <div style={{ background: '#fff', padding: 3, border: '1px solid #ddd', borderRadius: 3 }}>
-                                        <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={42} />
+                                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
+                                      <div style={{ background: '#fff', padding: 2, border: '1px solid #ddd', borderRadius: 2 }}>
+                                        <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={36} />
                                       </div>
-                                      <div style={{ fontSize: 6, color: '#666', lineHeight: 1.3 }}>
+                                      <div style={{ fontSize: 5, color: '#666', lineHeight: 1.2 }}>
                                         {sitoWeb}
                                       </div>
                                     </div>
