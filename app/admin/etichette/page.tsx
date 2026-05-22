@@ -67,7 +67,7 @@ interface Impostazioni {
   origine_default?: string
 }
 
-type FormatoEtichetta = 'orizzontale' | 'verticale' | 'rotonda'
+type FormatoEtichetta = 'orizzontale' | 'verticale'
 
 interface Elementi {
   logo: boolean
@@ -93,7 +93,6 @@ export default function EtichettePage() {
   const [formato, setFormato] = useState<FormatoEtichetta>('orizzontale')
   const [larghezza, setLarghezza] = useState(10)
   const [altezza, setAltezza] = useState(6)
-  const [diametro, setDiametro] = useState(10)
   const [elementi, setElementi] = useState<Elementi>({
     logo: true,
     valoriNutrizionali: true,
@@ -182,9 +181,58 @@ export default function EtichettePage() {
   // Entrambi i campi devono essere validi
   const canGeneratePdf = isTmcValid && isPesoNettoValid
 
+  // Validazione dimensioni per formato
+  const handleLarghezzaChange = (value: number) => {
+    setLarghezza(value)
+    // Per orizzontale: larghezza deve essere >= altezza
+    if (formato === 'orizzontale' && value < altezza) {
+      setAltezza(value)
+    }
+    // Per verticale: altezza deve essere >= larghezza
+    if (formato === 'verticale' && value > altezza) {
+      setAltezza(value)
+    }
+  }
+
+  const handleAltezzaChange = (value: number) => {
+    setAltezza(value)
+    // Per orizzontale: larghezza deve essere >= altezza
+    if (formato === 'orizzontale' && value > larghezza) {
+      setLarghezza(value)
+    }
+    // Per verticale: altezza deve essere >= larghezza
+    if (formato === 'verticale' && value < larghezza) {
+      setLarghezza(value)
+    }
+  }
+
+  const handleFormatoChange = (newFormato: FormatoEtichetta) => {
+    setFormato(newFormato)
+    // Aggiusta dimensioni se necessario
+    if (newFormato === 'orizzontale' && altezza > larghezza) {
+      // Scambia le dimensioni
+      const temp = larghezza
+      setLarghezza(altezza)
+      setAltezza(temp)
+    }
+    if (newFormato === 'verticale' && larghezza > altezza) {
+      // Scambia le dimensioni
+      const temp = altezza
+      setAltezza(larghezza)
+      setLarghezza(temp)
+    }
+  }
+
   // Calcola dimensioni in px
-  const widthPx = formato === 'rotonda' ? diametro * CM_TO_PX : larghezza * CM_TO_PX
-  const heightPx = formato === 'rotonda' ? diametro * CM_TO_PX : altezza * CM_TO_PX
+  const widthPx = larghezza * CM_TO_PX
+  const heightPx = altezza * CM_TO_PX
+
+  // Calcola dimensione QR proporzionata per orizzontale (circa 15-18% della dimensione minore)
+  const minDimension = Math.min(widthPx, heightPx)
+  const qrSizeOrizzontale = Math.max(32, Math.min(55, Math.floor(minDimension * 0.20)))
+  
+  // Calcola dimensione QR per verticale (piu grande, circa 25-35% della larghezza)
+  const qrSizeVerticale = Math.max(50, Math.min(90, Math.floor(widthPx * 0.30)))
 
   // Scala per fit nello schermo con zoom maggiore per visualizzazione
   const maxSize = 550
@@ -337,7 +385,7 @@ export default function EtichettePage() {
             <div style={{ display: 'flex', gap: 8 }}>
               {/* Card Orizzontale */}
               <div
-                onClick={() => setFormato('orizzontale')}
+                onClick={() => handleFormatoChange('orizzontale')}
                 style={{
                   flex: 1,
                   padding: '12px 8px',
@@ -358,7 +406,7 @@ export default function EtichettePage() {
 
               {/* Card Verticale */}
               <div
-                onClick={() => setFormato('verticale')}
+                onClick={() => handleFormatoChange('verticale')}
                 style={{
                   flex: 1,
                   padding: '12px 8px',
@@ -376,27 +424,6 @@ export default function EtichettePage() {
                 <div style={{ width: 30, height: 50, border: '2px solid #999', borderRadius: 3, margin: '0 auto 8px', background: formato === 'verticale' ? '#f5f0e8' : '#f9f9f9' }} />
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#1a3a2a' }}>Verticale</div>
               </div>
-
-              {/* Card Rotonda */}
-              <div
-                onClick={() => setFormato('rotonda')}
-                style={{
-                  flex: 1,
-                  padding: '12px 8px',
-                  borderRadius: 10,
-                  border: formato === 'rotonda' ? '2px solid #c9933a' : '1px solid #e5e7eb',
-                  background: formato === 'rotonda' ? '#fffbf5' : '#fff',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {formato === 'rotonda' && (
-                  <span style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, background: '#22c55e', borderRadius: '50%', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</span>
-                )}
-                <div style={{ width: 40, height: 40, border: '2px solid #999', borderRadius: '50%', margin: '0 auto 8px', background: formato === 'rotonda' ? '#f5f0e8' : '#f9f9f9' }} />
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#1a3a2a' }}>Rotonda</div>
-              </div>
             </div>
           </div>
 
@@ -406,47 +433,35 @@ export default function EtichettePage() {
               Dimensioni
             </div>
             
-            {formato !== 'rotonda' ? (
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 6 }}>Larghezza (cm)</label>
-                  <input
-                    type="number"
-                    value={larghezza}
-                    onChange={(e) => setLarghezza(Number(e.target.value) || 10)}
-                    min={3}
-                    max={20}
-                    step={0.5}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 6 }}>Altezza (cm)</label>
-                  <input
-                    type="number"
-                    value={altezza}
-                    onChange={(e) => setAltezza(Number(e.target.value) || 6)}
-                    min={3}
-                    max={20}
-                    step={0.5}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 6 }}>Diametro (cm)</label>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 6 }}>Larghezza (cm)</label>
                 <input
                   type="number"
-                  value={diametro}
-                  onChange={(e) => setDiametro(Number(e.target.value) || 10)}
+                  value={larghezza}
+                  onChange={(e) => handleLarghezzaChange(Number(e.target.value) || 3)}
                   min={3}
                   max={20}
                   step={0.5}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}
                 />
               </div>
-            )}
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 6 }}>Altezza (cm)</label>
+                <input
+                  type="number"
+                  value={altezza}
+                  onChange={(e) => handleAltezzaChange(Number(e.target.value) || 3)}
+                  min={3}
+                  max={20}
+                  step={0.5}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}
+                />
+              </div>
+            </div>
+            <div style={{ fontSize: 10, color: '#888', marginTop: 8 }}>
+              {formato === 'orizzontale' ? 'Larghezza deve essere >= altezza' : 'Altezza deve essere >= larghezza'}
+            </div>
           </div>
 
           {/* SEZIONE 4 - Elementi */}
@@ -602,7 +617,7 @@ export default function EtichettePage() {
             ) : (
               <div id="etichetta-preview" className="etichette-preview-inner" style={{ 
                 background: '#fff', 
-                borderRadius: formato === 'rotonda' ? '50%' : 8,
+                borderRadius: 8,
                 boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
                 transform: `scale(${scale})`,
                 transformOrigin: 'center center',
@@ -681,7 +696,7 @@ export default function EtichettePage() {
                             <div style={{ flex: '1 1 45%', fontSize: 5.5, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                               <div style={{ lineHeight: 1.4 }}>
                                 <div><strong>Peso netto:</strong> {pesoNettoValue || '_____'}</div>
-                                {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
+                                {elementi.lotto && <div><strong>Lotto:</strong> {selectedLotto.codice_lotto}</div>}
                                 <div><strong>Da consumarsi preferibilmente entro:</strong> {tmcValue || '_____'}</div>
                                 {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
                                 {elementi.conservazione && selectedLotto.condizioni_conservazione && (
@@ -689,11 +704,11 @@ export default function EtichettePage() {
                                 )}
                               </div>
                               {elementi.qrCode && (
-                                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
-                                  <div style={{ background: '#fff', padding: 2, border: '1px solid #ddd', borderRadius: 2 }}>
-                                    <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={36} />
+                                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, marginRight: 4, marginBottom: 4 }}>
+                                  <div style={{ background: '#fff', padding: 3, border: '1px solid #ddd', borderRadius: 3 }}>
+                                    <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={qrSizeOrizzontale} />
                                   </div>
-                                  <div style={{ fontSize: 5, color: '#666' }}>{sitoWeb}</div>
+                                  <div style={{ fontSize: 5, color: '#666', marginBottom: 2 }}>{sitoWeb}</div>
                                 </div>
                               )}
                             </div>
@@ -712,11 +727,11 @@ export default function EtichettePage() {
                             )}
                           </div>
                           {elementi.qrCode && (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                              <div style={{ background: '#fff', padding: 2, border: '1px solid #ddd', borderRadius: 2 }}>
-                                <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={40} />
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: 4, marginBottom: 4 }}>
+                              <div style={{ background: '#fff', padding: 3, border: '1px solid #ddd', borderRadius: 3 }}>
+                                <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={qrSizeOrizzontale} />
                               </div>
-                              <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{sitoWeb}</div>
+                              <div style={{ fontSize: 5, color: '#666', marginTop: 3 }}>{sitoWeb}</div>
                             </div>
                           )}
                         </div>
@@ -786,89 +801,26 @@ export default function EtichettePage() {
                         </div>
                       )}
 
-                      {/* Info prodotto in due colonne */}
-                      <div style={{ display: 'flex', gap: 6, flex: 1 }}>
-                        <div style={{ flex: 1, lineHeight: 1.4 }}>
-                          <div><strong>Peso netto:</strong> {pesoNettoValue || '_____'}</div>
-                          {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
-                          <div style={{ fontSize: 5 }}><strong>Da consumarsi pref. entro:</strong> {tmcValue || '_____'}</div>
-                          {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
-                          {elementi.conservazione && selectedLotto.condizioni_conservazione && (
-                            <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{selectedLotto.condizioni_conservazione}</div>
-                          )}
-                        </div>
-                        
-                        {/* QR code nella colonna destra */}
-                        {elementi.qrCode && (
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <div style={{ background: '#fff', padding: 2, border: '1px solid #ddd', borderRadius: 2 }}>
-                              <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={38} />
-                            </div>
-                            <div style={{ fontSize: 4.5, color: '#666', marginTop: 2 }}>{sitoWeb}</div>
-                          </div>
+                      {/* Info prodotto */}
+                      <div style={{ lineHeight: 1.4, marginBottom: 4 }}>
+                        <div><strong>Peso netto:</strong> {pesoNettoValue || '_____'}</div>
+                        {elementi.lotto && <div><strong>Lotto:</strong> {selectedLotto.codice_lotto}</div>}
+                        <div style={{ fontSize: 5 }}><strong>Da consumarsi pref. entro:</strong> {tmcValue || '_____'}</div>
+                        {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
+                        {elementi.conservazione && selectedLotto.condizioni_conservazione && (
+                          <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{selectedLotto.condizioni_conservazione}</div>
                         )}
                       </div>
-                    </div>
-                  </div>
-                )}
-
-                {formato === 'rotonda' && (
-                  <div
-                    ref={etichettaRef}
-                    style={{
-                      width: widthPx,
-                      height: heightPx,
-                      borderRadius: '50%',
-                      border: '3px solid #c9933a',
-                      background: '#fff',
-                      fontFamily: 'system-ui, -apple-system, sans-serif',
-                      fontSize: 7,
-                      color: '#333',
-                      overflow: 'hidden',
-                      position: 'relative',
-                    }}
-                  >
-                    {/* Logo watermark */}
-                    {elementi.logo && (
-                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', opacity: 0.1, width: '60%', pointerEvents: 'none' }}>
-                        <Image src="/images/logo.png" alt="" width={200} height={200} style={{ objectFit: 'contain', width: '100%', height: 'auto' }} />
-                      </div>
-                    )}
-
-                    {/* Contenuto due colonne */}
-                    <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '50px 40px' }}>
-                      <div style={{ display: 'flex', width: '100%', maxWidth: 280, gap: 12 }}>
-                        {/* Colonna sinistra 60% */}
-                        <div style={{ flex: '0 0 60%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                          <div style={{ fontSize: 7, fontWeight: 600, color: '#c9933a', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>
-                            {ragioneSociale}
+                      
+                      {/* QR code centrato nello spazio rimanente */}
+                      {elementi.qrCode && (
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingBottom: 8 }}>
+                          <div style={{ background: '#fff', padding: 4, border: '1px solid #ddd', borderRadius: 4 }}>
+                            <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={qrSizeVerticale} />
                           </div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: '#1a3a2a', marginBottom: 8, lineHeight: 1.2 }}>
-                            {selectedProdotto.nome}
-                          </div>
-                          {elementi.allergeni && selectedProdotto.allergeni && (
-                            <div style={{ fontSize: 7, fontWeight: 700, marginBottom: 8, padding: '3px 8px', background: '#f97316', borderRadius: 3, color: '#fff', display: 'inline-block', alignSelf: 'flex-start' }}>
-                              {selectedProdotto.allergeni}
-                            </div>
-                          )}
-                          {elementi.lotto && <div style={{ fontSize: 7, marginBottom: 3 }}><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
-                          <div style={{ fontSize: 7, marginBottom: 3 }}><strong>Entro:</strong> {tmcValue || '_____'}</div>
-                          {elementi.origine && <div style={{ fontSize: 7, marginBottom: 3 }}>{selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
-                          {elementi.conservazione && selectedLotto.condizioni_conservazione && (
-                            <div style={{ fontSize: 7, color: '#666' }}>{selectedLotto.condizioni_conservazione}</div>
-                          )}
+                          <div style={{ fontSize: 6, color: '#666', marginTop: 4 }}>{sitoWeb}</div>
                         </div>
-
-                        {/* Colonna destra 40% */}
-                        {elementi.qrCode && (
-                          <div style={{ flex: '0 0 40%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                            <div style={{ background: '#fff', padding: 4, border: '1px solid #ddd', borderRadius: 4 }}>
-                              <QRCode value={`https://gianniparisse.it/store/traccia/${selectedLotto.codice_lotto}`} size={80} />
-                            </div>
-                            <div style={{ fontSize: 7, color: '#666', marginTop: 6, textAlign: 'center' }}>{sitoWeb}</div>
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
                 )}
