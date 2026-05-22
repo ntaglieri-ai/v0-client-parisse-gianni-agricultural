@@ -109,8 +109,8 @@ export default function EtichettePage() {
     telefono: true,
     tmc: true,
   })
-  const [tmcMese, setTmcMese] = useState('')
-  const [tmcAnno, setTmcAnno] = useState('')
+  const [tmcValue, setTmcValue] = useState('')
+  const [tmcError, setTmcError] = useState('')
   const [generatingPdf, setGeneratingPdf] = useState(false)
   const etichettaRef = useRef<HTMLDivElement>(null)
 
@@ -124,6 +124,48 @@ export default function EtichettePage() {
   const selectedProdotto = prodotti?.find(p => p.id === selectedProdottoId)
   const selectedLotto = lotti?.find(l => l.id === selectedLottoId)
   const lottiAttivi = lotti?.filter(l => l.attivo) || []
+
+  // Pre-compila TMC dal lotto se non e "vedi confezione"
+  useEffect(() => {
+    if (selectedLotto?.tmc && selectedLotto.tmc.toLowerCase() !== 'vedi confezione') {
+      // Prova a parsare MM/YYYY dal valore del lotto
+      const match = selectedLotto.tmc.match(/^(\d{1,2})\/(\d{4})$/)
+      if (match) {
+        setTmcValue(selectedLotto.tmc)
+        setTmcError('')
+      } else {
+        setTmcValue('')
+      }
+    } else {
+      setTmcValue('')
+    }
+  }, [selectedLotto])
+
+  // Validazione TMC formato MM/YYYY
+  const validateTmc = (value: string): string => {
+    if (!value) return 'Campo obbligatorio'
+    const match = value.match(/^(\d{1,2})\/(\d{4})$/)
+    if (!match) return 'Formato non valido (MM/YYYY)'
+    const month = parseInt(match[1], 10)
+    if (month < 1 || month > 12) return 'Mese non valido (01-12)'
+    return ''
+  }
+
+  const handleTmcChange = (value: string) => {
+    // Auto-format: aggiungi / dopo 2 cifre
+    let formatted = value.replace(/[^\d/]/g, '')
+    if (formatted.length === 2 && !formatted.includes('/') && tmcValue.length < 2) {
+      formatted = formatted + '/'
+    }
+    if (formatted.length > 7) formatted = formatted.slice(0, 7)
+    setTmcValue(formatted)
+    if (elementi.tmc) {
+      setTmcError(validateTmc(formatted))
+    }
+  }
+
+  // TMC valido per abilitare PDF
+  const isTmcValid = !elementi.tmc || (tmcValue && !validateTmc(tmcValue))
 
   // Calcola dimensioni in px
   const widthPx = formato === 'rotonda' ? diametro * CM_TO_PX : larghezza * CM_TO_PX
@@ -432,34 +474,36 @@ export default function EtichettePage() {
 
             {/* Campo TMC separato con input MM/YYYY */}
             <div style={{ marginTop: 16, padding: 12, background: '#f9f9f9', borderRadius: 8 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12, color: '#444', marginBottom: 10 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12, color: '#444', marginBottom: elementi.tmc ? 10 : 0 }}>
                 <input
                   type="checkbox"
                   checked={elementi.tmc}
-                  onChange={() => toggleElemento('tmc')}
+                  onChange={() => {
+                    toggleElemento('tmc')
+                    if (elementi.tmc) setTmcError('')
+                  }}
                   style={{ width: 16, height: 16, accentColor: '#c9933a' }}
                 />
                 Da consumarsi preferibilmente entro
               </label>
               {elementi.tmc && (
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 24 }}>
+                <div style={{ marginLeft: 24 }}>
                   <input
                     type="text"
-                    value={tmcMese}
-                    onChange={(e) => setTmcMese(e.target.value.replace(/\D/g, '').slice(0, 2))}
-                    placeholder="MM"
-                    maxLength={2}
-                    style={{ width: 50, padding: '6px 8px', borderRadius: 6, border: '1px solid #ddd', fontSize: 13, textAlign: 'center' }}
+                    value={tmcValue}
+                    onChange={(e) => handleTmcChange(e.target.value)}
+                    placeholder="MM/YYYY (es. 12/2027)"
+                    style={{ 
+                      width: '100%', 
+                      padding: '8px 12px', 
+                      borderRadius: 6, 
+                      border: tmcError ? '1px solid #dc2626' : '1px solid #ddd', 
+                      fontSize: 13,
+                    }}
                   />
-                  <span style={{ color: '#666', fontSize: 14 }}>/</span>
-                  <input
-                    type="text"
-                    value={tmcAnno}
-                    onChange={(e) => setTmcAnno(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    placeholder="YYYY"
-                    maxLength={4}
-                    style={{ width: 70, padding: '6px 8px', borderRadius: 6, border: '1px solid #ddd', fontSize: 13, textAlign: 'center' }}
-                  />
+                  {tmcError && (
+                    <div style={{ fontSize: 11, color: '#dc2626', marginTop: 4 }}>{tmcError}</div>
+                  )}
                 </div>
               )}
             </div>
@@ -469,17 +513,17 @@ export default function EtichettePage() {
           <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button
               onClick={handleGeneraPdf}
-              disabled={!canShowPreview || generatingPdf}
+              disabled={!canShowPreview || generatingPdf || !isTmcValid}
               style={{
                 width: '100%',
                 padding: '14px',
-                background: canShowPreview ? '#c9933a' : '#ccc',
+                background: (canShowPreview && isTmcValid) ? '#c9933a' : '#ccc',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 10,
                 fontSize: 14,
                 fontWeight: 700,
-                cursor: canShowPreview ? 'pointer' : 'not-allowed',
+                cursor: (canShowPreview && isTmcValid) ? 'pointer' : 'not-allowed',
               }}
             >
               {generatingPdf ? 'Generazione...' : 'Genera PDF'}
@@ -614,7 +658,7 @@ export default function EtichettePage() {
                               <div style={{ lineHeight: 1.4 }}>
                                 {elementi.pesoNetto && <div><strong>Peso netto:</strong> {selectedProdotto.peso_netto || '-'}</div>}
                                 {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
-                                <div><strong>TMC:</strong> {selectedLotto.tmc || 'vedi conf.'}</div>
+                                {elementi.tmc && tmcValue && <div><strong>Da consumarsi preferibilmente entro:</strong> {tmcValue}</div>}
                                 {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
                                 {elementi.conservazione && selectedLotto.condizioni_conservazione && (
                                   <div style={{ fontSize: 5, color: '#666', marginTop: 2 }}>{selectedLotto.condizioni_conservazione}</div>
@@ -711,7 +755,7 @@ export default function EtichettePage() {
                       <div style={{ lineHeight: 1.5 }}>
                         {elementi.pesoNetto && <div><strong>Peso:</strong> {selectedProdotto.peso_netto || '-'}</div>}
                         {elementi.lotto && <div><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
-                        <div><strong>TMC:</strong> {selectedLotto.tmc || 'vedi conf.'}</div>
+                        {elementi.tmc && tmcValue && <div><strong>Da consumarsi preferibilmente entro:</strong> {tmcValue}</div>}
                         {elementi.origine && <div><strong>Origine:</strong> {selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
                       </div>
                     </div>
@@ -769,6 +813,7 @@ export default function EtichettePage() {
                             </div>
                           )}
                           {elementi.lotto && <div style={{ fontSize: 7, marginBottom: 3 }}><strong>L:</strong> {selectedLotto.codice_lotto}</div>}
+                          {elementi.tmc && tmcValue && <div style={{ fontSize: 7, marginBottom: 3 }}><strong>Entro:</strong> {tmcValue}</div>}
                           {elementi.origine && <div style={{ fontSize: 7, marginBottom: 3 }}>{selectedProdotto.origine || impostazioni?.origine_default || 'Italia'}</div>}
                           {elementi.conservazione && selectedLotto.condizioni_conservazione && (
                             <div style={{ fontSize: 7, color: '#666' }}>{selectedLotto.condizioni_conservazione}</div>
