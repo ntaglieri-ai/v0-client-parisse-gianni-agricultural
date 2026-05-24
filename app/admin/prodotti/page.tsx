@@ -826,11 +826,8 @@ export default function AdminProdottiPage() {
             
             <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               {prodottiCat.map((prodotto, idx) => {
-                const totaleDisponibile = getTotaleDisponibile(prodotto.id)
                 const totaleTotale = getTotaleTotale(prodotto.id)
-                const percentuale = totaleTotale > 0 ? (totaleDisponibile / totaleTotale) * 100 : 0
-                const isLow = totaleDisponibile < 50 && totaleDisponibile > 0
-                const isEmpty = totaleDisponibile === 0
+                const isEmpty = totaleTotale === 0
                 const lottiAttiviCount = getLottiAttiviCount(prodotto.id)
                 const isExpanded = expandedProdottoId === prodotto.id
                 const lottiProdotto = getLottiForProdotto(prodotto.id)
@@ -841,7 +838,7 @@ export default function AdminProdottiPage() {
                       style={{ 
                         padding: isMobile ? '14px 16px' : '16px 20px', 
                         borderBottom: (idx < prodottiCat.length - 1 && !isExpanded) ? '1px solid #f0f0f0' : 'none',
-                        background: isLow ? '#fef2f2' : (isEmpty ? '#f9fafb' : '#fff'),
+                        background: isEmpty ? '#f9fafb' : '#fff',
                       }}
                     >
                       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 16 }}>
@@ -849,8 +846,7 @@ export default function AdminProdottiPage() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
                             <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 600, color: '#1a3a2a' }}>{prodotto.nome}</span>
-                            {!prodotto.attivo && <span style={{ background: '#9ca3af', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>INATTIVO</span>}
-                            {isLow && <span style={{ background: '#dc2626', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>SCORTE BASSE</span>}
+                            {!prodotto.attivo && <span style={{ background: '#f59e0b', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>NASCOSTO</span>}
                             {/* Badge lotti cliccabile */}
                             <button
                               onClick={() => setExpandedProdottoId(isExpanded ? null : prodotto.id)}
@@ -873,24 +869,50 @@ export default function AdminProdottiPage() {
                             </button>
                           </div>
                           
-                          {/* Progress bar e kg */}
+                          {/* Progress bar e kg totali */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             <div style={{ flex: 1, maxWidth: 200, background: '#e5e7eb', borderRadius: 4, height: 8, overflow: 'hidden' }}>
                               <div style={{
-                                width: `${Math.min(percentuale, 100)}%`,
+                                width: isEmpty ? '0%' : '100%',
                                 height: '100%',
-                                background: isEmpty ? '#9ca3af' : (isLow ? '#dc2626' : (percentuale < 30 ? '#f59e0b' : '#22c55e')),
+                                background: isEmpty ? '#dc2626' : '#22c55e',
                                 borderRadius: 4,
                               }} />
                             </div>
-                            <span style={{ fontSize: 13, color: isEmpty ? '#9ca3af' : (isLow ? '#dc2626' : '#666'), fontWeight: 600, whiteSpace: 'nowrap' }}>
-                              {totaleDisponibile.toFixed(0)} / {totaleTotale.toFixed(0)} kg
+                            <span style={{ fontSize: 13, color: isEmpty ? '#dc2626' : '#666', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                              {totaleTotale.toFixed(0)} kg
                             </span>
                           </div>
                         </div>
                         
                         {/* Bottoni */}
                         <div style={{ display: 'flex', gap: 8 }}>
+                          <button 
+                            onClick={async () => {
+                              try {
+                                await fetch(`/api/admin/prodotti/${prodotto.id}`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ ...prodotto, attivo: !prodotto.attivo }),
+                                })
+                                mutate('/api/admin/prodotti')
+                              } catch (error) {
+                                console.error('Error toggling attivo:', error)
+                              }
+                            }}
+                            style={{ 
+                              padding: '8px 14px', 
+                              background: prodotto.attivo ? '#22c55e' : '#f59e0b', 
+                              color: '#fff', 
+                              border: 'none', 
+                              borderRadius: 6, 
+                              fontSize: 12, 
+                              fontWeight: 600, 
+                              cursor: 'pointer' 
+                            }}
+                          >
+                            {prodotto.attivo ? 'Attivo' : 'Nascosto'}
+                          </button>
                           <button 
                             onClick={() => setDetailProdotto(prodotto)}
                             style={{ padding: '8px 14px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
