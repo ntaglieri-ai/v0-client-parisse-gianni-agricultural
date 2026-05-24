@@ -109,6 +109,7 @@ export default function AdminProdottiPage() {
   const [isMobile, setIsMobile] = useState(false)
   const [expandedProdottoId, setExpandedProdottoId] = useState<number | null>(null)
   const [codiceLottoError, setCodiceLottoError] = useState('')
+  const [detailProdotto, setDetailProdotto] = useState<Prodotto | null>(null)
   
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -825,11 +826,8 @@ export default function AdminProdottiPage() {
             
             <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               {prodottiCat.map((prodotto, idx) => {
-                const totaleDisponibile = getTotaleDisponibile(prodotto.id)
                 const totaleTotale = getTotaleTotale(prodotto.id)
-                const percentuale = totaleTotale > 0 ? (totaleDisponibile / totaleTotale) * 100 : 0
-                const isLow = totaleDisponibile < 50 && totaleDisponibile > 0
-                const isEmpty = totaleDisponibile === 0
+                const isEmpty = totaleTotale === 0
                 const lottiAttiviCount = getLottiAttiviCount(prodotto.id)
                 const isExpanded = expandedProdottoId === prodotto.id
                 const lottiProdotto = getLottiForProdotto(prodotto.id)
@@ -840,7 +838,7 @@ export default function AdminProdottiPage() {
                       style={{ 
                         padding: isMobile ? '14px 16px' : '16px 20px', 
                         borderBottom: (idx < prodottiCat.length - 1 && !isExpanded) ? '1px solid #f0f0f0' : 'none',
-                        background: isLow ? '#fef2f2' : (isEmpty ? '#f9fafb' : '#fff'),
+                        background: isEmpty ? '#f9fafb' : '#fff',
                       }}
                     >
                       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 16 }}>
@@ -848,8 +846,7 @@ export default function AdminProdottiPage() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
                             <span style={{ fontSize: isMobile ? 15 : 16, fontWeight: 600, color: '#1a3a2a' }}>{prodotto.nome}</span>
-                            {!prodotto.attivo && <span style={{ background: '#9ca3af', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>INATTIVO</span>}
-                            {isLow && <span style={{ background: '#dc2626', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>SCORTE BASSE</span>}
+                            {!prodotto.attivo && <span style={{ background: '#f59e0b', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 10 }}>NASCOSTO</span>}
                             {/* Badge lotti cliccabile */}
                             <button
                               onClick={() => setExpandedProdottoId(isExpanded ? null : prodotto.id)}
@@ -872,18 +869,18 @@ export default function AdminProdottiPage() {
                             </button>
                           </div>
                           
-                          {/* Progress bar e kg */}
+                          {/* Progress bar e kg totali */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             <div style={{ flex: 1, maxWidth: 200, background: '#e5e7eb', borderRadius: 4, height: 8, overflow: 'hidden' }}>
                               <div style={{
-                                width: `${Math.min(percentuale, 100)}%`,
+                                width: isEmpty ? '0%' : '100%',
                                 height: '100%',
-                                background: isEmpty ? '#9ca3af' : (isLow ? '#dc2626' : (percentuale < 30 ? '#f59e0b' : '#22c55e')),
+                                background: isEmpty ? '#dc2626' : '#22c55e',
                                 borderRadius: 4,
                               }} />
                             </div>
-                            <span style={{ fontSize: 13, color: isEmpty ? '#9ca3af' : (isLow ? '#dc2626' : '#666'), fontWeight: 600, whiteSpace: 'nowrap' }}>
-                              {totaleDisponibile.toFixed(0)} / {totaleTotale.toFixed(0)} kg
+                            <span style={{ fontSize: 13, color: isEmpty ? '#dc2626' : '#666', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                              {totaleTotale.toFixed(0)} kg
                             </span>
                           </div>
                         </div>
@@ -891,10 +888,36 @@ export default function AdminProdottiPage() {
                         {/* Bottoni */}
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button 
-                            onClick={() => handleSelectProdotto(prodotto, true)}
+                            onClick={async () => {
+                              try {
+                                await fetch(`/api/admin/prodotti/${prodotto.id}`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ ...prodotto, attivo: !prodotto.attivo }),
+                                })
+                                mutate('/api/admin/prodotti')
+                              } catch (error) {
+                                console.error('Error toggling attivo:', error)
+                              }
+                            }}
+                            style={{ 
+                              padding: '8px 14px', 
+                              background: prodotto.attivo ? '#22c55e' : '#f59e0b', 
+                              color: '#fff', 
+                              border: 'none', 
+                              borderRadius: 6, 
+                              fontSize: 12, 
+                              fontWeight: 600, 
+                              cursor: 'pointer' 
+                            }}
+                          >
+                            {prodotto.attivo ? 'Attivo' : 'Nascosto'}
+                          </button>
+                          <button 
+                            onClick={() => setDetailProdotto(prodotto)}
                             style={{ padding: '8px 14px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                           >
-                            + Lotto
+                            Dettagli
                           </button>
                           <button 
                             onClick={() => handleSelectProdotto(prodotto, false)}
@@ -977,6 +1000,263 @@ export default function AdminProdottiPage() {
           </div>
         )
       })}
+
+      {/* Sidebar Dettagli Prodotto */}
+      {detailProdotto && (
+        <>
+          {/* Overlay */}
+          <div 
+            onClick={() => setDetailProdotto(null)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.5)',
+              zIndex: 100,
+              backdropFilter: 'blur(2px)',
+            }}
+          />
+          
+          {/* Sidebar */}
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            right: 0,
+            width: isMobile ? '100%' : 480,
+            height: '100vh',
+            background: '#fff',
+            zIndex: 101,
+            boxShadow: '-8px 0 32px rgba(0,0,0,0.15)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}>
+            {/* Header sidebar */}
+            <div style={{
+              padding: isMobile ? '16px 20px' : '24px 32px',
+              borderBottom: '1px solid #e5e7eb',
+              background: 'linear-gradient(135deg, #1a3a2a 0%, #2d5a3d 100%)',
+              color: '#fff',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <h2 className={playfair.className} style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, margin: 0, marginBottom: 8 }}>
+                    {detailProdotto.nome}
+                  </h2>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ 
+                      background: 'rgba(255,255,255,0.2)', 
+                      padding: '4px 12px', 
+                      borderRadius: 20, 
+                      fontSize: 12, 
+                      fontWeight: 500,
+                      textTransform: 'capitalize',
+                    }}>
+                      {detailProdotto.categoria}
+                    </span>
+                    {detailProdotto.attivo ? (
+                      <span style={{ background: '#22c55e', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>Attivo</span>
+                    ) : (
+                      <span style={{ background: '#dc2626', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>Inattivo</span>
+                    )}
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setDetailProdotto(null)}
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    color: '#fff',
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    fontSize: 20,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  x
+                </button>
+              </div>
+            </div>
+            
+            {/* Contenuto sidebar scrollabile */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 20 : 32 }}>
+              {/* Immagine prodotto */}
+              {detailProdotto.immagine && (
+                <div style={{ marginBottom: 24 }}>
+                  <img 
+                    src={detailProdotto.immagine} 
+                    alt={detailProdotto.nome}
+                    style={{
+                      width: '100%',
+                      height: 200,
+                      objectFit: 'cover',
+                      borderRadius: 12,
+                      border: '1px solid #e5e7eb',
+                    }}
+                  />
+                </div>
+              )}
+              
+              {/* Descrizione */}
+              {detailProdotto.descrizione && (
+                <div style={{ marginBottom: 24 }}>
+                  <h4 style={{ fontSize: 12, fontWeight: 700, color: '#c9933a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Descrizione</h4>
+                  <p style={{ fontSize: 14, color: '#555', lineHeight: 1.6, margin: 0 }}>{detailProdotto.descrizione}</p>
+                </div>
+              )}
+              
+              {/* Info generali */}
+              <div style={{ marginBottom: 24 }}>
+                <h4 style={{ fontSize: 12, fontWeight: 700, color: '#c9933a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Informazioni</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+                  <div style={{ background: '#f8f8f8', padding: 14, borderRadius: 10 }}>
+                    <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Unita</div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: '#1a3a2a' }}>{detailProdotto.unita}</div>
+                  </div>
+                  <div style={{ background: '#f8f8f8', padding: 14, borderRadius: 10 }}>
+                    <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Prezzo Base</div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: '#1a3a2a' }}>{detailProdotto.prezzo_base ? `€${Number(detailProdotto.prezzo_base).toFixed(2)}` : '-'}</div>
+                  </div>
+                  <div style={{ background: '#f8f8f8', padding: 14, borderRadius: 10 }}>
+                    <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Origine</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#1a3a2a' }}>{detailProdotto.origine || 'Non specificata'}</div>
+                  </div>
+                  <div style={{ background: '#f8f8f8', padding: 14, borderRadius: 10 }}>
+                    <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Peso Netto</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#1a3a2a' }}>{detailProdotto.peso_netto || '-'}</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Ingredienti e Allergeni */}
+              {(detailProdotto.ingredienti || detailProdotto.allergeni) && (
+                <div style={{ marginBottom: 24 }}>
+                  <h4 style={{ fontSize: 12, fontWeight: 700, color: '#c9933a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Etichetta</h4>
+                  {detailProdotto.ingredienti && (
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#666', marginBottom: 4 }}>Ingredienti</div>
+                      <p style={{ fontSize: 13, color: '#333', margin: 0, lineHeight: 1.5 }}>{detailProdotto.ingredienti}</p>
+                    </div>
+                  )}
+                  {detailProdotto.allergeni && (
+                    <div style={{ 
+                      background: '#fef2f2', 
+                      padding: 12, 
+                      borderRadius: 8, 
+                      border: '1px solid #fecaca',
+                    }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', marginBottom: 4 }}>ALLERGENI</div>
+                      <p style={{ fontSize: 13, color: '#dc2626', margin: 0, fontWeight: 500 }}>{detailProdotto.allergeni}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Valori nutrizionali */}
+              {detailProdotto.valori_nutrizionali && Object.values(detailProdotto.valori_nutrizionali).some(v => v !== null) && (
+                <div style={{ marginBottom: 24 }}>
+                  <h4 style={{ fontSize: 12, fontWeight: 700, color: '#c9933a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Valori Nutrizionali (per 100g)</h4>
+                  <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
+                    {[
+                      { label: 'Energia', value: detailProdotto.valori_nutrizionali.energia_kcal ? `${detailProdotto.valori_nutrizionali.energia_kcal} kcal` : null },
+                      { label: 'Grassi', value: detailProdotto.valori_nutrizionali.grassi !== null ? `${detailProdotto.valori_nutrizionali.grassi} g` : null },
+                      { label: '- di cui saturi', value: detailProdotto.valori_nutrizionali.grassi_saturi !== null ? `${detailProdotto.valori_nutrizionali.grassi_saturi} g` : null, indent: true },
+                      { label: 'Carboidrati', value: detailProdotto.valori_nutrizionali.carboidrati !== null ? `${detailProdotto.valori_nutrizionali.carboidrati} g` : null },
+                      { label: '- di cui zuccheri', value: detailProdotto.valori_nutrizionali.zuccheri !== null ? `${detailProdotto.valori_nutrizionali.zuccheri} g` : null, indent: true },
+                      { label: 'Fibre', value: detailProdotto.valori_nutrizionali.fibre !== null ? `${detailProdotto.valori_nutrizionali.fibre} g` : null },
+                      { label: 'Proteine', value: detailProdotto.valori_nutrizionali.proteine !== null ? `${detailProdotto.valori_nutrizionali.proteine} g` : null },
+                      { label: 'Sale', value: detailProdotto.valori_nutrizionali.sale !== null ? `${detailProdotto.valori_nutrizionali.sale} g` : null },
+                    ].filter(item => item.value !== null).map((item, idx) => (
+                      <div 
+                        key={item.label}
+                        style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          padding: '10px 14px',
+                          background: idx % 2 === 0 ? '#f9fafb' : '#fff',
+                          fontSize: 13,
+                        }}
+                      >
+                        <span style={{ color: '#555', paddingLeft: item.indent ? 12 : 0 }}>{item.label}</span>
+                        <span style={{ fontWeight: 600, color: '#1a3a2a' }}>{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Statistiche lotti */}
+              <div style={{ marginBottom: 24 }}>
+                <h4 style={{ fontSize: 12, fontWeight: 700, color: '#c9933a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Magazzino</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                  <div style={{ background: '#f0fdf4', padding: 14, borderRadius: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: '#16a34a' }}>{getLottiAttiviCount(detailProdotto.id)}</div>
+                    <div style={{ fontSize: 11, color: '#666' }}>Lotti Attivi</div>
+                  </div>
+                  <div style={{ background: '#fef3c7', padding: 14, borderRadius: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: '#d97706' }}>{getTotaleDisponibile(detailProdotto.id).toFixed(0)}</div>
+                    <div style={{ fontSize: 11, color: '#666' }}>Kg Disponibili</div>
+                  </div>
+                  <div style={{ background: '#f1f5f9', padding: 14, borderRadius: 10, textAlign: 'center' }}>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: '#475569' }}>{getTotaleTotale(detailProdotto.id).toFixed(0)}</div>
+                    <div style={{ fontSize: 11, color: '#666' }}>Kg Totali</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer sidebar */}
+            <div style={{
+              padding: isMobile ? '16px 20px' : '20px 32px',
+              borderTop: '1px solid #e5e7eb',
+              background: '#f9fafb',
+              display: 'flex',
+              gap: 12,
+            }}>
+              <button
+                onClick={() => { setDetailProdotto(null); handleSelectProdotto(detailProdotto, false) }}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#c9933a',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Modifica Prodotto
+              </button>
+              <a
+                href="/admin/tracciabilita"
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#1a3a2a',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  textAlign: 'center',
+                }}
+              >
+                + Nuovo Lotto
+              </a>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

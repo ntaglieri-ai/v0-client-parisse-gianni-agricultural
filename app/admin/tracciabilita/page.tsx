@@ -54,6 +54,23 @@ interface Prodotto {
   nome: string
   unita: string
   attivo: boolean
+  categoria: string
+  descrizione: string
+  immagine: string
+  ingredienti: string
+  allergeni: string
+  categoria_etichetta: string
+  valori_nutrizionali: {
+    energia_kj: number
+    energia_kcal: number
+    grassi: number
+    grassi_saturi: number
+    carboidrati: number
+    zuccheri: number
+    fibre: number
+    proteine: number
+    sale: number
+  }
 }
 
 interface Lotto {
@@ -83,6 +100,7 @@ export default function TracciabilitaPage() {
   const [saving, setSaving] = useState(false)
   const [codiceLottoError, setCodiceLottoError] = useState('')
   const [isMobile, setIsMobile] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -536,7 +554,24 @@ export default function TracciabilitaPage() {
                 </div>
 
                 {/* Azioni */}
-                <div style={{ display: 'flex', gap: 10 }}>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setShowPreview(true)}
+                    style={{
+                      flex: '1 1 100%',
+                      padding: '14px 20px',
+                      background: 'linear-gradient(135deg, #1a3a2a 0%, #2d5a3d 100%)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 10,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      marginBottom: 6,
+                    }}
+                  >
+                    Anteprima Cliente
+                  </button>
                   <button
                     onClick={handleDownloadQR}
                     style={{
@@ -664,6 +699,245 @@ export default function TracciabilitaPage() {
             o scaricarlo come immagine PNG per utilizzi personalizzati.
           </p>
         </div>
+
+        {/* Sidebar Anteprima Cliente */}
+        {showPreview && selectedLotto && selectedProdotto && (
+          <>
+            {/* Overlay */}
+            <div 
+              onClick={() => setShowPreview(false)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.6)',
+                zIndex: 100,
+                backdropFilter: 'blur(4px)',
+              }}
+            />
+            
+            {/* Sidebar */}
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              right: 0,
+              width: isMobile ? '100%' : 450,
+              height: '100vh',
+              background: '#f5f0e8',
+              zIndex: 101,
+              boxShadow: '-8px 0 40px rgba(0,0,0,0.2)',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}>
+              {/* Header sidebar */}
+              <div style={{
+                background: '#1a3a2a',
+                padding: isMobile ? '16px 20px' : '24px 28px',
+                textAlign: 'center',
+                position: 'relative',
+              }}>
+                <button 
+                  onClick={() => setShowPreview(false)}
+                  style={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                    background: 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    color: '#fff',
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    fontSize: 18,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  x
+                </button>
+                <img src="/images/logo.png" alt="Logo" style={{ height: 48, filter: 'brightness(0) invert(1)', margin: '0 auto' }} />
+                <p className={playfair.className} style={{ color: '#fff', fontSize: 18, fontWeight: 700, marginTop: 10, marginBottom: 4 }}>
+                  Azienda Agricola Parisse Gianni
+                </p>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>
+                  Via II Traversa delle Croci, 16 - 67057 Pescina (AQ)
+                </p>
+                <p style={{ color: '#c9933a', fontSize: 11, marginTop: 2 }}>
+                  Italia - Altopiano del Fucino
+                </p>
+                <span style={{
+                  display: 'inline-block',
+                  marginTop: 12,
+                  padding: '6px 14px',
+                  background: '#c9933a',
+                  color: '#fff',
+                  fontSize: 12,
+                  borderRadius: 20,
+                  fontWeight: 600,
+                }}>
+                  Prodotto Verificato
+                </span>
+              </div>
+              
+              {/* Contenuto scrollabile */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
+                {/* Prodotto */}
+                <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                  {selectedProdotto.immagine && (
+                    <img 
+                      src={selectedProdotto.immagine} 
+                      alt={selectedProdotto.nome}
+                      style={{
+                        width: '100%',
+                        maxWidth: 280,
+                        height: 160,
+                        objectFit: 'cover',
+                        borderRadius: 12,
+                        marginBottom: 12,
+                      }}
+                    />
+                  )}
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '4px 12px',
+                    background: '#1a3a2a',
+                    color: '#fff',
+                    fontSize: 10,
+                    textTransform: 'uppercase',
+                    borderRadius: 20,
+                  }}>
+                    {selectedProdotto.categoria}
+                  </span>
+                  <h2 className={playfair.className} style={{ fontSize: 24, fontWeight: 700, color: '#1a3a2a', marginTop: 8, marginBottom: 6 }}>
+                    {selectedProdotto.nome}
+                  </h2>
+                  {selectedProdotto.descrizione && (
+                    <p style={{ fontSize: 13, color: '#666', lineHeight: 1.5 }}>{selectedProdotto.descrizione}</p>
+                  )}
+                </div>
+
+                {/* Ingredienti e Allergeni */}
+                {selectedProdotto.categoria_etichetta === 'completo' && (
+                  <div style={{ marginBottom: 20 }}>
+                    {selectedProdotto.ingredienti && (
+                      <div style={{ background: '#fff', borderRadius: 10, padding: 14, marginBottom: 10 }}>
+                        <p style={{ fontSize: 10, textTransform: 'uppercase', color: '#c9933a', fontWeight: 700, letterSpacing: 1, marginBottom: 6 }}>Ingredienti</p>
+                        <p style={{ fontSize: 13, color: '#333', margin: 0 }}>{selectedProdotto.ingredienti}</p>
+                      </div>
+                    )}
+                    {selectedProdotto.allergeni && (
+                      <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 10, padding: 14 }}>
+                        <p style={{ fontSize: 12, fontWeight: 700, color: '#92400e', margin: 0 }}>ALLERGENI: {selectedProdotto.allergeni}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Valori Nutrizionali */}
+                {selectedProdotto.categoria_etichetta === 'completo' && selectedProdotto.valori_nutrizionali && (
+                  <div style={{ background: '#fff', borderRadius: 10, padding: 14, marginBottom: 20 }}>
+                    <p style={{ fontSize: 10, textTransform: 'uppercase', color: '#c9933a', fontWeight: 700, letterSpacing: 1, marginBottom: 10 }}>
+                      Valori Nutrizionali (per 100g)
+                    </p>
+                    {[
+                      ['Energia', `${selectedProdotto.valori_nutrizionali.energia_kj || '-'} kJ / ${selectedProdotto.valori_nutrizionali.energia_kcal || '-'} kcal`],
+                      ['Grassi', `${selectedProdotto.valori_nutrizionali.grassi ?? '-'} g`],
+                      ['- di cui saturi', `${selectedProdotto.valori_nutrizionali.grassi_saturi ?? '-'} g`],
+                      ['Carboidrati', `${selectedProdotto.valori_nutrizionali.carboidrati ?? '-'} g`],
+                      ['- di cui zuccheri', `${selectedProdotto.valori_nutrizionali.zuccheri ?? '-'} g`],
+                      ['Fibre', `${selectedProdotto.valori_nutrizionali.fibre ?? '-'} g`],
+                      ['Proteine', `${selectedProdotto.valori_nutrizionali.proteine ?? '-'} g`],
+                      ['Sale', `${selectedProdotto.valori_nutrizionali.sale ?? '-'} g`],
+                    ].map(([label, value], idx) => (
+                      <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 8px', background: idx % 2 === 0 ? '#f5f0e8' : '#fff', fontSize: 12 }}>
+                        <span style={{ color: '#666' }}>{label}</span>
+                        <span style={{ fontWeight: 600, color: '#1a3a2a' }}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Tracciabilita Lotto */}
+                <div style={{ marginBottom: 20 }}>
+                  <h3 className={playfair.className} style={{ fontSize: 18, fontWeight: 700, color: '#1a3a2a', marginBottom: 8 }}>
+                    Tracciabilita del Lotto
+                  </h3>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '4px 10px',
+                    background: '#f5f0e8',
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                    borderRadius: 4,
+                    marginBottom: 12,
+                  }}>
+                    {selectedLotto.codice_lotto}
+                  </span>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                    {[
+                      ['Campo', selectedLotto.campo],
+                      ['Comune', selectedLotto.comune],
+                      ['Data Semina', selectedLotto.data_semina ? new Date(selectedLotto.data_semina).toLocaleDateString('it-IT') : '-'],
+                      ['Data Raccolta', selectedLotto.data_raccolta ? new Date(selectedLotto.data_raccolta).toLocaleDateString('it-IT') : '-'],
+                      ['Quantita prodotta', `${selectedLotto.kg_totali} kg`],
+                      ['Conservazione fino a', selectedLotto.tmc || '-'],
+                    ].map(([label, value]) => (
+                      <div key={label} style={{ background: '#fff', borderRadius: 8, padding: 12 }}>
+                        <p style={{ fontSize: 9, textTransform: 'uppercase', color: '#c9933a', fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>{label}</p>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: '#1a3a2a', margin: 0 }}>{value || '-'}</p>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {selectedLotto.condizioni_conservazione && (
+                    <div style={{ background: '#fff', borderRadius: 8, padding: 12, marginTop: 10 }}>
+                      <p style={{ fontSize: 9, textTransform: 'uppercase', color: '#c9933a', fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>Conservazione</p>
+                      <p style={{ fontSize: 13, color: '#333', margin: 0 }}>{selectedLotto.condizioni_conservazione}</p>
+                    </div>
+                  )}
+                  
+                  {selectedLotto.certificazioni && (
+                    <div style={{ background: '#dcfce7', border: '1px solid #86efac', borderRadius: 8, padding: 12, marginTop: 10 }}>
+                      <p style={{ fontSize: 12, fontWeight: 600, color: '#166534', margin: 0 }}>CERTIFICAZIONI: {selectedLotto.certificazioni}</p>
+                    </div>
+                  )}
+                  
+                  <div style={{ textAlign: 'center', marginTop: 16 }}>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '8px 16px',
+                      background: '#1a3a2a',
+                      color: '#c9933a',
+                      fontSize: 12,
+                      borderRadius: 20,
+                      fontWeight: 600,
+                    }}>
+                      Filiera Tracciata
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Footer sidebar */}
+              <div style={{
+                padding: isMobile ? '12px 16px' : '16px 24px',
+                borderTop: '1px solid #e5d9c3',
+                background: '#f5f0e8',
+                textAlign: 'center',
+              }}>
+                <p style={{ fontSize: 11, color: '#666', margin: 0 }}>
+                  Questa e l&apos;anteprima che vedranno i clienti scansionando il QR code
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   )
