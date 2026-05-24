@@ -23,6 +23,11 @@ export async function GET() {
       SELECT COUNT(*) as count FROM prodotti WHERE attivo = true
     `
     
+    // Prodotti nascosti
+    const prodottiNascosti = await sql`
+      SELECT COUNT(*) as count FROM prodotti WHERE attivo = false
+    `
+    
     // Lotti attivi
     const lottiAttivi = await sql`
       SELECT COUNT(*) as count FROM lotti WHERE attivo = true
@@ -40,6 +45,7 @@ export async function GET() {
       ordiniOggi: parseInt(ordiniOggi[0]?.count || '0'),
       ordiniMese: parseInt(ordiniMese[0]?.count || '0'),
       prodottiAttivi: parseInt(prodottiAttivi[0]?.count || '0'),
+      prodottiNascosti: parseInt(prodottiNascosti[0]?.count || '0'),
       lottiAttivi: parseInt(lottiAttivi[0]?.count || '0'),
       ultimiOrdini
     })

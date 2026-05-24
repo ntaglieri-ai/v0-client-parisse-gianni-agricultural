@@ -890,12 +890,14 @@ export default function AdminProdottiPage() {
                           <button 
                             onClick={async () => {
                               try {
-                                await fetch(`/api/admin/prodotti/${prodotto.id}`, {
-                                  method: 'PUT',
+                                const res = await fetch(`/api/admin/prodotti/${prodotto.id}`, {
+                                  method: 'PATCH',
                                   headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ ...prodotto, attivo: !prodotto.attivo }),
+                                  body: JSON.stringify({ attivo: !prodotto.attivo }),
                                 })
-                                mutate('/api/admin/prodotti')
+                                if (res.ok) {
+                                  mutate('/api/admin/prodotti')
+                                }
                               } catch (error) {
                                 console.error('Error toggling attivo:', error)
                               }
@@ -1194,7 +1196,7 @@ export default function AdminProdottiPage() {
               {/* Statistiche lotti */}
               <div style={{ marginBottom: 24 }}>
                 <h4 style={{ fontSize: 12, fontWeight: 700, color: '#c9933a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Magazzino</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                   <div style={{ background: '#f0fdf4', padding: 14, borderRadius: 10, textAlign: 'center' }}>
                     <div style={{ fontSize: 22, fontWeight: 700, color: '#16a34a' }}>{getLottiAttiviCount(detailProdotto.id)}</div>
                     <div style={{ fontSize: 11, color: '#666' }}>Lotti Attivi</div>
@@ -1202,10 +1204,6 @@ export default function AdminProdottiPage() {
                   <div style={{ background: '#fef3c7', padding: 14, borderRadius: 10, textAlign: 'center' }}>
                     <div style={{ fontSize: 22, fontWeight: 700, color: '#d97706' }}>{getTotaleDisponibile(detailProdotto.id).toFixed(0)}</div>
                     <div style={{ fontSize: 11, color: '#666' }}>Kg Disponibili</div>
-                  </div>
-                  <div style={{ background: '#f1f5f9', padding: 14, borderRadius: 10, textAlign: 'center' }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: '#475569' }}>{getTotaleTotale(detailProdotto.id).toFixed(0)}</div>
-                    <div style={{ fontSize: 11, color: '#666' }}>Kg Totali</div>
                   </div>
                 </div>
               </div>

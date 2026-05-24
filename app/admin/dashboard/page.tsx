@@ -93,6 +93,16 @@ export default function AdminDashboardPage() {
               </span>
             </div>
             <p style={{ color: '#666', fontSize: 14, margin: 0 }}>{card.label}</p>
+            {card.key === 'prodottiAttivi' && data?.prodottiNascosti > 0 && (
+              <p style={{ 
+                color: '#f59e0b', 
+                fontSize: 12, 
+                margin: '8px 0 0 0',
+                fontWeight: 600,
+              }}>
+                {data.prodottiNascosti} nascost{data.prodottiNascosti === 1 ? 'o' : 'i'}
+              </p>
+            )}
           </div>
         ))}
       </div>
