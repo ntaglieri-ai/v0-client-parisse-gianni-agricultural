@@ -289,19 +289,44 @@ export default function EtichettePage() {
             flex-direction: column !important;
             height: auto !important;
             min-height: calc(100vh - 48px);
+            margin: 0 !important;
+            overflow-x: hidden !important;
           }
           .etichette-panel {
             width: 100% !important;
+            min-width: 0 !important;
             max-width: 100% !important;
             box-shadow: none !important;
             border-bottom: 1px solid #e5e7eb;
+            flex-shrink: 0 !important;
           }
           .etichette-preview {
-            min-height: 400px;
-            padding: 16px !important;
+            min-height: 350px;
+            padding: 12px !important;
+            width: 100% !important;
+            overflow-x: hidden !important;
           }
           .etichette-preview-inner {
-            transform: scale(0.85) !important;
+            transform: scale(0.7) !important;
+            transform-origin: center center !important;
+            max-width: 100% !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .etichette-preview-inner {
+            transform: scale(0.55) !important;
+          }
+          .etichette-preview {
+            min-height: 280px;
+            padding: 8px !important;
+          }
+        }
+        @media (max-width: 360px) {
+          .etichette-preview-inner {
+            transform: scale(0.45) !important;
+          }
+          .etichette-preview {
+            min-height: 240px;
           }
         }
       `}</style>
@@ -311,6 +336,9 @@ export default function EtichettePage() {
         height: 'calc(100vh - 48px)',
         margin: '-24px',
         background: '#f5f0e8',
+        overflowX: 'hidden',
+        width: '100%',
+        maxWidth: '100%',
       }}>
         {/* COLONNA SINISTRA - Pannello di controllo */}
         <div className="etichette-panel" style={{ 
