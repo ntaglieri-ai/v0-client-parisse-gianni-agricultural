@@ -609,18 +609,18 @@ export default function AdminProdottiPage() {
         <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 24, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h3 className={playfair.className} style={{ color: '#1a3a2a', fontSize: isMobile ? 18 : 22, fontWeight: 700, margin: 0 }}>Lotti</h3>
-            <button 
-              onClick={() => { resetLottoForm(); setShowLottoForm(true) }} 
-              style={{ padding: '10px 20px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            <a 
+              href="/admin/tracciabilita" 
+              style={{ padding: '10px 20px', background: '#1a3a2a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none' }}
             >
               + Nuovo Lotto
-            </button>
+            </a>
           </div>
 
-          {/* Form Nuovo/Modifica Lotto */}
-          {showLottoForm && (
+          {/* Form Modifica Lotto */}
+          {showLottoForm && editingLotto && (
             <div style={{ background: '#f8f8f8', borderRadius: 10, padding: isMobile ? 14 : 20, marginBottom: 20 }}>
-              <h4 style={{ fontSize: 15, fontWeight: 600, color: '#1a3a2a', marginBottom: 16 }}>{editingLotto ? 'Modifica Lotto' : 'Nuovo Lotto'}</h4>
+              <h4 style={{ fontSize: 15, fontWeight: 600, color: '#1a3a2a', marginBottom: 16 }}>Modifica Lotto</h4>
               <form onSubmit={handleLottoSubmit}>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
 <div>
@@ -707,7 +707,7 @@ export default function AdminProdottiPage() {
                       cursor: (codiceLottoError || !lottoFormData.codice_lotto || !codiceLottoRegex.test(lottoFormData.codice_lotto)) ? 'not-allowed' : 'pointer' 
                     }}
                   >
-                    {saving ? 'Salvataggio...' : (editingLotto ? 'Aggiorna Lotto' : 'Crea Lotto')}
+                    {saving ? 'Salvataggio...' : 'Aggiorna Lotto'}
                   </button>
                   <button type="button" onClick={resetLottoForm} style={{ padding: '10px 24px', background: '#e0e0e0', color: '#666', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                     Annulla

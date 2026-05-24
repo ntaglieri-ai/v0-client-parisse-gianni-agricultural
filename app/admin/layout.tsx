@@ -25,6 +25,7 @@ const navItems = [
   { name: 'Prodotti', href: '/admin/prodotti', icon: '📦' },
   { name: 'Ordini', href: '/admin/ordini', icon: '🛒' },
   { name: 'Etichette', href: '/admin/etichette', icon: '🏷️' },
+  { name: 'Tracciabilita', href: '/admin/tracciabilita', icon: '📱' },
   { name: 'Impostazioni', href: '/admin/impostazioni', icon: '⚙️' },
 ]
 
