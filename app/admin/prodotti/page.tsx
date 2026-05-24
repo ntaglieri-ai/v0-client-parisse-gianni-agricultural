@@ -890,12 +890,14 @@ export default function AdminProdottiPage() {
                           <button 
                             onClick={async () => {
                               try {
-                                await fetch(`/api/admin/prodotti/${prodotto.id}`, {
-                                  method: 'PUT',
+                                const res = await fetch(`/api/admin/prodotti/${prodotto.id}`, {
+                                  method: 'PATCH',
                                   headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ ...prodotto, attivo: !prodotto.attivo }),
+                                  body: JSON.stringify({ attivo: !prodotto.attivo }),
                                 })
-                                mutate('/api/admin/prodotti')
+                                if (res.ok) {
+                                  mutate('/api/admin/prodotti')
+                                }
                               } catch (error) {
                                 console.error('Error toggling attivo:', error)
                               }

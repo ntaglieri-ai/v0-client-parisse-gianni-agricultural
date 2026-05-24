@@ -3,6 +3,29 @@ import { neon } from '@neondatabase/serverless'
 
 const sql = neon(process.env.DATABASE_URL!)
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+    const { attivo } = body
+    
+    const result = await sql`
+      UPDATE prodotti 
+      SET attivo = ${attivo}
+      WHERE id = ${id}
+      RETURNING *
+    `
+    
+    return NextResponse.json(result[0])
+  } catch (error) {
+    console.error('Error toggling prodotto attivo:', error)
+    return NextResponse.json({ error: 'Errore aggiornamento stato prodotto' }, { status: 500 })
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
