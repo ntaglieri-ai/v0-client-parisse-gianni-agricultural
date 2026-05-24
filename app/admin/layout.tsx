@@ -23,9 +23,9 @@ export const useAuth = () => useContext(AuthContext)
 const navItems = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: '📊' },
   { name: 'Prodotti', href: '/admin/prodotti', icon: '📦' },
-  { name: 'Ordini', href: '/admin/ordini', icon: '🛒' },
-  { name: 'Etichette', href: '/admin/etichette', icon: '🏷️' },
   { name: 'Tracciabilita', href: '/admin/tracciabilita', icon: '📱' },
+  { name: 'Etichette', href: '/admin/etichette', icon: '🏷️' },
+  { name: 'Ordini', href: '/admin/ordini', icon: '🛒' },
   { name: 'Impostazioni', href: '/admin/impostazioni', icon: '⚙️' },
 ]
 
